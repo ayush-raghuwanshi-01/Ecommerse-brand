@@ -1,0 +1,61 @@
+.strip {
+  position: relative;
+  overflow: hidden;
+  padding: 16px 0;
+  border-top: 1px solid var(--bh-border);
+  border-bottom: 1px solid var(--bh-border);
+  background: var(--bh-bg-alt);
+  /* Fade the ends so the loop has no visible seam. */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  animation: scroll-x 38s linear infinite;
+}
+
+.group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 22px;
+  padding-right: 22px;
+  font-family: var(--bh-font-display);
+  font-size: clamp(0.9375rem, 1.5vw, 1.125rem);
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  color: var(--bh-text-dim);
+  white-space: nowrap;
+}
+
+.item::after {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--bh-gold);
+  opacity: 0.75;
+}
+
+@keyframes scroll-x {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* Frozen, and still readable, when the visitor asks for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation-play-state: paused;
+  }
+}

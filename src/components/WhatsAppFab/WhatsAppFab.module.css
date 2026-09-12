@@ -1,0 +1,78 @@
+.fab {
+  position: fixed;
+  right: clamp(16px, 3vw, 28px);
+  bottom: clamp(16px, 3vw, 28px);
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--bh-gold);
+  color: var(--bh-bg);
+  box-shadow: 0 10px 30px color-mix(in srgb, #000 55%, transparent);
+  transition:
+    background-color var(--bh-motion-fast) var(--bh-ease),
+    transform var(--bh-motion-fast) var(--bh-ease);
+}
+
+.fab:hover {
+  background: var(--bh-gold-bright);
+  color: var(--bh-bg);
+  transform: translateY(-2px);
+}
+
+.icon {
+  width: 26px;
+  height: 26px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Pulsing ring, skipped entirely under prefers-reduced-motion. */
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--bh-gold);
+  animation: pulse 2.8s var(--bh-ease) infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.65;
+  }
+  70% {
+    transform: scale(1.85);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.85);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring {
+    animation: none;
+    opacity: 0.35;
+  }
+
+  .fab:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .fab {
+    width: 50px;
+    height: 50px;
+  }
+
+  .icon {
+    width: 23px;
+    height: 23px;
+  }
+}

@@ -1,0 +1,125 @@
+.footer {
+  padding: clamp(48px, 7vw, 72px) var(--bh-space-page) 32px;
+  background: var(--bh-bg-alt);
+  border-top: 1px solid var(--bh-border);
+}
+
+.inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 32px clamp(24px, 4vw, 56px);
+  align-items: start;
+}
+
+.wordmark {
+  font-family: var(--bh-font-display);
+  font-size: 1.625rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--bh-text);
+}
+
+.wordmark span {
+  color: var(--bh-gold);
+}
+
+.tagline {
+  margin-top: 12px;
+  max-width: 34ch;
+  font-size: 0.875rem;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--bh-text-dim);
+}
+
+.heading {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--bh-text-dim);
+  margin-bottom: 14px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9375rem;
+  color: var(--bh-text);
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--bh-gold-bright);
+}
+
+.linkIcon {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: var(--bh-gold);
+}
+
+/* Placeholder entries render as text, not as dead links. */
+.placeholder {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9375rem;
+  color: color-mix(in srgb, var(--bh-text-dim) 88%, transparent);
+}
+
+.soon {
+  font-size: 0.75rem;
+  color: var(--bh-text-dim);
+}
+
+.bottom {
+  max-width: 1240px;
+  margin: clamp(40px, 6vw, 64px) auto 0;
+  padding-top: 22px;
+  border-top: 1px solid var(--bh-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  font-size: 0.8125rem;
+  color: var(--bh-text-dim);
+}
+
+.toTop {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: var(--bh-text-dim);
+  text-decoration: none;
+}
+
+.toTop:hover {
+  color: var(--bh-gold-bright);
+}
+
+.toTopLine {
+  display: inline-block;
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+}
+
+@media (max-width: 760px) {
+  .inner {
+    grid-template-columns: 1fr;
+  }
+}

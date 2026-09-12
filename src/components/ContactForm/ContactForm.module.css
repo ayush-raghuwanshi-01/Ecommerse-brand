@@ -1,0 +1,136 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--bh-text-dim);
+}
+
+.optional {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--bh-text-dim) 72%, transparent);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 10px 2px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--bh-border);
+  border-radius: 0;
+  color: var(--bh-text);
+  font-size: 1rem;
+  font-weight: 400;
+  transition:
+    border-color var(--bh-motion-fast) var(--bh-ease),
+    background-color var(--bh-motion-fast) var(--bh-ease);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: color-mix(in srgb, var(--bh-text-dim) 62%, transparent);
+}
+
+.input:hover,
+.textarea:hover {
+  border-bottom-color: color-mix(in srgb, var(--bh-gold) 50%, var(--bh-border));
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-bottom-color: var(--bh-gold);
+  background: color-mix(in srgb, var(--bh-surface) 60%, transparent);
+}
+
+.textarea {
+  min-height: 116px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.invalid {
+  border-bottom-color: #b4553f;
+}
+
+.error {
+  font-size: 0.8125rem;
+  color: #d98a72;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.submit {
+  padding: 14px 28px;
+  border: 1px solid var(--bh-gold);
+  border-radius: var(--bh-radius-soft);
+  background: transparent;
+  color: var(--bh-gold-bright);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition:
+    background-color var(--bh-motion-fast) var(--bh-ease),
+    color var(--bh-motion-fast) var(--bh-ease);
+}
+
+.submit:hover {
+  background: var(--bh-gold);
+  color: var(--bh-bg);
+}
+
+.submit:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.status {
+  font-size: 0.875rem;
+  color: var(--bh-gold);
+}
+
+/*
+ * Explains the mailto mechanism honestly.
+ * Swap this copy when a real form service replaces the client-side handler.
+ */
+.note {
+  padding-top: 18px;
+  border-top: 1px solid var(--bh-border);
+  font-size: 0.8125rem;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--bh-text-dim);
+}
+
+@media (max-width: 520px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}

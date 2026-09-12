@@ -1,0 +1,19 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/*
+ * Static gradient shown while the 3D chunk loads — and permanently, if WebGL
+ * is unavailable. The canvas paints on top of it.
+ */
+.fallback {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(58% 46% at 68% 38%, color-mix(in srgb, var(--bh-gold) 16%, transparent) 0%, transparent 62%),
+    radial-gradient(42% 40% at 30% 72%, color-mix(in srgb, var(--bh-gold-deep) 40%, transparent) 0%, transparent 70%),
+    linear-gradient(160deg, var(--bh-bg-alt) 0%, var(--bh-bg) 60%);
+}

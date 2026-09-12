@@ -1,0 +1,11 @@
+.art {
+  color: var(--bh-gold);
+  opacity: 0.82;
+  transition:
+    opacity var(--bh-motion-fast) var(--bh-ease),
+    transform 600ms var(--bh-ease);
+}
+
+.art:hover {
+  opacity: 1;
+}

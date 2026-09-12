@@ -1,0 +1,229 @@
+.nav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 100;
+  height: var(--bh-nav-height);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 var(--bh-space-page);
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  transition:
+    background-color 420ms var(--bh-ease),
+    border-color 420ms var(--bh-ease),
+    backdrop-filter 420ms var(--bh-ease);
+}
+
+/* Gains a blurred dark plate once the hero has scrolled past. */
+.stuck {
+  background-color: color-mix(in srgb, var(--bh-bg) 78%, transparent);
+  border-bottom-color: var(--bh-border);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  backdrop-filter: blur(14px) saturate(120%);
+}
+
+.wordmark {
+  font-family: var(--bh-font-display);
+  font-size: 1.1875rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--bh-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.wordmark:hover {
+  color: var(--bh-gold-bright);
+}
+
+/* The gold tick in the wordmark — the only ornament it needs. */
+.mark {
+  color: var(--bh-gold);
+}
+
+.primaryNav {
+  display: flex;
+  margin-left: auto;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  list-style: none;
+  padding: 0;
+}
+
+.link {
+  position: relative;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--bh-text-dim);
+  text-decoration: none;
+  padding: 6px 0;
+  transition: color var(--bh-motion-fast) var(--bh-ease);
+}
+
+.link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--bh-gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--bh-motion-fast) var(--bh-ease);
+}
+
+.link:hover {
+  color: var(--bh-text);
+}
+
+.link:hover::after,
+.link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.cta {
+  margin-left: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border: 1px solid var(--bh-gold);
+  border-radius: var(--bh-radius-pill);
+  color: var(--bh-gold-bright);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--bh-motion-fast) var(--bh-ease),
+    color var(--bh-motion-fast) var(--bh-ease),
+    border-color var(--bh-motion-fast) var(--bh-ease);
+}
+
+.cta:hover {
+  background-color: var(--bh-gold);
+  border-color: var(--bh-gold);
+  color: var(--bh-bg);
+}
+
+.ctaIcon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+/* Mobile trigger — hidden on wide viewports. */
+.toggle {
+  display: none;
+  margin-left: auto;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--bh-border);
+  border-radius: var(--bh-radius-soft);
+  color: var(--bh-text);
+}
+
+.toggle:hover {
+  border-color: var(--bh-gold);
+  color: var(--bh-gold-bright);
+}
+
+.toggleBars {
+  display: grid;
+  gap: 5px;
+  width: 18px;
+}
+
+.toggleBars span {
+  display: block;
+  height: 1px;
+  background: currentColor;
+  transition: transform var(--bh-motion-fast) var(--bh-ease);
+}
+
+.toggle[aria-expanded="true"] .toggleBars span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.toggle[aria-expanded="true"] .toggleBars span:nth-child(2) {
+  opacity: 0;
+}
+
+.toggle[aria-expanded="true"] .toggleBars span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.panel {
+  position: fixed;
+  top: var(--bh-nav-height);
+  left: 0;
+  right: 0;
+  z-index: 99;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px var(--bh-space-page) 20px;
+  background-color: color-mix(in srgb, var(--bh-bg) 94%, transparent);
+  border-bottom: 1px solid var(--bh-border);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.panelOpen {
+  display: flex;
+}
+
+.panelLink {
+  display: block;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--bh-border);
+  font-family: var(--bh-font-display);
+  font-size: 1.375rem;
+  color: var(--bh-text);
+  text-decoration: none;
+}
+
+.panelLink:last-of-type {
+  border-bottom: 0;
+}
+
+.panelLink:hover {
+  color: var(--bh-gold-bright);
+}
+
+.panelCta {
+  margin-top: 12px;
+  justify-content: center;
+}
+
+@media (max-width: 800px) {
+  .primaryNav,
+  .links,
+  .cta {
+    display: none;
+  }
+
+  .toggle {
+    display: inline-flex;
+  }
+
+  .panel .cta {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 420px) {
+  .wordmark {
+    font-size: 1.0625rem;
+  }
+}

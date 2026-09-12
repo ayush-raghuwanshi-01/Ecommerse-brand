@@ -1,0 +1,210 @@
+.section {
+  padding: var(--bh-space-section) 0 0;
+  background: var(--bh-bg);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 40px;
+  padding: 0 var(--bh-space-page);
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.title {
+  font-family: var(--bh-font-display);
+  font-size: clamp(2rem, 4.6vw, 3.5rem);
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  color: var(--bh-text);
+}
+
+.note {
+  max-width: 44ch;
+  font-size: 0.9375rem;
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--bh-text-dim);
+}
+
+.railWrap {
+  position: relative;
+  margin-top: clamp(32px, 5vw, 56px);
+}
+
+.rail {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: var(--bh-space-page);
+  padding: 0 var(--bh-space-page) 22px;
+  background: var(--bh-bg);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+/* Hairline scrollbar, matching the palette. */
+.rail::-webkit-scrollbar {
+  height: 4px;
+}
+
+.rail::-webkit-scrollbar-track {
+  background: var(--bh-border);
+}
+
+.rail::-webkit-scrollbar-thumb {
+  background: var(--bh-gold);
+}
+
+.card {
+  position: relative;
+  flex: 0 0 auto;
+  width: clamp(238px, 30vw, 320px);
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--bh-border);
+  border-radius: var(--bh-radius-hair);
+  background: var(--bh-surface);
+  transition:
+    border-color var(--bh-motion-fast) var(--bh-ease),
+    background-color var(--bh-motion-fast) var(--bh-ease);
+}
+
+.card:hover,
+.card:focus-within {
+  border-color: color-mix(in srgb, var(--bh-gold) 60%, transparent);
+}
+
+.artPanel {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background:
+    radial-gradient(90% 70% at 50% 32%, color-mix(in srgb, var(--bh-gold-deep) 22%, transparent) 0%, transparent 70%),
+    var(--bh-bg-alt);
+  border-bottom: 1px solid var(--bh-border);
+  overflow: hidden;
+}
+
+.art {
+  width: 76%;
+  height: auto;
+  max-height: 100%;
+}
+
+.card:hover .art {
+  transform: translateY(-4px);
+}
+
+.tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--bh-gold) 55%, transparent);
+  border-radius: var(--bh-radius-pill);
+  background: color-mix(in srgb, var(--bh-bg) 70%, transparent);
+  color: var(--bh-gold-bright);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.illustrative {
+  position: absolute;
+  bottom: 10px;
+  right: 12px;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  color: color-mix(in srgb, var(--bh-text-dim) 82%, transparent);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 18px 20px;
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.name {
+  font-family: var(--bh-font-display);
+  font-size: 1.125rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--bh-text);
+}
+
+.price {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--bh-gold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ref {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--bh-text-dim);
+}
+
+.enquire {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--bh-border);
+  color: var(--bh-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color var(--bh-motion-fast) var(--bh-ease);
+}
+
+.enquire:hover {
+  color: var(--bh-gold-bright);
+}
+
+.enquireIcon {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: var(--bh-gold);
+}
+
+.footnote {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 6px var(--bh-space-page) 0;
+  font-size: 0.8125rem;
+  color: var(--bh-text-dim);
+}
+
+@media (max-width: 560px) {
+  .card {
+    width: min(78vw, 280px);
+  }
+
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

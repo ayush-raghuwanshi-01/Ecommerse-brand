@@ -1,0 +1,187 @@
+.hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: calc(var(--bh-nav-height) + 40px) var(--bh-space-page) 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Dark scrim over the 3D layer so the headline stays legible at any angle. */
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--bh-bg) 82%, transparent) 0%,
+      color-mix(in srgb, var(--bh-bg) 22%, transparent) 34%,
+      color-mix(in srgb, var(--bh-bg) 58%, transparent) 68%,
+      var(--bh-bg) 100%),
+    radial-gradient(120% 90% at 12% 100%, var(--bh-bg) 12%, transparent 62%);
+}
+
+/* Hairline frame — the quiet way of saying "editorial". */
+.frame {
+  position: absolute;
+  inset: calc(var(--bh-nav-height) + 12px) var(--bh-space-page) 20px var(--bh-space-page);
+  z-index: 1;
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--bh-border) 70%, transparent);
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding-bottom: clamp(48px, 9vh, 96px);
+}
+
+.headline {
+  max-width: 15ch;
+  font-family: var(--bh-font-display);
+  font-size: clamp(2.9rem, 8.6vw, 7rem);
+  font-weight: 300;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  color: var(--bh-text);
+}
+
+.headline em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--bh-gold);
+}
+
+.subheading {
+  margin-top: clamp(20px, 3vw, 32px);
+  max-width: 46ch;
+  font-size: clamp(1rem, 1.6vw, 1.1875rem);
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--bh-text-dim);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 20px;
+  margin-top: clamp(28px, 4vw, 44px);
+}
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  padding: 15px 30px;
+  background: var(--bh-gold);
+  border: 1px solid var(--bh-gold);
+  border-radius: var(--bh-radius-pill);
+  color: var(--bh-bg);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition:
+    background-color var(--bh-motion-fast) var(--bh-ease),
+    border-color var(--bh-motion-fast) var(--bh-ease),
+    color var(--bh-motion-fast) var(--bh-ease);
+}
+
+.primary:hover {
+  background: var(--bh-gold-bright);
+  border-color: var(--bh-gold-bright);
+  color: var(--bh-bg);
+}
+
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 28px;
+  border: 1px solid var(--bh-border);
+  border-radius: var(--bh-radius-pill);
+  color: var(--bh-text);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    border-color var(--bh-motion-fast) var(--bh-ease),
+    color var(--bh-motion-fast) var(--bh-ease);
+}
+
+.secondary:hover {
+  border-color: var(--bh-gold);
+  color: var(--bh-gold-bright);
+}
+
+.secondaryIcon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+/* Quiet meta strip pinned to the bottom of the frame. */
+.meta {
+  position: absolute;
+  left: var(--bh-space-page);
+  right: var(--bh-space-page);
+  bottom: 26px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 26px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bh-border);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--bh-text-dim);
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metaItem + .metaItem::before {
+  content: "";
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--bh-gold);
+}
+
+@media (max-width: 640px) {
+  .hero {
+    align-items: flex-end;
+    padding-top: calc(var(--bh-nav-height) + 24px);
+  }
+
+  .content {
+    padding-bottom: 96px;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .primary,
+  .secondary {
+    justify-content: center;
+  }
+
+  .meta {
+    bottom: 20px;
+    gap: 6px 16px;
+    font-size: 0.75rem;
+  }
+}

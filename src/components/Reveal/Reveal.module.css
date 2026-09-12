@@ -1,0 +1,26 @@
+/*
+ * The one and only scroll-reveal treatment: a single fade plus a slight rise,
+ * applied once on first appearance. No per-element scatter animation.
+ */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity var(--bh-motion-reveal) var(--bh-ease),
+    transform var(--bh-motion-reveal) var(--bh-ease);
+  will-change: opacity, transform;
+}
+
+.visible {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

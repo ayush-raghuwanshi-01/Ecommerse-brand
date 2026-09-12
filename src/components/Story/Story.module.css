@@ -1,0 +1,128 @@
+.section {
+  padding: var(--bh-space-section) var(--bh-space-page);
+  background: var(--bh-bg-alt);
+  border-top: 1px solid var(--bh-border);
+  border-bottom: 1px solid var(--bh-border);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  align-items: center;
+  gap: clamp(36px, 6vw, 88px);
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(22px, 3vw, 32px);
+}
+
+.quote {
+  position: relative;
+  padding-left: clamp(20px, 3vw, 34px);
+  border-left: 1px solid var(--bh-gold);
+  font-family: var(--bh-font-display);
+  font-size: clamp(1.5rem, 3.2vw, 2.375rem);
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--bh-text);
+}
+
+.attribution {
+  display: block;
+  margin-top: 18px;
+  font-family: var(--bh-font-body);
+  font-size: 0.8125rem;
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--bh-text-dim);
+}
+
+.body p {
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--bh-text) 82%, transparent);
+}
+
+.body p + p {
+  margin-top: 18px;
+}
+
+/* The panel tilts toward the pointer — see useTilt(). */
+.visual {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--bh-border);
+  border-radius: var(--bh-radius-hair);
+  background:
+    radial-gradient(78% 58% at 50% 28%, color-mix(in srgb, var(--bh-gold-deep) 34%, transparent) 0%, transparent 68%),
+    linear-gradient(165deg, var(--bh-surface) 0%, var(--bh-bg) 78%);
+  transform: perspective(1100px) rotateX(0deg) rotateY(0deg) scale(1);
+  transform-style: preserve-3d;
+  transition: transform 620ms var(--bh-ease);
+  will-change: transform;
+  overflow: hidden;
+}
+
+/*
+ * PERSONALISE ME — drop a real studio photograph in here when one exists
+ * (e.g. background-image on .visual, and delete .monogram / .caption).
+ */
+.monogram {
+  font-family: var(--bh-font-display);
+  font-size: clamp(4rem, 11vw, 7.5rem);
+  font-weight: 300;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: color-mix(in srgb, var(--bh-gold) 42%, transparent);
+  transform: translateZ(28px);
+}
+
+.innerFrame {
+  position: absolute;
+  inset: 16px;
+  border: 1px solid color-mix(in srgb, var(--bh-border) 80%, transparent);
+  pointer-events: none;
+}
+
+.caption {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 22px;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--bh-text-dim);
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .visual {
+    aspect-ratio: 16 / 11;
+    /* Tilt reads poorly on touch, and the order is better copy-first anyway. */
+    order: 2;
+  }
+
+  .copy {
+    order: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visual {
+    transform: none;
+    transition: none;
+  }
+}
