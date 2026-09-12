@@ -48,6 +48,26 @@ def retry(payload: RetryPaymentRequest, user: CurrentUser, db: Db):
     return session
 
 
+@router.post("/mock-capture/{order_id}", response_model=dict)
+def mock_capture(order_id: str, user: CurrentUser, db: Db):
+    """Dev/test only: simulates the gateway capturing payment when Razorpay keys
+    are absent (mock gateway). Refuses to exist in live mode."""
+    from app.core.config import settings as env_settings
+    from app.core.exceptions import ConflictError
+
+    if env_settings.razorpay_enabled:
+        raise ConflictError("Mock capture is disabled when Razorpay is configured.")
+    order = _own_order(db, order_id, user)
+    payment = payment_service.latest_payment(db, order)
+    payment_service.confirm_payment_success(
+        db, order,
+        provider_payment_id=f"mock_pay_{order.number}",
+        gateway_meta={"mock_capture": True},
+    )
+    db.commit()
+    return {"status": "paid", "order_number": order.number, "payment_id": payment.id}
+
+
 @router.get("/order/{order_id}", response_model=list[PaymentOut])
 def list_payments(order_id: str, user: CurrentUser, db: Db):
     order = _own_order(db, order_id, user)

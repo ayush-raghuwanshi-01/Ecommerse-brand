@@ -143,3 +143,14 @@ def test_audit_log_records_manager_actions(client, clean_db, product, manager_he
     assert audits[0].user_id == manager.id
     assert audits[0].role == "manager"
     assert audits[0].ip is not None
+
+
+def test_list_totals_accurate_with_eager_loads(client, clean_db, product, customer_headers,
+                                               staff_headers, address):
+    """Regression: page meta.total must equal real row count (joinedload-safe)."""
+    _cod_order(client, clean_db, product, customer_headers, address, key="tot-1")
+    _cod_order(client, clean_db, product, customer_headers, address, key="tot-2")
+    r = client.get("/api/v1/orders?page_size=10", headers=staff_headers)
+    assert r.json()["meta"]["total"] == 2
+    r = client.get("/api/v1/products?page_size=10")
+    assert r.json()["meta"]["total"] >= 1

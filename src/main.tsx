@@ -1,16 +1,74 @@
-import React,{Suspense} from 'react';import{createRoot}from'react-dom/client';import'./styles.css';import{Canvas,useFrame}from'@react-three/fiber';import{Environment}from'@react-three/drei';import{config,getWhatsAppLink}from'./config';import{useEffect,useRef,useState}from'react';import{Mesh}from'three';
-const products=[['01','The Waypoint','₹18,500','New'],['02','The Longline','₹24,000','Restock'],['03','The Transit','₹21,500',''],['04','The Field Coat','₹28,000','New'],['05','The Rook','₹16,800',''],['06','The Overcast','₹22,500','']] as const;
-type Product=typeof products[number];
-function useScrolled(){const[s,set]=useState(false);useEffect(()=>{const f=()=>set(scrollY>30);addEventListener('scroll',f);return()=>removeEventListener('scroll',f)},[]);return s}
-function useReveal(){const r=useRef<HTMLDivElement>(null);useEffect(()=>{const o=new IntersectionObserver(([e])=>e.isIntersecting&&r.current?.classList.add('visible'),{threshold:.12});if(r.current)o.observe(r.current);return()=>o.disconnect()},[]);return r}
-function Knot(){const ref=useRef<Mesh>(null);useFrame(({clock,mouse})=>{if(ref.current){ref.current.rotation.y=clock.elapsedTime*.22;ref.current.rotation.x=clock.elapsedTime*.12;ref.current.position.x+=(mouse.x*.45-ref.current.position.x)*.03;ref.current.position.y+=(mouse.y*.25-ref.current.position.y)*.03}});return <mesh ref={ref}><torusKnotGeometry args={[1.45,.42,180,32]}/><meshStandardMaterial color="#c9a24b" metalness={.9} roughness={.18}/></mesh>}
-function Hero3D(){return <Canvas className="hero-canvas" camera={{position:[0,0,5],fov:45}} gl={{alpha:true}}><ambientLight intensity={.35}/><pointLight position={[3,3,4]} intensity={18} color="#e8c873"/><pointLight position={[-4,-2,2]} intensity={10} color="#8a5e24"/><Suspense fallback={null}><Knot/><Environment preset="city"/></Suspense></Canvas>}
-function Nav(){const scroll=useScrolled();return <nav className={scroll?'scrolled':''}><a className="wordmark" href="#top"><BrandLogo/></a><div className="navlinks"><a href="#collection">Collection</a><a href="#story">Story</a><a href="#contact">Contact</a></div><a className="button small" href={getWhatsAppLink('Hello Black House, I would like to know more.')}>Chat on WhatsApp</a></nav>}
-function BrandLogo(){return <div className="brand-logo" aria-label="Black House"><strong>BLACK</strong><strong>HOUSE</strong><i/></div>}
-function Hero(){return <header id="top" className="hero"><video className="hero-video" autoPlay muted loop playsInline poster="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=2200&q=85"><source src="https://videos.pexels.com/video-files/853800/853800-hd_1920_1080_25fps.mp4" type="video/mp4"/></video><Hero3D/><div className="scrim"/><div className="hero-copy"><p className="eyebrow">Independent outerwear · New Delhi</p><h1>Made for the<br/><em>long way home.</em></h1><p className="lede">Small-batch layers for considered movement. Cut with intent, built to stay.</p><div className="actions"><a className="button" href="#collection">View the collection</a><a className="textlink" href={getWhatsAppLink('Hello Black House, I would like to view the collection.')}>Message us on WhatsApp ↗</a></div></div><div className="hero-index">BH / 24—25</div></header>}
-function Marquee(){return <div className="marquee"><div>Heavyweight cotton <i>•</i> Gold hardware <i>•</i> Small batch runs <i>•</i> Made to last <i>•</i> Heavyweight cotton <i>•</i> Gold hardware <i>•</i> Small batch runs <i>•</i> Made to last</div></div>}
-function Silhouette({index}:{index:number}){return <svg className="silhouette" viewBox="0 0 240 260" aria-label="Illustrative garment silhouette"><path d={index%3===0?'M83 38l-29 28 18 24v122h104V90l18-24-29-28-32 20H115L83 38z':'M77 35l-30 35 22 18v126h102V88l22-18-30-35-30 19H107L77 35z'}/><path d="M115 55v35m12-35v35M72 91h120M72 218h120"/><circle cx="121" cy="112" r="3"/><circle cx="121" cy="137" r="3"/></svg>}
-function Collection(){const r=useReveal();return <section id="collection" className="section collection"><div ref={r} className="reveal section-head"><p className="eyebrow">The current line</p><h2>Quiet forms. <em>Strong presence.</em></h2><p>Six considered silhouettes, produced in limited runs and numbered by hand.</p></div><div className="gallery">{products.map((p,i)=><article className="product" key={p[0]}><div className="product-art"><span>Illustrative placeholder</span><Silhouette index={i}/></div><div className="product-meta"><div><small>{p[3]}</small><h3>{p[1]}</h3></div><strong>{p[2]}</strong></div><a className="enquire" href={getWhatsAppLink(`Hello Black House, I am enquiring about ${p[1]}.`)}>Enquire on WhatsApp ↗</a></article>)}</div></section>}
-function Story(){const r=useReveal();return <section id="story" className="section story"><div ref={r} className="reveal story-copy"><p className="eyebrow">The house</p><blockquote>“A wardrobe should become more itself with time.”</blockquote><p>Black House began with a simple premise: the everyday layer deserves the same attention as the occasion piece.</p><p>We work slowly, in small batches, with durable cloth and hardware that earns its patina. No noise. Just clothes with a point of view.</p></div><div className="story-panel"><div className="panel-mark">BH</div><span>Material study / 2024</span></div></section>}
-function Contact(){const[name,setName]=useState('');const[email,setEmail]=useState('');const[phone,setPhone]=useState('');const[msg,setMsg]=useState('');const[sent,setSent]=useState(false);const submit=(e:React.FormEvent)=>{e.preventDefault();setSent(true);window.location.href=`mailto:${config.contactEmail}?subject=${encodeURIComponent('Enquiry from '+name)}&body=${encodeURIComponent(`Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\n${msg}`)}`;setTimeout(()=>setSent(false),4000)};return <section id="contact" className="section contact"><div className="contact-intro"><p className="eyebrow">Start a conversation</p><h2>Good things begin with a <em>hello.</em></h2><p>Ask about a piece, a private appointment, or just say hello.</p><div className="whatsapp-card"><p className="eyebrow">Direct line</p><h3>+91 00000 00000</h3><p>Studio hours, Monday–Saturday<br/>10:00–18:00 IST · Replies within one working day</p><a className="button" href={getWhatsAppLink('Hello Black House, I would like to start a conversation.')}>Chat on WhatsApp</a></div></div><form onSubmit={submit}><label>Name<input required value={name} onChange={e=>setName(e.target.value)} /></label><label>Email<input required type="email" value={email} onChange={e=>setEmail(e.target.value)} /></label><label>Phone <span>(optional)</span><input value={phone} onChange={e=>setPhone(e.target.value)} /></label><label>Message<textarea required rows={4} value={msg} onChange={e=>setMsg(e.target.value)} /></label><button className="button" type="submit">Send enquiry</button>{sent&&<p className="status">Opening your email app…</p>}<small>This opens your email client. A direct form service can replace this later.</small></form></section>}
-function Footer(){return <footer><a className="wordmark" href="#top">BLACK HOUSE</a><div><a href="#">Instagram</a><a href="#">Journal</a><a href={getWhatsAppLink('Hello Black House.')}>WhatsApp</a></div><a href="#top">Back to top ↑</a><small>© 2024 Black House. Built in small batches.</small></footer>};function App(){return <><Nav/><Hero/><Marquee/><Collection/><Story/><Contact/><Footer/><a className="fab" href={getWhatsAppLink('Hello Black House, I would like to know more.')} aria-label="Chat on WhatsApp">◔</a></>}createRoot(document.getElementById('root')!).render(<App/>);
+import { Suspense, lazy, useEffect, type ReactNode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import CartDrawer from './components/CartDrawer';
+import Footer from './components/Footer';
+import Nav from './components/Nav';
+import { Spinner } from './components/bits';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
+import { ToastProvider } from './context/ToastContext';
+import AccountPage from './pages/Account';
+import AuthPage from './pages/Auth';
+import BulkPage from './pages/Bulk';
+import Checkout from './pages/Checkout';
+import Home from './pages/Home';
+import { OrderDetailPage, OrdersPage } from './pages/Orders';
+import ProductPage from './pages/Product';
+import Shop from './pages/Shop';
+import StoryPage from './pages/Story';
+import './styles.css';
+
+const AdminPage = lazy(() => import('./pages/Admin'));
+
+function RequireAuth({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+  if (loading) return <main className="page"><Spinner /></main>;
+  if (!user) return <Navigate to={`/login?next=${encodeURIComponent(location.pathname)}`} replace />;
+  return <>{children}</>;
+}
+
+function ScrollTop() {
+  const { pathname } = useLocation();
+  useEffect(() => window.scrollTo({ top: 0 }), [pathname]);
+  return null;
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <ToastProvider>
+        <CartProvider>
+          <BrowserRouter>
+            <ScrollTop />
+            <a className="skip-link" href="#content">Skip to content</a>
+            <Nav />
+            <div id="content">
+              <Suspense fallback={<main className="page"><Spinner /></main>}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/shop" element={<Shop />} />
+                  <Route path="/product/:slug" element={<ProductPage />} />
+                  <Route path="/story" element={<StoryPage />} />
+                  <Route path="/bulk" element={<BulkPage />} />
+                  <Route path="/login" element={<AuthPage />} />
+                  <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
+                  <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
+                  <Route path="/orders" element={<RequireAuth><OrdersPage /></RequireAuth>} />
+                  <Route path="/order/:id" element={<RequireAuth><OrderDetailPage /></RequireAuth>} />
+                  <Route path="/admin" element={<AdminPage />} />
+                  <Route path="*" element={<main className="page"><p className="empty">Page not found.</p></main>} />
+                </Routes>
+              </Suspense>
+            </div>
+            <Footer />
+            <CartDrawer />
+          </BrowserRouter>
+        </CartProvider>
+      </ToastProvider>
+    </AuthProvider>
+  );
+}
+
+createRoot(document.getElementById('root')!).render(<App />);

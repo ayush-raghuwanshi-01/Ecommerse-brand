@@ -138,3 +138,16 @@ def test_refund_requires_manager(client, clean_db, product, customer_headers, st
     assert clean_db.get(Refund, refund.id).status == RefundStatus.completed
     order = clean_db.get(Order, order_id)
     assert order.payment_status == PaymentStatus.refunded
+
+
+def test_mock_capture_completes_prepaid_order(client, clean_db, product, customer_headers, address):
+    body = _place_prepaid(client, clean_db, product, customer_headers, address, key="pay-mockcap")
+    order_id = body["order"]["id"]
+    r = client.post(f"/api/v1/payments/mock-capture/{order_id}", headers=customer_headers)
+    assert r.status_code == 200, r.text
+    order = clean_db.get(Order, order_id)
+    assert order.payment_status == PaymentStatus.paid
+    assert order.status == OrderStatus.confirmed
+    # idempotent: second call is harmless
+    r2 = client.post(f"/api/v1/payments/mock-capture/{order_id}", headers=customer_headers)
+    assert r2.status_code == 200

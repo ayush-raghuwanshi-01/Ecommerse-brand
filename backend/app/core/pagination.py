@@ -3,7 +3,7 @@
 from typing import Any, TypeVar
 
 from fastapi import Query
-from sqlalchemy import Select
+from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session
 
 T = TypeVar("T")
@@ -29,12 +29,12 @@ class PageParams:
 
 def paginate(db: Session, stmt: Select, params: PageParams, sort_columns: dict[str, Any] | None = None):
     """Apply sorting + pagination. Returns (items, total)."""
-    from sqlalchemy import func
-
     if params.sort_by and sort_columns and params.sort_by in sort_columns:
         col = sort_columns[params.sort_by]
         stmt = stmt.order_by(col.desc() if params.sort_dir == "desc" else col.asc())
-    total = db.scalar(stmt.with_only_columns(func.count()).order_by(None)) or 0
+    # Count via subquery: `with_only_columns(func.count())` implicitly groups by
+    # the entity PK and returns wrong totals for ORM selects.
+    total = db.scalar(select(func.count()).select_from(stmt.order_by(None).subquery())) or 0
     stmt = stmt.offset((params.page - 1) * params.page_size).limit(params.page_size)
     return db.scalars(stmt).unique().all(), total
 
