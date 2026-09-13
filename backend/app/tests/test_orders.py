@@ -1,9 +1,7 @@
 from sqlalchemy import select
 
 from app.models.commerce import AuditLog
-from app.models.order import Order, OrderStatus
-from app.tests.conftest import _user, auth_headers, make_product, variant_of
-from app.models.user import UserRole
+from app.tests.conftest import make_product, variant_of
 
 
 def _cod_order(client, clean_db, product, customer_headers, address, qty=1, key="ord-1"):
@@ -110,7 +108,6 @@ def test_order_edit_revalidates_and_audits(client, clean_db, product, customer_h
                                            staff_headers, address):
     order = _cod_order(client, clean_db, product, customer_headers, address, qty=1, key="ord-7")
     item_id = order["items"][0]["id"]
-    m = variant_of(product, "M")
     r = client.patch(f"/api/v1/orders/{order['id']}", headers=staff_headers, json={
         "line_updates": [{"order_item_id": item_id, "qty": 4}],
     })

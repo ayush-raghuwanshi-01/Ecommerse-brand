@@ -5,8 +5,8 @@ from sqlalchemy import select
 from app.models.commerce import Notification, RestockStatus, RestockSubscription
 from app.models.inventory import AdjustmentType, InventoryAdjustment
 from app.models.order import Order, OrderStatus
-from app.tests.conftest import _user, auth_headers, make_product, variant_of
 from app.models.user import UserRole
+from app.tests.conftest import _user, auth_headers, make_product, variant_of
 
 
 def test_adjustment_ledger_and_negative_prevention(client, clean_db, product, staff_headers, manager):
@@ -22,9 +22,12 @@ def test_adjustment_ledger_and_negative_prevention(client, clean_db, product, st
     ledgers = clean_db.scalars(
         select(InventoryAdjustment).where(InventoryAdjustment.variant_id == m.id)
     ).all()
-    assert any(l.adjustment_type == AdjustmentType.increase and l.qty_change == 10 for l in ledgers)
+    assert any(
+        entry.adjustment_type == AdjustmentType.increase and entry.qty_change == 10
+        for entry in ledgers
+    )
     # ledger records user + before/after
-    inc = next(l for l in ledgers if l.adjustment_type == AdjustmentType.increase)
+    inc = next(e for e in ledgers if e.adjustment_type == AdjustmentType.increase)
     assert inc.user_id is not None and inc.qty_after == inc.qty_before + 10
 
 

@@ -1,17 +1,17 @@
 """Shipments (courier abstraction data) and returns/exchanges/refunds."""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.database import Base
 from app.core.types import UTCDateTime
-from app.core.database import Base, utcnow
 from app.models.base import Timestamps, UUIDPk, enum_col
 
 
-class ShipmentStatus(str, Enum):
+class ShipmentStatus(StrEnum):
     pending = "pending"
     ready_to_ship = "ready_to_ship"
     picked_up = "picked_up"
@@ -41,14 +41,14 @@ class Shipment(UUIDPk, Timestamps, Base):
     order = relationship("Order")
 
 
-class ReturnType(str, Enum):
+class ReturnType(StrEnum):
     refund = "refund"
     size_exchange = "size_exchange"
     product_exchange = "product_exchange"
     replacement = "replacement"
 
 
-class ReturnReason(str, Enum):
+class ReturnReason(StrEnum):
     size_issue = "size_issue"
     wrong_product = "wrong_product"
     damaged_product = "damaged_product"
@@ -65,7 +65,7 @@ COMPANY_PAYS_RETURN_SHIPPING = {
 }
 
 
-class ReturnStatus(str, Enum):
+class ReturnStatus(StrEnum):
     requested = "requested"
     under_review = "under_review"
     approved = "approved"
@@ -99,7 +99,7 @@ class ReturnRequest(UUIDPk, Timestamps, Base):
     refunds: Mapped[list["Refund"]] = relationship(back_populates="return_request")
 
 
-class RefundStatus(str, Enum):
+class RefundStatus(StrEnum):
     requested = "requested"
     approved = "approved"
     processing = "processing"

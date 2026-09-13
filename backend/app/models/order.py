@@ -1,10 +1,10 @@
 """Orders, order items (immutable snapshots), status history."""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import JSON, Boolean, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base, utcnow
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from app.models.payment import Payment
 
 
-class OrderSource(str, Enum):
+class OrderSource(StrEnum):
     website = "website"
     whatsapp = "whatsapp"
     instagram = "instagram"
@@ -26,13 +26,13 @@ class OrderSource(str, Enum):
     staff_manual = "staff_manual"
 
 
-class PaymentMethod(str, Enum):
+class PaymentMethod(StrEnum):
     razorpay = "razorpay"      # cards / netbanking / wallets via gateway
     upi = "upi"                # UPI via Razorpay
     cod = "cod"
 
 
-class PaymentStatus(str, Enum):
+class PaymentStatus(StrEnum):
     created = "created"
     pending = "pending"
     pending_cod = "pending_cod"
@@ -44,7 +44,7 @@ class PaymentStatus(str, Enum):
     refunded = "refunded"
 
 
-class OrderStatus(str, Enum):
+class OrderStatus(StrEnum):
     pending_payment = "pending_payment"
     confirmed = "confirmed"
     processing = "processing"
@@ -70,14 +70,14 @@ PACKED_AND_BEYOND = {
 }
 
 
-class FulfillmentStatus(str, Enum):
+class FulfillmentStatus(StrEnum):
     unfulfilled = "unfulfilled"
     partially_fulfilled = "partially_fulfilled"
     fulfilled = "fulfilled"
     returned = "returned"
 
 
-class CancellationReason(str, Enum):
+class CancellationReason(StrEnum):
     ordered_by_mistake = "ordered_by_mistake"
     changed_mind = "changed_mind"
     payment_issue = "payment_issue"

@@ -50,13 +50,13 @@ def test_role_protection(client, customer_headers, staff_headers, manager_header
 
 
 def test_password_reset_flow(client, clean_db):
-    user = _user(clean_db, UserRole.customer, email="reset@example.com")
+    # Created for its side effect: the reset flow must find a matching user.
+    _user(clean_db, UserRole.customer, email="reset@example.com")
     r = client.post("/api/v1/auth/password-reset/request", json={"email": "reset@example.com"})
     assert r.status_code == 200
     from sqlalchemy import select
 
     from app.models.commerce import Notification
-    from app.models.user import AuthToken, AuthTokenPurpose
     note = clean_db.scalars(select(Notification).where(Notification.recipient == "reset@example.com")).first()
     token = note.payload_json["reset_token"]
     r = client.post("/api/v1/auth/password-reset/confirm", json={"token": token, "new_password": "BrandNew@123"})

@@ -8,7 +8,6 @@ gateway is re-queried (live mode) before money is considered captured.
 import hashlib
 import hmac
 from abc import ABC, abstractmethod
-from typing import Any
 from uuid import uuid4
 
 import httpx

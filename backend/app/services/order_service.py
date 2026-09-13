@@ -22,13 +22,13 @@ from app.core.exceptions import (
 from app.models.cart import Cart
 from app.models.commerce import Coupon
 from app.models.order import (
+    PACKED_AND_BEYOND,
     CancellationReason,
     Order,
     OrderItem,
     OrderSource,
     OrderStatus,
     OrderStatusHistory,
-    PACKED_AND_BEYOND,
     PaymentMethod,
     PaymentStatus,
 )
@@ -268,8 +268,8 @@ def place_order(
     )
     _reserve_all(db, order, lines)
 
-    from app.models.payment import Payment, PaymentProvider
     from app.core.config import settings as env_settings
+    from app.models.payment import Payment, PaymentProvider
 
     db.add(
         Payment(

@@ -6,16 +6,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.api.v1.orders import serialize_order
 from app.core.database import get_db
 from app.core.deps import StaffUser
 from app.core.exceptions import NotFoundError
 from app.models.order import OrderSource
 from app.models.user import User
 from app.schemas.order import PaymentSessionOut, StaffOrderCreateRequest
-from app.schemas.order import OrderOut
 from app.services import order_service, payment_service
-
-from app.api.v1.orders import serialize_order
 
 router = APIRouter(prefix="/staff", tags=["staff"])
 Db = Annotated[Session, Depends(get_db)]

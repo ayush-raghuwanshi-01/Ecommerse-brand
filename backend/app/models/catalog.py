@@ -1,13 +1,13 @@
 """Catalog: categories, collections, products, size variants, images."""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Numeric, String, Table, Text
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, Numeric, String, Table, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.types import UTCDateTime
 from app.core.database import Base, utcnow
+from app.core.types import UTCDateTime
 from app.models.base import Timestamps, UUIDPk, enum_col
 
 product_tags = Table(
@@ -18,7 +18,7 @@ product_tags = Table(
 )
 
 
-class ProductStatus(str, Enum):
+class ProductStatus(StrEnum):
     draft = "draft"
     upcoming = "upcoming"
     active = "active"
@@ -26,7 +26,7 @@ class ProductStatus(str, Enum):
     archived = "archived"
 
 
-class VariantSize(str, Enum):
+class VariantSize(StrEnum):
     XS = "XS"
     S = "S"
     M = "M"
@@ -35,7 +35,7 @@ class VariantSize(str, Enum):
     XXL = "XXL"
 
 
-class VariantAvailability(str, Enum):
+class VariantAvailability(StrEnum):
     available = "available"
     low_stock = "low_stock"
     out_of_stock = "out_of_stock"

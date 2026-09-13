@@ -1,6 +1,4 @@
-from sqlalchemy import select
 
-from app.models.commerce import BulkEnquiryStatus
 from app.tests.conftest import variant_of
 
 

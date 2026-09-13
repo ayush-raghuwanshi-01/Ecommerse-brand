@@ -59,4 +59,15 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
-ignore = ["B008"]  # Depends() in default args is FastAPI idiomatic
+ignore = [
+    "B008",   # Depends() in default args is FastAPI idiomatic
+    # UP046 wants `class Page[T](BaseModel)` (PEP 695) instead of
+    # `class Page(BaseModel, Generic[T])`. Rejected deliberately:
+    #   * it is a single, purely cosmetic occurrence in a Pydantic *generic*
+    #     model, where Pydantic resolves parameters via __pydantic_generic_metadata__
+    #     built from the Generic[T] base — PEP 695 support there is version-sensitive;
+    #   * the dev sandbox runs Python 3.11, where PEP 695 is a hard SyntaxError,
+    #     so the rewrite cannot be validated locally (prod/Docker/CI are 3.12).
+    # Not worth trading a verified working generic for an unverifiable one.
+    "UP046",
+]

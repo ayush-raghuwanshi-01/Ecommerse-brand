@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db, utcnow
@@ -12,7 +12,7 @@ from app.core.deps import AdminUser, ManagerUser
 from app.core.pagination import PageParams, page_meta, paginate
 from app.models.catalog import ProductVariant
 from app.models.commerce import AuditLog, ShippingRule
-from app.models.order import Order, OrderStatus, PaymentStatus
+from app.models.order import Order, PaymentStatus
 from app.schemas.common import Message, Page
 from app.schemas.ops import (
     AuditLogOut,

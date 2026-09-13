@@ -5,11 +5,9 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import CurrentUser
-from app.models.user import User
 from app.schemas.common import Message
 from app.schemas.order import CartAddRequest, CartOut, CartUpdateRequest, CouponApplyRequest
 from app.services import cart_service, shipping_service
-
 
 router = APIRouter(prefix="/carts", tags=["carts"])
 Db = Annotated[Session, Depends(get_db)]
@@ -107,7 +105,10 @@ def remove_coupon(user: CurrentUser, db: Db):
 
 @router.get("/me/shipping-estimate", response_model=dict)
 def shipping_estimate(postal_code: str, user: CurrentUser, db: Db):
-    cart = cart_service.get_or_create_cart(db, user)
+    # The cart is deliberately not loaded: this endpoint quotes a rate for a PIN
+    # code, and shipping is state/PIN-based rather than weight- or value-based,
+    # so the cart contents cannot change the answer. Fetching it here only
+    # created a cart row as a side effect of a read-only GET.
     result = shipping_service.get_provider().check_serviceability(db, postal_code)
     return {
         "postal_code": postal_code,

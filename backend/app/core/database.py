@@ -5,6 +5,7 @@ degrade gracefully on SQLite (conditional UPDATE guards provide safety there).
 """
 
 from collections.abc import Generator
+from datetime import UTC
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
@@ -70,6 +71,6 @@ def supports_row_locking(db: Session) -> bool:
 
 
 def utcnow():
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)

@@ -6,11 +6,11 @@ from datetime import timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core import security
 from app.core.config import settings
 from app.core.database import utcnow
 from app.core.exceptions import AuthenticationError, ConflictError, TokenError
 from app.models.user import AuthToken, AuthTokenPurpose, User, UserRole
-from app.core import security
 from app.services import notification_service
 
 

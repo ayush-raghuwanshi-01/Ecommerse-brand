@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import ManagerUser, StaffUser
+from app.core.deps import StaffUser
 from app.core.pagination import PageParams, page_meta, paginate
 from app.models.catalog import ProductVariant
 from app.models.inventory import AdjustmentType, InventoryAdjustment

@@ -13,7 +13,7 @@ of the aggregation UI.
 import json
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.core.config import settings
 
@@ -36,7 +36,7 @@ class JsonFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, object] = {
-            "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(
+            "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(
                 timespec="milliseconds"
             ),
             "level": record.levelname,

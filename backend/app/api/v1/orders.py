@@ -10,7 +10,7 @@ from app.core.exceptions import NotFoundError, PermissionDeniedError
 from app.core.pagination import PageParams, page_meta, paginate
 from app.models.order import Order, OrderStatus
 from app.models.user import User
-from app.schemas.common import Message, Page
+from app.schemas.common import Page
 from app.schemas.order import (
     CancelDecision,
     CancelRequest,
@@ -20,7 +20,7 @@ from app.schemas.order import (
     OrderOut,
     StatusUpdateRequest,
 )
-from app.services import audit_service, order_service, payment_service
+from app.services import order_service, payment_service
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 Db = Annotated[Session, Depends(get_db)]

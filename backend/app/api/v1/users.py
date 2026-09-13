@@ -8,7 +8,7 @@ from app.core.deps import AdminUser, CurrentUser, StaffUser
 from app.core.exceptions import NotFoundError
 from app.core.pagination import PageParams, page_meta, paginate
 from app.models.user import Address, User
-from app.schemas.auth import AddressOut, AddressBase, UserOut, UserUpdate
+from app.schemas.auth import AddressBase, AddressOut, UserOut, UserUpdate
 from app.schemas.common import Page
 from app.services import audit_service
 

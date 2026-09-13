@@ -1,17 +1,17 @@
 """Warehouses and the inventory movement ledger."""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.types import UTCDateTime
 from app.core.database import Base, utcnow
+from app.core.types import UTCDateTime
 from app.models.base import Timestamps, UUIDPk, enum_col
 
 
-class AdjustmentType(str, Enum):
+class AdjustmentType(StrEnum):
     # Manual adjustment reasons (business-specified)
     increase = "increase"
     decrease = "decrease"

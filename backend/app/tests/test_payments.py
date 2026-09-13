@@ -8,7 +8,7 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.core.database import utcnow
 from app.models.order import Order, OrderStatus, PaymentStatus
-from app.models.payment import Payment, PaymentRecordStatus
+from app.models.payment import Payment
 from app.models.returns import Refund, RefundStatus
 from app.tests.conftest import variant_of
 

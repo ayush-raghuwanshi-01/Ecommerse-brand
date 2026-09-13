@@ -5,13 +5,13 @@ from fastapi import APIRouter, Depends, File, Request, UploadFile
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, joinedload
 
+from app.core import uploads
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.deps import ManagerUser, StaffUser
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.logging import get_logger
 from app.core.pagination import PageParams, page_meta, paginate
-from app.core import uploads
 from app.models.catalog import (
     Product,
     ProductImage,

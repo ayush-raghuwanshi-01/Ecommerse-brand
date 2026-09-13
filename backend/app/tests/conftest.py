@@ -26,7 +26,6 @@ from app.models.catalog import (  # noqa: E402
 )
 from app.models.inventory import Warehouse  # noqa: E402
 from app.models.user import Address, User, UserRole  # noqa: E402
-from app.services import settings_service  # noqa: E402
 
 
 @pytest.fixture(scope="session", autouse=True)

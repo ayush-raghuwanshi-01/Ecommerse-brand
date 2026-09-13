@@ -1,12 +1,7 @@
-import json
 from datetime import timedelta
 
-from sqlalchemy import select
-
 from app.core.database import utcnow
-from app.models.catalog import ProductStatus
 from app.models.commerce import Coupon
-from app.models.order import Order, OrderStatus
 from app.tests.conftest import make_product, variant_of
 
 

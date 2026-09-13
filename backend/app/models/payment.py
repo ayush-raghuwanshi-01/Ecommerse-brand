@@ -1,23 +1,23 @@
 """Payments, webhook event log (idempotency), checkout idempotency keys."""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.types import UTCDateTime
 from app.core.database import Base, utcnow
+from app.core.types import UTCDateTime
 from app.models.base import Timestamps, UUIDPk, enum_col
 from app.models.order import Order
 
 
-class PaymentProvider(str, Enum):
+class PaymentProvider(StrEnum):
     razorpay = "razorpay"
     mock = "mock"
 
 
-class PaymentRecordStatus(str, Enum):
+class PaymentRecordStatus(StrEnum):
     created = "created"
     pending = "pending"
     authorized = "authorized"

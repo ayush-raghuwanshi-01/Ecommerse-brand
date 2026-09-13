@@ -6,7 +6,7 @@ Uses Redis when REDIS_URL is configured; otherwise an in-process TTL bucket
 
 import time
 from collections import defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from threading import Lock
 
 from fastapi import Request

@@ -5,11 +5,12 @@ from enum import Enum
 from typing import Any
 from uuid import uuid4
 
-from sqlalchemy import DateTime, Enum as SAEnum, String
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.types import UTCDateTime
 from app.core.database import utcnow
+from app.core.types import UTCDateTime
 
 
 class UUIDPk:

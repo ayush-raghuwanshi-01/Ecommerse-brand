@@ -149,7 +149,6 @@ def complete_refund(db: Session, refund: Refund, *, gateway_meta: dict | None = 
             db, event_type="refund_completed", recipient=order.customer.email,
             payload={"order_number": order.number, "amount_paise": refund.amount_paise},
         )
-    from app.models.user import User
 
     audit_service.record(
         db, user=None, action="refund.complete", entity_type="refund", entity_id=refund.id,

@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from app.core.database import utcnow
 from app.core.exceptions import NotFoundError, PolicyError, ValidationError
 from app.models.catalog import ProductVariant
-from app.models.inventory import AdjustmentType
 from app.models.order import Order, OrderStatus
 from app.models.returns import (
     COMPANY_PAYS_RETURN_SHIPPING,
@@ -17,7 +16,13 @@ from app.models.returns import (
     ReturnType,
 )
 from app.models.user import User
-from app.services import audit_service, inventory_service, notification_service, refund_service, settings_service
+from app.services import (
+    audit_service,
+    inventory_service,
+    notification_service,
+    refund_service,
+    settings_service,
+)
 
 RETURN_FLOW = [
     ReturnStatus.requested,

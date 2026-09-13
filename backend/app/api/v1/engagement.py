@@ -16,7 +16,6 @@ from app.models.commerce import (
     RestockStatus,
     RestockSubscription,
 )
-from app.models.user import User
 from app.schemas.common import Message, Page
 from app.schemas.ops import (
     BulkEnquiryCreate,
