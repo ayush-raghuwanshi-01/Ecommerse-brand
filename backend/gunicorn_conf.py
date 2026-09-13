@@ -63,6 +63,21 @@ access_log_format = '%(h)s "%(r)s" %(s)s %(b)s %(L)ss'
 
 proc_name = "blackhouse-api"
 
+# ── Proxy headers ────────────────────────────────────────────────────────────
+# On every PaaS target (Render, Railway, Fly) the container is reached only
+# through the platform's load balancer, so the TCP peer is the proxy rather than
+# the shopper. Uvicorn's ProxyHeadersMiddleware rewrites request.client.host
+# from X-Forwarded-For and the URL scheme from X-Forwarded-Proto when the peer is
+# in this allow-list. Without it every caller shares one IP, which collapses
+# rate limiting into a single site-wide bucket and records our own infra as the
+# actor in the audit log.
+#
+# "*" trusts whatever the proxy sends. That is correct here because the port is
+# not internet-reachable except via the platform LB. If you ever expose the
+# container directly, set FORWARDED_ALLOW_IPS to the specific upstream address
+# (and TRUST_PROXY_HEADERS=false) or X-Forwarded-For becomes a rate-limit bypass.
+forwarded_allow_ips = os.environ.get("FORWARDED_ALLOW_IPS", "*")
+
 
 def when_ready(server):  # pragma: no cover - gunicorn hook
     server.log.info("blackhouse-api ready: bind=%s workers=%s timeout=%ss", bind, workers, timeout)

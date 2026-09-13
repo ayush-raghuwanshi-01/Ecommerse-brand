@@ -129,12 +129,69 @@ point-in-time recovery.
 | `REDIS_URL` | *(empty)* | e.g. `redis://localhost:6379/0`. Empty = in-process rate limiting. |
 
 Redis backs the **shared rate limiter** only. With it unset, each replica keeps its own in-memory
-bucket, so a determined client gets `RATE_LIMIT_PER_MINUTE × replicas` attempts. That is
+bucket, so a determined client gets `RATE_LIMIT_PER_MINUTE × replicas × workers` attempts. That is
 acceptable for one replica and wrong for more. `/readyz` reports Redis as `ok`, `unavailable` or
 `disabled` — unavailable degrades rather than failing readiness, because rate limiting is not
 worth pulling a healthy replica out of rotation.
 
 Requires `pip install ".[redis]"`.
+
+**Set `REDIS_URL` in production.** Without it the limiter is per-worker, which means the effective
+budget scales with the number of processes you are running — precisely the opposite of what you
+want when you scale out to handle traffic.
+
+### 3.1 Rate limiting tiers
+
+Two tiers, deliberately (`app/core/ratelimit.py`):
+
+| Tier | Limit | Keyed by | Applied to |
+|---|---|---|---|
+| Strict (opt-in) | `RATE_LIMIT_PER_MINUTE` or the per-route override | client IP **+ path** | `/auth/login`, `/auth/register`, `/auth/password-reset/request` |
+| Blanket (default-on) | `RATE_LIMIT_DEFAULT_PER_MINUTE` | user id if authenticated, else client IP | every other `/api/` route |
+
+The blanket tier exists because a decorator is opt-in: with only the auth endpoints decorated, the
+other ~90 handlers had no limit at all. `RateLimitMiddleware` inverts that, so a newly added
+endpoint is protected unless it is explicitly exempted.
+
+The strict tier is keyed by IP rather than user id on purpose — credential stuffing and
+password-reset abuse must be throttled per source address even when the caller is anonymous, and an
+attacker holding many accounts should not get a fresh budget per account. Conversely the blanket
+tier is keyed by user id so that shoppers behind one NAT address (corporate offices, hostels, mobile
+carriers) do not collectively exhaust a single budget.
+
+Exempt from all limiting: `/healthz`, `/readyz`, `/metrics`, `/docs`, `/redoc`, `/openapi.json`, and
+anything outside `/api/` (including the `/static/uploads` mount). Throttling a health probe would
+get a healthy instance marked unhealthy and killed.
+
+Rejected requests return `429` with a `Retry-After` header and the standard
+`{"error": {"code": "RATE_LIMITED", ...}}` envelope. `Retry-After` is in CORS `expose_headers` so a
+browser client can actually read it.
+
+The in-process fallback is memory-bounded (`_MAX_KEYS = 50_000`, LRU eviction) so a client minting
+unbounded keys cannot grow the worker until it is OOM-killed.
+
+### 3.2 Proxy trust and the real client IP
+
+On every PaaS target the container is reached only through the platform load balancer, so the TCP
+peer of each request is **the proxy, not the shopper**. Left unhandled this silently breaks two
+things: every caller collapses into one rate-limit bucket, and the audit log records your own
+infrastructure as the actor instead of the person who cancelled the order.
+
+Two settings fix it, and both default correctly for a PaaS deploy:
+
+* `FORWARDED_ALLOW_IPS` (default `*`) — tells Gunicorn/Uvicorn's `ProxyHeadersMiddleware` to rewrite
+  `request.client.host` from `X-Forwarded-For` and the URL scheme from `X-Forwarded-Proto`. The
+  scheme matters for the `Secure` cookie flag.
+* `TRUST_PROXY_HEADERS` (default `true`) — `app/core/net.py:client_ip()` resolves the real address
+  for the rate limiter, audit log and request log.
+
+`X-Forwarded-For` is client-controlled, so this is only safe when the port is not internet-reachable
+except through the trusted proxy — which is the case on Render, Railway and Fly. **If you ever expose
+the container directly**, set `TRUST_PROXY_HEADERS=false` and pin `FORWARDED_ALLOW_IPS` to the
+specific upstream address, or the header becomes a trivial rate-limit bypass.
+
+Malformed and over-long header values are rejected rather than trusted: they fall back to the socket
+peer, so a client cannot poison a bucket key or inject arbitrary text into structured logs.
 
 ---
 
@@ -312,7 +369,11 @@ the initial default.
 | `PINCODE_MODE` | `denylist` | `denylist` = serviceable except blocked ranges; `allowlist` = only listed. Seeded rules assume `denylist`. |
 | `STAFF_CAN_CANCEL_BEFORE_PACKING` | `true` | After packing, manager approval is always required. |
 | `ORDER_NUMBER_PREFIX` | `BH` | e.g. `BH-1042`. |
-| `RATE_LIMIT_PER_MINUTE` | `30` | Default bucket for rate-limited routes. |
+| `RATE_LIMIT_PER_MINUTE` | `30` | Strict per-route tier (login, register, password reset). Keyed by IP + path. |
+| `RATE_LIMIT_DEFAULT_PER_MINUTE` | `120` | Blanket tier applied by middleware to every other `/api/` route. Keyed by user id when authenticated, else IP. |
+| `RATE_LIMIT_ENABLED` | `true` | Master kill switch. Set `false` to disable all limiting (useful during a load test). |
+| `TRUST_PROXY_HEADERS` | `true` | Read the real client IP from `X-Forwarded-For`. Must stay `true` behind a PaaS proxy; set `false` if the container is directly exposed. |
+| `FORWARDED_ALLOW_IPS` | `*` | Gunicorn/Uvicorn trusted-proxy allow-list. See §3. |
 
 Prices are **GST-inclusive**; the tax component is derived per line as
 `taxable = gross / (1 + gst%)`. Seeded GST is 5% (the apparel slab) and is configurable per

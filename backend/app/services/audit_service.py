@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import Request
 from sqlalchemy.orm import Session
 
+from app.core.net import client_ip
 from app.models.commerce import AuditLog
 from app.models.user import User
 
@@ -68,7 +69,7 @@ def record(
         entity_id=entity_id,
         before_json=_snapshot(before),
         after_json=_snapshot(after),
-        ip=request.client.host if request and request.client else None,
+        ip=client_ip(request) if request else None,
         user_agent=request.headers.get("user-agent") if request else None,
     )
     db.add(entry)

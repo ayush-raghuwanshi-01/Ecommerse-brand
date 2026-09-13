@@ -160,7 +160,22 @@ class Settings(BaseSettings):
     pincode_mode: Literal["allowlist", "denylist"] = "denylist"
     staff_can_cancel_before_packing: bool = True
     order_number_prefix: str = "BH"
+
+    # ── Rate limiting ───────────────────────────────────────────────────────
+    # Two tiers. `rate_limit_per_minute` is the strict, opt-in limit applied by
+    # the `rate_limit()` dependency to abuse-prone endpoints (login, register,
+    # password reset). `rate_limit_default_per_minute` is the blanket limit the
+    # middleware applies to every other /api/ route, so a new endpoint is
+    # protected by default instead of only if someone remembers the decorator.
     rate_limit_per_minute: int = 30
+    rate_limit_default_per_minute: int = 120
+    rate_limit_enabled: bool = True
+
+    # ── Proxy trust ─────────────────────────────────────────────────────────
+    # See app/core/net.py. Must stay True on a PaaS (the TCP peer is the
+    # platform proxy); set False if the container is exposed directly, or the
+    # X-Forwarded-For header becomes a rate-limit bypass.
+    trust_proxy_headers: bool = True
 
     # ── Normalisers ─────────────────────────────────────────────────────────
     @field_validator("cors_origins", mode="before")

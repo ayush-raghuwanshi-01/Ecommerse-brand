@@ -21,10 +21,13 @@ from collections.abc import Awaitable, Callable
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 
 from app.core.config import settings
+from app.core.exceptions import RateLimitedError
 from app.core.logging import get_logger
+from app.core.net import client_ip
+from app.core.ratelimit import global_rate_limit
 
 log = get_logger("http")
 
@@ -103,7 +106,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                     "path": request.url.path,
                     "status": response.status_code,
                     "duration_ms": round(elapsed_ms, 1),
-                    "ip": request.client.host if request.client else None,
+                    "ip": client_ip(request),
                 },
             )
         return response
@@ -143,3 +146,72 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             response.headers.setdefault("Cache-Control", "no-store, private")
 
         return response
+
+
+# Paths that must never be rate limited. Health/readiness probes are polled
+# every few seconds by the platform and by the load balancer; throttling them
+# would cause the instance to be marked unhealthy and killed. Metrics are
+# scraped on a fixed interval for the same reason.
+_RATE_LIMIT_EXEMPT = frozenset(
+    {"/healthz", "/readyz", "/metrics", "/docs", "/redoc", "/openapi.json", "/docs/oauth2-redirect"}
+)
+
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    """Blanket rate limit across every ``/api/`` route.
+
+    Exists because the per-route ``rate_limit()`` dependency is opt-in: with
+    only the auth endpoints decorated, the other ~90 handlers had no limit at
+    all, so any of them could be hammered. A default-on middleware inverts that
+    — new endpoints are protected unless explicitly exempted.
+
+    Runs innermost in the stack (see ``create_app``) so that:
+      * ``SecurityHeadersMiddleware`` still decorates the 429 it returns;
+      * CORS preflight ``OPTIONS`` requests are answered by ``CORSMiddleware``
+        upstream and never spend a caller's budget;
+      * ``RequestContextMiddleware`` has already assigned ``X-Request-ID``, so
+        a throttled request is still traceable in the logs.
+    """
+
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        path = request.url.path
+        if path in _RATE_LIMIT_EXEMPT or not path.startswith("/api/"):
+            return await call_next(request)
+
+        try:
+            global_rate_limit(request)
+        except RateLimitedError as exc:
+            retry_after = str(exc.details.get("retry_after", 60))
+            log.warning(
+                "rate limited %s %s",
+                request.method,
+                path,
+                extra={
+                    "request_id": getattr(request.state, "request_id", None),
+                    "method": request.method,
+                    "path": path,
+                    "status": 429,
+                    "ip": client_ip(request),
+                },
+            )
+            response = JSONResponse(
+                status_code=429,
+                content={
+                    "error": {
+                        "code": exc.code,
+                        "message": exc.message,
+                        "details": exc.details,
+                    }
+                },
+            )
+            # RFC 9110: tell the client how long to wait. Without it, well-behaved
+            # clients retry immediately and make the congestion worse.
+            response.headers["Retry-After"] = retry_after
+            request_id = getattr(request.state, "request_id", None)
+            if request_id:
+                response.headers[REQUEST_ID_HEADER] = request_id
+            return response
+
+        return await call_next(request)

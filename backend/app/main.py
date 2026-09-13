@@ -12,7 +12,11 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
-from app.core.middleware import RequestContextMiddleware, SecurityHeadersMiddleware
+from app.core.middleware import (
+    RateLimitMiddleware,
+    RequestContextMiddleware,
+    SecurityHeadersMiddleware,
+)
 from app.services import order_service
 
 log = get_logger("main")
@@ -83,10 +87,21 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         openapi_url="/openapi.json",
     )
-    # Middleware order matters: Starlette wraps in reverse, so the LAST added
-    # runs FIRST. Request context is added last so it is outermost — it times the
-    # whole request and guarantees an X-Request-ID even when a later middleware
-    # or the route raises.
+    # Middleware order matters: Starlette builds the stack so that the LAST
+    # added middleware is OUTERMOST (it runs first on the way in). Reading the
+    # resulting onion from outside in:
+    #
+    #   CORS -> RequestContext -> SecurityHeaders -> RateLimit -> router
+    #
+    #  * CORS outermost so even an error response carries the ACAO header and a
+    #    preflight OPTIONS is answered without touching anything downstream.
+    #  * RequestContext next so every request - including a CORS-rejected or
+    #    rate-limited one - is timed and carries an X-Request-ID.
+    #  * SecurityHeaders outside RateLimit so the 429 it generates still gets
+    #    the defensive headers.
+    #  * RateLimit innermost: it must not spend a caller's budget on a preflight,
+    #    and anything it rejects still flows back out through the three above.
+    app.add_middleware(RateLimitMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestContextMiddleware)
     app.add_middleware(
@@ -95,7 +110,7 @@ def create_app() -> FastAPI:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["Idempotency-Key", "X-Request-ID"],
+        expose_headers=["Idempotency-Key", "X-Request-ID", "Retry-After"],
     )
     register_exception_handlers(app)
     app.include_router(api_router, prefix=settings.api_v1_str)
