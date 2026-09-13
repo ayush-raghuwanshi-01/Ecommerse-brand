@@ -10,21 +10,20 @@ from fastapi import APIRouter, Depends, Header, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.api.v1.carts import serialize_cart
+from app.api.v1.orders import serialize_order
 from app.core.database import get_db, utcnow
 from app.core.deps import CurrentUser
 from app.models.payment import IdempotencyKey
 from app.schemas.order import (
     CheckoutPreview,
-    PlaceOrderRequest,
-    PlaceOrderOut,
     PincodeCheck,
     PincodeCheckOut,
+    PlaceOrderOut,
+    PlaceOrderRequest,
 )
 from app.services import cart_service, payment_service, shipping_service
 from app.services.order_service import place_order as place_order_service
-
-from app.api.v1.carts import serialize_cart
-from app.api.v1.orders import serialize_order
 
 router = APIRouter(prefix="/checkout", tags=["checkout"])
 Db = Annotated[Session, Depends(get_db)]
@@ -91,9 +90,7 @@ def place_order(
     cart = cart_service.get_or_create_cart(db, user)
 
     if idempotency_key:
-        request_hash = hashlib.sha256(
-            json.dumps(payload.model_dump(), sort_keys=True).encode()
-        ).hexdigest()
+        request_hash = hashlib.sha256(json.dumps(payload.model_dump(), sort_keys=True).encode()).hexdigest()
         existing = db.scalar(
             select(IdempotencyKey).where(
                 IdempotencyKey.key == idempotency_key, IdempotencyKey.user_id == user.id

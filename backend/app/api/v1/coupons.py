@@ -31,8 +31,15 @@ def create_coupon(payload: CouponCreate, manager: ManagerUser, db: Db, request: 
     coupon = Coupon(**payload.model_dump(), code=payload.code.upper().strip())
     db.add(coupon)
     db.flush()
-    audit_service.record(db, user=manager, action="coupon.create", entity_type="coupon",
-                         entity_id=coupon.id, after=payload.model_dump(), request=request)
+    audit_service.record(
+        db,
+        user=manager,
+        action="coupon.create",
+        entity_type="coupon",
+        entity_id=coupon.id,
+        after=payload.model_dump(),
+        request=request,
+    )
     db.commit()
     return _out(db, coupon)
 
@@ -45,8 +52,15 @@ def update_coupon(coupon_id: str, payload: CouponUpdate, manager: ManagerUser, d
     before = {k: getattr(coupon, k) for k in payload.model_dump(exclude_unset=True)}
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(coupon, key, value)
-    audit_service.record(db, user=manager, action="coupon.update", entity_type="coupon",
-                         entity_id=coupon.id, before=before, after=payload.model_dump(exclude_unset=True),
-                         request=request)
+    audit_service.record(
+        db,
+        user=manager,
+        action="coupon.update",
+        entity_type="coupon",
+        entity_id=coupon.id,
+        before=before,
+        after=payload.model_dump(exclude_unset=True),
+        request=request,
+    )
     db.commit()
     return _out(db, coupon)

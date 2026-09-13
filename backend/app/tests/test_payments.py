@@ -8,7 +8,7 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.core.database import utcnow
 from app.models.order import Order, OrderStatus, PaymentStatus
-from app.models.payment import Payment, PaymentRecordStatus
+from app.models.payment import Payment
 from app.models.returns import Refund, RefundStatus
 from app.tests.conftest import variant_of
 
@@ -16,19 +16,28 @@ from app.tests.conftest import variant_of
 def _place_prepaid(client, clean_db, product, customer_headers, address, key="pay-1"):
     m = variant_of(product, "M")
     client.post("/api/v1/carts/me/items", headers=customer_headers, json={"variant_id": m.id, "qty": 1})
-    r = client.post("/api/v1/checkout/orders", headers={**customer_headers, "Idempotency-Key": key},
-                    json={"shipping_address_id": address.id, "payment_method": "razorpay"})
+    r = client.post(
+        "/api/v1/checkout/orders",
+        headers={**customer_headers, "Idempotency-Key": key},
+        json={"shipping_address_id": address.id, "payment_method": "razorpay"},
+    )
     assert r.status_code == 201
     return r.json()
 
 
 def _webhook(client, event_id, event_type, provider_order_id, payment_id="pay_x", sig=None):
-    payload = {"id": event_id, "event": event_type,
-               "payload": {"payment": {"entity": {"id": payment_id, "order_id": provider_order_id}}}}
+    payload = {
+        "id": event_id,
+        "event": event_type,
+        "payload": {"payment": {"entity": {"id": payment_id, "order_id": provider_order_id}}},
+    }
     body = json.dumps(payload).encode()
     signature = sig or hmac.new(settings.razorpay_webhook_secret.encode(), body, hashlib.sha256).hexdigest()
-    return client.post("/api/v1/webhooks/razorpay", content=body,
-                       headers={"X-Razorpay-Signature": signature, "Content-Type": "application/json"})
+    return client.post(
+        "/api/v1/webhooks/razorpay",
+        content=body,
+        headers={"X-Razorpay-Signature": signature, "Content-Type": "application/json"},
+    )
 
 
 def test_webhook_success_confirms_order(client, clean_db, product, customer_headers, address):
@@ -108,18 +117,23 @@ def test_browser_closed_order_recoverable(client, clean_db, product, customer_he
     assert order["payment_status"] == "paid"
 
 
-def test_refund_requires_manager(client, clean_db, product, customer_headers, staff_headers,
-                                 manager_headers, address):
+def test_refund_requires_manager(
+    client, clean_db, product, customer_headers, staff_headers, manager_headers, address
+):
     body = _place_prepaid(client, clean_db, product, customer_headers, address, key="pay-7")
     order_id = body["order"]["id"]
     rzp_order = body["payment_session"]["provider_order_id"]
     _webhook(client, "evt_ref", "payment.captured", rzp_order)
 
     # staff cannot approve refunds: create refund via cancellation by manager first
-    client.post(f"/api/v1/orders/me/{order_id}/cancel-request", headers=customer_headers,
-                json={"reason": "ordered_by_mistake"})
-    r = client.post(f"/api/v1/orders/{order_id}/cancel-decision", headers=manager_headers,
-                    json={"approve": True})
+    client.post(
+        f"/api/v1/orders/me/{order_id}/cancel-request",
+        headers=customer_headers,
+        json={"reason": "ordered_by_mistake"},
+    )
+    r = client.post(
+        f"/api/v1/orders/{order_id}/cancel-decision", headers=manager_headers, json={"approve": True}
+    )
     assert r.status_code == 200
     clean_db.expire_all()
     refund = clean_db.scalars(select(Refund).where(Refund.order_id == order_id)).first()
@@ -127,12 +141,18 @@ def test_refund_requires_manager(client, clean_db, product, customer_headers, st
     assert refund.status == RefundStatus.requested  # awaits explicit manager approval
 
     # staff cannot approve refunds
-    r = client.post("/api/v1/returns/refunds/decide", headers=staff_headers,
-                    json={"refund_id": refund.id, "approve": True})
+    r = client.post(
+        "/api/v1/returns/refunds/decide",
+        headers=staff_headers,
+        json={"refund_id": refund.id, "approve": True},
+    )
     assert r.status_code == 403
 
-    r = client.post("/api/v1/returns/refunds/decide", headers=manager_headers,
-                    json={"refund_id": refund.id, "approve": True})
+    r = client.post(
+        "/api/v1/returns/refunds/decide",
+        headers=manager_headers,
+        json={"refund_id": refund.id, "approve": True},
+    )
     assert r.status_code == 200
     clean_db.expire_all()
     assert clean_db.get(Refund, refund.id).status == RefundStatus.completed

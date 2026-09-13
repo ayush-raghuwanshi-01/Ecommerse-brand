@@ -41,7 +41,8 @@ def request_refund(
     if existing:
         return existing
     payment = db.scalar(
-        select(Payment).where(Payment.order_id == order.id, Payment.status == PaymentRecordStatus.paid.value)
+        select(Payment)
+        .where(Payment.order_id == order.id, Payment.status == PaymentRecordStatus.paid.value)
         .order_by(Payment.created_at.desc())
     )
     refund = Refund(
@@ -55,7 +56,11 @@ def request_refund(
     db.add(refund)
     db.flush()
     audit_service.record(
-        db, user=actor, action="refund.request", entity_type="refund", entity_id=refund.id,
+        db,
+        user=actor,
+        action="refund.request",
+        entity_type="refund",
+        entity_id=refund.id,
         after={"order": order.number, "amount_paise": amount_paise, "reason": reason},
     )
     return refund
@@ -68,15 +73,27 @@ def decide_refund(db: Session, refund: Refund, *, actor: User, approve: bool, no
     if not approve:
         refund.status = RefundStatus.rejected
         refund.failure_reason = note
-        audit_service.record(db, user=actor, action="refund.reject", entity_type="refund",
-                             entity_id=refund.id, after={"note": note})
+        audit_service.record(
+            db,
+            user=actor,
+            action="refund.reject",
+            entity_type="refund",
+            entity_id=refund.id,
+            after={"note": note},
+        )
         db.flush()
         return refund
 
     refund.status = RefundStatus.approved
     refund.approved_by = actor.id
-    audit_service.record(db, user=actor, action="refund.approve", entity_type="refund",
-                         entity_id=refund.id, after={"note": note})
+    audit_service.record(
+        db,
+        user=actor,
+        action="refund.approve",
+        entity_type="refund",
+        entity_id=refund.id,
+        after={"note": note},
+    )
     return initiate_refund(db, refund, actor=actor)
 
 
@@ -103,7 +120,9 @@ def initiate_refund(db: Session, refund: Refund, *, actor: User) -> Refund:
     db.flush()
     if order.customer:
         notification_service.notify(
-            db, event_type="refund_initiated", recipient=order.customer.email,
+            db,
+            event_type="refund_initiated",
+            recipient=order.customer.email,
             payload={"order_number": order.number, "amount_paise": refund.amount_paise},
         )
     # Mock gateway completes synchronously; Razorpay completes via webhook.
@@ -146,13 +165,18 @@ def complete_refund(db: Session, refund: Refund, *, gateway_meta: dict | None = 
         )
     if order and order.customer:
         notification_service.notify(
-            db, event_type="refund_completed", recipient=order.customer.email,
+            db,
+            event_type="refund_completed",
+            recipient=order.customer.email,
             payload={"order_number": order.number, "amount_paise": refund.amount_paise},
         )
-    from app.models.user import User
 
     audit_service.record(
-        db, user=None, action="refund.complete", entity_type="refund", entity_id=refund.id,
+        db,
+        user=None,
+        action="refund.complete",
+        entity_type="refund",
+        entity_id=refund.id,
         after={"amount_paise": refund.amount_paise, "gateway": gateway_meta},
     )
     db.flush()

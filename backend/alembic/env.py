@@ -2,14 +2,15 @@ import sys
 from logging.config import fileConfig
 from pathlib import Path
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
+
+from alembic import context
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+import app.models  # noqa: E402,F401  (register all mappers)
 from app.core.config import settings  # noqa: E402
 from app.core.database import Base  # noqa: E402
-import app.models  # noqa: E402,F401  (register all mappers)
 
 config = context.config
 if config.config_file_name is not None:

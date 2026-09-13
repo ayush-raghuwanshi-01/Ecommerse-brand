@@ -41,7 +41,7 @@ class ProductImageOut(ORMModel):
 
 
 class ProductImageCreate(BaseModel):
-    url: str | None = None          # provide url or upload a file
+    url: str | None = None  # provide url or upload a file
     alt_text: str | None = None
     sort_order: int = 0
     is_primary: bool = False

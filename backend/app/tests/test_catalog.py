@@ -18,8 +18,8 @@ def test_public_visibility_rules(client, clean_db, warehouse):
     slugs = {p["slug"] for p in client.get("/api/v1/products?page_size=50").json()["items"]}
     assert "active-coat" in slugs
     assert "upcoming-coat" in slugs
-    assert "oos-coat" in slugs                 # visible: has restock info
-    assert "oos-silent-coat" not in slugs      # hidden: no restock info
+    assert "oos-coat" in slugs  # visible: has restock info
+    assert "oos-silent-coat" not in slugs  # hidden: no restock info
     assert "draft-coat" not in slugs
     assert "archived-coat" not in slugs
 
@@ -27,15 +27,25 @@ def test_public_visibility_rules(client, clean_db, warehouse):
 def test_upcoming_not_purchasable_unless_preorder(client, clean_db, warehouse, customer_headers):
     upcoming = make_product(clean_db, name="Launch Coat", status=ProductStatus.upcoming, preorder=False)
     pre = make_product(
-        clean_db, name="Preorder Coat", status=ProductStatus.upcoming, preorder=True, stock={},
+        clean_db,
+        name="Preorder Coat",
+        status=ProductStatus.upcoming,
+        preorder=True,
+        stock={},
     )
     clean_db.commit()
-    r = client.post("/api/v1/carts/me/items", headers=customer_headers,
-                    json={"variant_id": variant_of(upcoming, "M").id, "qty": 1})
+    r = client.post(
+        "/api/v1/carts/me/items",
+        headers=customer_headers,
+        json={"variant_id": variant_of(upcoming, "M").id, "qty": 1},
+    )
     assert r.status_code == 422 and r.json()["error"]["code"] == "POLICY_VIOLATION"
 
-    r = client.post("/api/v1/carts/me/items", headers=customer_headers,
-                    json={"variant_id": variant_of(pre, "M").id, "qty": 1})
+    r = client.post(
+        "/api/v1/carts/me/items",
+        headers=customer_headers,
+        json={"variant_id": variant_of(pre, "M").id, "qty": 1},
+    )
     assert r.status_code == 201
     assert r.json()["items"][0]["is_preorder"] is True
 
@@ -44,8 +54,11 @@ def test_preorder_window_respected(client, clean_db, warehouse, customer_headers
     pre = make_product(clean_db, name="Future Coat", status=ProductStatus.upcoming, preorder=True, stock={})
     pre.preorder_start_at = utcnow() + timedelta(days=5)
     clean_db.commit()
-    r = client.post("/api/v1/carts/me/items", headers=customer_headers,
-                    json={"variant_id": variant_of(pre, "M").id, "qty": 1})
+    r = client.post(
+        "/api/v1/carts/me/items",
+        headers=customer_headers,
+        json={"variant_id": variant_of(pre, "M").id, "qty": 1},
+    )
     assert r.status_code == 422
 
 
@@ -58,8 +71,7 @@ def test_disabled_variants_visible_but_blocked(client, clean_db, warehouse, cust
     sizes = {v["size"]: v for v in detail["variants"]}
     assert sizes["XS"]["availability"] == "disabled"
     assert sizes["M"]["availability"] == "available"
-    r = client.post("/api/v1/carts/me/items", headers=customer_headers,
-                    json={"variant_id": xs.id, "qty": 1})
+    r = client.post("/api/v1/carts/me/items", headers=customer_headers, json={"variant_id": xs.id, "qty": 1})
     assert r.status_code == 422
 
 

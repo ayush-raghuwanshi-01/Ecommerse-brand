@@ -14,6 +14,9 @@ authors = [{ name = "Black House Engineering" }]
 dependencies = [
     "fastapi>=0.115,<1.0",
     "uvicorn[standard]>=0.32",
+    # Process manager for production: supervises multiple Uvicorn workers,
+    # restarts any that die, and handles graceful reloads on deploy.
+    "gunicorn>=23.0",
     "sqlalchemy>=2.0.36,<2.1",
     "alembic>=1.14",
     "pydantic>=2.9,<3.0",
@@ -29,13 +32,18 @@ dependencies = [
 [project.optional-dependencies]
 # Redis is optional: used only for rate limiting / shared checkout state when configured.
 redis = ["redis>=5.2"]
-# S3-compatible object storage; local storage works without it.
+# S3-compatible object storage; Cloudinary needs no extra dependency (httpx).
 s3 = ["boto3>=1.35"]
+# Metrics + error tracking. Kept optional so the core app has a small footprint.
+observability = ["prometheus-client>=0.21", "sentry-sdk[fastapi]>=2.19"]
 dev = [
     "pytest>=8.3",
     "pytest-cov>=5.0",
     "ruff>=0.7",
     "redis>=5.2",
+    # Metrics tests assert on /metrics output, so the optional observability
+    # extra must be present in CI too.
+    "prometheus-client>=0.21",
 ]
 
 [tool.setuptools.packages.find]
@@ -54,4 +62,15 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
-ignore = ["B008"]  # Depends() in default args is FastAPI idiomatic
+ignore = [
+    "B008",   # Depends() in default args is FastAPI idiomatic
+    # UP046 wants `class Page[T](BaseModel)` (PEP 695) instead of
+    # `class Page(BaseModel, Generic[T])`. Rejected deliberately:
+    #   * it is a single, purely cosmetic occurrence in a Pydantic *generic*
+    #     model, where Pydantic resolves parameters via __pydantic_generic_metadata__
+    #     built from the Generic[T] base — PEP 695 support there is version-sensitive;
+    #   * the dev sandbox runs Python 3.11, where PEP 695 is a hard SyntaxError,
+    #     so the rewrite cannot be validated locally (prod/Docker/CI are 3.12).
+    # Not worth trading a verified working generic for an unverifiable one.
+    "UP046",
+]

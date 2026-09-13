@@ -5,17 +5,36 @@ from typing import Any
 from fastapi import Request
 from sqlalchemy.orm import Session
 
+from app.core.net import client_ip
 from app.models.commerce import AuditLog
 from app.models.user import User
 
 AUDITABLE = {
-    "product.create", "product.update", "product.publish", "product.archive", "product.price_change",
-    "variant.update", "inventory.adjust", "order.create_staff", "order.edit", "order.status_change",
-    "order.cancel_request", "order.cancel_approve", "order.cancel_reject",
-    "refund.approve", "refund.reject", "refund.complete",
-    "return.approve", "return.reject", "return.status_change",
-    "coupon.create", "coupon.update", "user.role_change",
-    "shipment.update", "payment.status_change", "settings.update",
+    "product.create",
+    "product.update",
+    "product.publish",
+    "product.archive",
+    "product.price_change",
+    "variant.update",
+    "inventory.adjust",
+    "order.create_staff",
+    "order.edit",
+    "order.status_change",
+    "order.cancel_request",
+    "order.cancel_approve",
+    "order.cancel_reject",
+    "refund.approve",
+    "refund.reject",
+    "refund.complete",
+    "return.approve",
+    "return.reject",
+    "return.status_change",
+    "coupon.create",
+    "coupon.update",
+    "user.role_change",
+    "shipment.update",
+    "payment.status_change",
+    "settings.update",
 }
 
 
@@ -50,7 +69,7 @@ def record(
         entity_id=entity_id,
         before_json=_snapshot(before),
         after_json=_snapshot(after),
-        ip=request.client.host if request and request.client else None,
+        ip=client_ip(request) if request else None,
         user_agent=request.headers.get("user-agent") if request else None,
     )
     db.add(entry)

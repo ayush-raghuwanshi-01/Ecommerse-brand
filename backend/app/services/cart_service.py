@@ -142,7 +142,6 @@ def compute_cart(db: Session, cart: Cart, postal_code: str | None = None):
             discount = 0
             for ln in lines:
                 ln.eligible_for_coupon = True
-    state = ""
     if postal_code:
         res = shipping_service.get_provider().check_serviceability(db, postal_code)
         shipping = res.charge_paise if res.serviceable else 0

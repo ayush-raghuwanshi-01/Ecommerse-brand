@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from app.core.database import utcnow
 from app.core.exceptions import NotFoundError, PolicyError, ValidationError
 from app.models.catalog import ProductVariant
-from app.models.inventory import AdjustmentType
 from app.models.order import Order, OrderStatus
 from app.models.returns import (
     COMPANY_PAYS_RETURN_SHIPPING,
@@ -17,7 +16,13 @@ from app.models.returns import (
     ReturnType,
 )
 from app.models.user import User
-from app.services import audit_service, inventory_service, notification_service, refund_service, settings_service
+from app.services import (
+    audit_service,
+    inventory_service,
+    notification_service,
+    refund_service,
+    settings_service,
+)
 
 RETURN_FLOW = [
     ReturnStatus.requested,
@@ -44,7 +49,13 @@ def create_return(
 ) -> ReturnRequest:
     if order.customer_id != customer.id:
         raise NotFoundError("Order not found.")
-    if order.status not in (OrderStatus.delivered, OrderStatus.completed, OrderStatus.return_requested, OrderStatus.return_approved, OrderStatus.returned):
+    if order.status not in (
+        OrderStatus.delivered,
+        OrderStatus.completed,
+        OrderStatus.return_requested,
+        OrderStatus.return_approved,
+        OrderStatus.returned,
+    ):
         raise PolicyError("Returns can only be requested for delivered orders.")
     window = int(settings_service.get_setting(db, "return_window_days") or 7)
     if not order.delivered_at or (utcnow() - order.delivered_at).days > window:
@@ -96,7 +107,9 @@ def create_return(
     if order.status == OrderStatus.delivered:
         order.status = OrderStatus.return_requested
     notification_service.notify(
-        db, event_type="return_requested", recipient="cs@blackhouse.internal",
+        db,
+        event_type="return_requested",
+        recipient="cs@blackhouse.internal",
         payload={"order_number": order.number, "return_type": return_type.value, "reason": reason.value},
     )
     db.flush()
@@ -121,9 +134,12 @@ def advance_return(
 
             raise PermissionDeniedError("Only managers/admins can approve or reject returns.")
         audit_service.record(
-            db, user=actor,
+            db,
+            user=actor,
             action="return.approve" if new_status == ReturnStatus.approved else "return.reject",
-            entity_type="return", entity_id=ret.id, after={"status": new_status.value},
+            entity_type="return",
+            entity_id=ret.id,
+            after={"status": new_status.value},
         )
     elif new_status in (ReturnStatus.approved_for_refund, ReturnStatus.approved_for_exchange):
         if not is_manager:
@@ -154,9 +170,7 @@ def advance_return(
     # Refund eligibility begins once courier pickup is confirmed.
     if new_status == ReturnStatus.picked_up and ret.return_type == ReturnType.refund:
         amount = _return_amount(db, ret)
-        refund_service.request_refund(
-            db, order, amount, actor, return_request=ret, reason=ret.reason.value
-        )
+        refund_service.request_refund(db, order, amount, actor, return_request=ret, reason=ret.reason.value)
 
     # Final completion happens after inspection/validation.
     if new_status == ReturnStatus.inspected:
@@ -168,7 +182,10 @@ def advance_return(
             ret.status = ReturnStatus.approved_for_exchange
             _schedule_exchange(db, ret, actor)
 
-    if new_status in (ReturnStatus.approved_for_refund, ReturnStatus.approved_for_exchange) and ret.status != new_status:
+    if (
+        new_status in (ReturnStatus.approved_for_refund, ReturnStatus.approved_for_exchange)
+        and ret.status != new_status
+    ):
         ret.status = new_status
 
     if new_status == ReturnStatus.completed:
@@ -177,8 +194,13 @@ def advance_return(
             order.status = OrderStatus.returned
 
     audit_service.record(
-        db, user=actor, action="return.status_change", entity_type="return", entity_id=ret.id,
-        before={"status": ret.status.value}, after={"status": new_status.value},
+        db,
+        user=actor,
+        action="return.status_change",
+        entity_type="return",
+        entity_id=ret.id,
+        before={"status": ret.status.value},
+        after={"status": new_status.value},
     )
     db.flush()
     return ret
@@ -212,6 +234,8 @@ def _schedule_exchange(db: Session, ret: ReturnRequest, actor: User) -> None:
     shipment.metadata_json = {"exchange_for_return": ret.id, "variant_id": ret.exchange_variant_id}
     if order and order.customer:
         notification_service.notify(
-            db, event_type="exchange_approved", recipient=order.customer.email,
+            db,
+            event_type="exchange_approved",
+            recipient=order.customer.email,
             payload={"order_number": order.number},
         )

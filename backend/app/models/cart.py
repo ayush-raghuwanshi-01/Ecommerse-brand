@@ -1,6 +1,6 @@
 """Customer carts (one active cart per customer) and cart items."""
 
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -25,7 +25,9 @@ class CartItem(UUIDPk, Timestamps, Base):
     cart_id: Mapped[str] = mapped_column(ForeignKey("carts.id", ondelete="CASCADE"), index=True)
     variant_id: Mapped[str] = mapped_column(ForeignKey("product_variants.id", ondelete="CASCADE"), index=True)
     qty: Mapped[int] = mapped_column(Integer, default=1)
-    unit_price_paise_snapshot: Mapped[int] = mapped_column(Integer)  # price at add-time; recalculated at checkout
+    unit_price_paise_snapshot: Mapped[int] = mapped_column(
+        Integer
+    )  # price at add-time; recalculated at checkout
 
     cart: Mapped[Cart] = relationship(back_populates="items")
     variant = relationship("ProductVariant")

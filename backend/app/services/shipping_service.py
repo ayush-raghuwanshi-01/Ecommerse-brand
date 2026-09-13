@@ -6,7 +6,6 @@ can be added later by implementing ShippingProvider — nothing else changes.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session

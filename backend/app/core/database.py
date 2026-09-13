@@ -5,6 +5,7 @@ degrade gracefully on SQLite (conditional UPDATE guards provide safety there).
 """
 
 from collections.abc import Generator
+from datetime import UTC
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
@@ -21,7 +22,8 @@ def _build_engine(url: str) -> Engine:
     if url.startswith("sqlite"):
         engine = create_engine(
             url,
-            connect_args={"check_same_thread": False, "timeout": 30},
+            echo=settings.database_echo,
+            connect_args={"check_same_thread": False, "timeout": settings.db_pool_timeout_seconds},
             pool_pre_ping=True,
         )
 
@@ -34,7 +36,17 @@ def _build_engine(url: str) -> Engine:
             cur.close()
 
         return engine
-    return create_engine(url, pool_pre_ping=True, pool_size=10, max_overflow=20)
+    return create_engine(
+        url,
+        echo=settings.database_echo,
+        pool_pre_ping=True,
+        pool_size=settings.db_pool_size,
+        max_overflow=settings.db_max_overflow,
+        pool_timeout=settings.db_pool_timeout_seconds,
+        # Recycle connections before the server/firewall drops them idle
+        # (Postgres' default idle timeout and most managed-DB proxies are <1h).
+        pool_recycle=settings.db_pool_recycle_seconds,
+    )
 
 
 engine = _build_engine(settings.database_url)
@@ -59,6 +71,6 @@ def supports_row_locking(db: Session) -> bool:
 
 
 def utcnow():
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)

@@ -8,6 +8,7 @@ on:
   pull_request:
     paths:
       - "backend/**"
+      - ".github/workflows/backend-ci.yml"
 
 jobs:
   test:
@@ -27,6 +28,16 @@ jobs:
           cache-dependency-path: backend/pyproject.toml
       - name: Install
         run: pip install -e ".[dev]"
+
+      # --- Lint gates (fail fast, before the slower test/migration steps) ---
+      # Both are clean on the current tree, so these block regressions rather
+      # than reporting pre-existing debt. See the two `style:`/`chore:` commits
+      # that cleared the backlog for why UP046 is ignored in pyproject.toml.
+      - name: Ruff lint
+        run: ruff check .
+      - name: Ruff format check
+        run: ruff format --check .
+
       - name: Alembic migration check (sqlite mirror)
         run: |
           DATABASE_URL="sqlite:///./ci.db" alembic upgrade head

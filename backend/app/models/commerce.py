@@ -2,18 +2,18 @@
 notifications, audit log, business settings, counters."""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.types import UTCDateTime
 from app.core.database import Base, utcnow
+from app.core.types import UTCDateTime
 from app.models.base import Timestamps, UUIDPk, enum_col
 
 
-class CouponType(str, Enum):
-    fixed = "fixed"          # flat amount off (paise)
+class CouponType(StrEnum):
+    fixed = "fixed"  # flat amount off (paise)
     percentage = "percentage"  # percent off eligible subtotal (value = percent * 100)
 
 
@@ -46,7 +46,7 @@ class CouponUsage(UUIDPk, Base):
     coupon: Mapped[Coupon] = relationship(back_populates="usages")
 
 
-class ShippingRuleKind(str, Enum):
+class ShippingRuleKind(StrEnum):
     serviceable = "serviceable"
     blocked = "blocked"
     rate_pincode = "rate_pincode"
@@ -77,7 +77,7 @@ class ShippingRule(UUIDPk, Timestamps, Base):
         return lo <= pin <= hi
 
 
-class RestockStatus(str, Enum):
+class RestockStatus(StrEnum):
     active = "active"
     notified = "notified"
     cancelled = "cancelled"
@@ -97,7 +97,7 @@ class RestockSubscription(UUIDPk, Base):
     variant = relationship("ProductVariant")
 
 
-class BulkEnquiryStatus(str, Enum):
+class BulkEnquiryStatus(StrEnum):
     new = "new"
     contacted = "contacted"
     in_progress = "in_progress"
@@ -116,18 +116,20 @@ class BulkEnquiry(UUIDPk, Timestamps, Base):
     product_interest: Mapped[str] = mapped_column(String(300))
     estimated_qty: Mapped[int | None] = mapped_column(Integer)
     message: Mapped[str | None] = mapped_column(Text)
-    status: Mapped[BulkEnquiryStatus] = mapped_column(enum_col(BulkEnquiryStatus), default=BulkEnquiryStatus.new)
+    status: Mapped[BulkEnquiryStatus] = mapped_column(
+        enum_col(BulkEnquiryStatus), default=BulkEnquiryStatus.new
+    )
     staff_notes: Mapped[str | None] = mapped_column(Text)
 
 
-class NotificationChannel(str, Enum):
+class NotificationChannel(StrEnum):
     email = "email"
     whatsapp = "whatsapp"
     sms = "sms"
     internal = "internal"
 
 
-class NotificationStatus(str, Enum):
+class NotificationStatus(StrEnum):
     pending = "pending"
     sent = "sent"
     failed = "failed"
@@ -140,7 +142,9 @@ class Notification(UUIDPk, Base):
     channel: Mapped[NotificationChannel] = mapped_column(enum_col(NotificationChannel))
     event_type: Mapped[str] = mapped_column(String(60), index=True)
     payload_json: Mapped[dict | None] = mapped_column(JSON)
-    status: Mapped[NotificationStatus] = mapped_column(enum_col(NotificationStatus), default=NotificationStatus.pending)
+    status: Mapped[NotificationStatus] = mapped_column(
+        enum_col(NotificationStatus), default=NotificationStatus.pending
+    )
     provider_message_id: Mapped[str | None] = mapped_column(String(120))
     retry_count: Mapped[int] = mapped_column(Integer, default=0)
     sent_at: Mapped[datetime | None] = mapped_column(UTCDateTime())

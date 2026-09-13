@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.exceptions import AuthenticationError, PermissionDeniedError
+from app.core.net import client_ip
 from app.core.security import decode_access_token
 from app.models.user import User, UserRole
 
@@ -68,6 +69,6 @@ CustomerUser = Annotated[User, require_roles(UserRole.customer)]
 
 def request_context(request: Request) -> dict:
     return {
-        "ip": request.client.host if request.client else None,
+        "ip": client_ip(request),
         "user_agent": request.headers.get("user-agent"),
     }

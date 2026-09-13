@@ -10,7 +10,7 @@ from app.core.exceptions import NotFoundError, PermissionDeniedError
 from app.core.pagination import PageParams, page_meta, paginate
 from app.models.order import Order, OrderStatus
 from app.models.user import User
-from app.schemas.common import Message, Page
+from app.schemas.common import Page
 from app.schemas.order import (
     CancelDecision,
     CancelRequest,
@@ -20,7 +20,7 @@ from app.schemas.order import (
     OrderOut,
     StatusUpdateRequest,
 )
-from app.services import audit_service, order_service, payment_service
+from app.services import order_service, payment_service
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 Db = Annotated[Session, Depends(get_db)]
@@ -82,7 +82,9 @@ def list_orders(
         stmt = stmt.where(Order.payment_status == payment_status)
     if params.q:
         like = f"%{params.q}%"
-        stmt = stmt.where(or_(Order.number.ilike(like), Order.shipping_address["postal_code"].as_string().ilike(like)))
+        stmt = stmt.where(
+            or_(Order.number.ilike(like), Order.shipping_address["postal_code"].as_string().ilike(like))
+        )
     items, total = paginate(db, stmt, params, sort_columns={"created_at": Order.created_at})
     return Page(items=[serialize_order(db, o, staff) for o in items], meta=page_meta(params, total))
 
@@ -159,5 +161,7 @@ def whatsapp_link(order_id: str, staff: StaffUser, db: Db):
     if order is None:
         raise NotFoundError("Order not found.")
     phone = order.shipping_address.get("phone", "")
-    message = f"Hello! Regarding your Black House order {order.number} (₹{order.grand_total_paise / 100:,.0f})."
+    message = (
+        f"Hello! Regarding your Black House order {order.number} (₹{order.grand_total_paise / 100:,.0f})."
+    )
     return {"link": build_link(phone, message)}

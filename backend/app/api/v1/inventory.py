@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import ManagerUser, StaffUser
+from app.core.deps import StaffUser
 from app.core.pagination import PageParams, page_meta, paginate
 from app.models.catalog import ProductVariant
 from app.models.inventory import AdjustmentType, InventoryAdjustment
@@ -35,7 +35,9 @@ def _stock_view(variant: ProductVariant, threshold: int) -> VariantStockOut:
 
 
 @router.get("/variants", response_model=Page[VariantStockOut])
-def list_stock(params: Annotated[PageParams, Depends()], staff: StaffUser, db: Db, low_stock: bool | None = None):
+def list_stock(
+    params: Annotated[PageParams, Depends()], staff: StaffUser, db: Db, low_stock: bool | None = None
+):
     threshold = int(settings_service.get_setting(db, "low_stock_threshold") or 3)
     stmt = select(ProductVariant)
     items, total = paginate(db, stmt, params, sort_columns={"sku": ProductVariant.sku})
@@ -49,8 +51,12 @@ def list_stock(params: Annotated[PageParams, Depends()], staff: StaffUser, db: D
 def adjust(payload: AdjustmentRequest, staff: StaffUser, db: Db):
     variant = inventory_service.get_variant(db, payload.variant_id)
     entry = inventory_service.adjust(
-        db, variant, AdjustmentType(payload.adjustment_type), payload.qty_change,
-        user=staff, reason=payload.reason,
+        db,
+        variant,
+        AdjustmentType(payload.adjustment_type),
+        payload.qty_change,
+        user=staff,
+        reason=payload.reason,
     )
     db.commit()
     return entry

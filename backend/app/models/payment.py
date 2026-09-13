@@ -1,23 +1,23 @@
 """Payments, webhook event log (idempotency), checkout idempotency keys."""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.types import UTCDateTime
 from app.core.database import Base, utcnow
+from app.core.types import UTCDateTime
 from app.models.base import Timestamps, UUIDPk, enum_col
 from app.models.order import Order
 
 
-class PaymentProvider(str, Enum):
+class PaymentProvider(StrEnum):
     razorpay = "razorpay"
     mock = "mock"
 
 
-class PaymentRecordStatus(str, Enum):
+class PaymentRecordStatus(StrEnum):
     created = "created"
     pending = "pending"
     authorized = "authorized"
@@ -38,7 +38,9 @@ class Payment(UUIDPk, Timestamps, Base):
     amount_paise: Mapped[int] = mapped_column(Integer)
     currency: Mapped[str] = mapped_column(String(3), default="INR")
     method: Mapped[str] = mapped_column(String(40))  # razorpay | upi | cod
-    status: Mapped[PaymentRecordStatus] = mapped_column(enum_col(PaymentRecordStatus), default=PaymentRecordStatus.created)
+    status: Mapped[PaymentRecordStatus] = mapped_column(
+        enum_col(PaymentRecordStatus), default=PaymentRecordStatus.created
+    )
     webhook_event_id: Mapped[str | None] = mapped_column(String(120))
     metadata_json: Mapped[dict | None] = mapped_column(JSON)
     failure_reason: Mapped[str | None] = mapped_column(String(300))
@@ -72,4 +74,3 @@ class IdempotencyKey(UUIDPk, Base):
     response_json: Mapped[dict | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     expires_at: Mapped[datetime] = mapped_column(UTCDateTime())
-

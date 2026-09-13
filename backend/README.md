@@ -13,9 +13,10 @@ manufacturer & D2C brand (Bhopal, Madhya Pradesh, India).
 | Schemas   | Pydantic v2 |
 | Auth      | JWT access (15 min) + rotating, revocable refresh tokens (7–30 d), Argon2id hashing |
 | Payments  | Razorpay (cards/UPI/netbanking) + Cash on Delivery; mock gateway when keys absent |
-| Cache/Jobs| Redis **optional** — rate limiting only; reservation sweep runs in-process |
-| Storage   | Object-storage abstraction: local (dev) / S3-compatible / Cloudinary interface |
-| Tests     | Pytest (55 tests: auth, catalog, checkout, inventory concurrency, payments, orders, returns) |
+| Cache/Jobs| Redis **optional** — shared rate limiting. Background work runs in `scripts/worker.py` (or in-process for single-container dev via `RUN_INLINE_SWEEP`) |
+| Storage   | Object-storage abstraction: local (dev) / **Cloudinary** (recommended, signed uploads + CDN transforms) / S3-compatible |
+| Email     | **Resend** in production; `log` provider for development. Templates render HTML + text for every lifecycle event |
+| Tests     | Pytest — **154 tests, 88% coverage**: auth, catalog, checkout, inventory concurrency, payments, orders, returns, upload validation, notifications, storage |
 
 Money is **integer paise** everywhere (`₹1,999 = 199900`). Prices are **GST-inclusive**;
 the tax component is derived per line (`taxable = gross / (1 + gst%)`).
@@ -24,49 +25,86 @@ the tax component is derived per line (`taxable = gross / (1 + gst%)`).
 
 ## Quick start (Docker)
 
+Compose lives at the **repo root** now, so it can bring up the storefront alongside the API.
+
 ```bash
-cd backend
-cp .env.example .env          # fill SECRET_KEY; leave Razorpay keys empty for mock gateway
-docker compose up --build     # postgres + redis + api on :8000
-# seed demo data (inside the api container or against a local venv):
-python -m scripts.seed_dev
+# from the repository root
+cp .env.example .env            # fill SECRET_KEY; leave Razorpay keys empty for mock gateway
+docker compose up --build -d    # postgres + redis + api (:8000) + web (:8080)
+docker compose --profile tools run --rm seed
 ```
 
-API docs: `http://localhost:8000/docs` · health: `/healthz`
+Backend only, with the API reachable from your host:
 
-Seeded logins (dev only): `admin@blackhouse.example / Admin@12345`,
-`manager@… / Manager@12345`, `staff@… / Staff@12345`, `customer@example.com / Customer@12345`.
+```bash
+docker compose up -d db redis                     # just the infrastructure
+docker compose up api                             # or the API container too
+```
+
+API docs: `http://localhost:8000/docs` · liveness: `/healthz` · readiness (checks the DB):
+`/readyz`
 
 ## Quick start (no Docker)
 
 ```bash
-cd backend
-python -m venv .venv && .venv/bin/pip install -e ".[dev]"
+# from the repository root — the Makefile wraps all of this
+scripts/setup.sh          # .env files, venv, deps, migrate, seed
+make backend-run          # API with autoreload on :8000
+
+# …or by hand, from backend/:
+python3.12 -m venv .venv && .venv/bin/pip install -e ".[dev,redis]"
 export DATABASE_URL="sqlite:///./dev.db"
 .venv/bin/alembic upgrade head
 .venv/bin/python -m scripts.seed_dev
 .venv/bin/uvicorn app.main:app --reload --port 8000
 ```
 
+## Production
+
+```bash
+gunicorn app.main:app -c gunicorn_conf.py     # multiple supervised Uvicorn workers
+python -m scripts.worker                       # reservation sweep + notification retries
+```
+
+`gunicorn_conf.py` sizes workers from `WEB_CONCURRENCY`, and the Dockerfile runs
+`alembic upgrade head` before serving so a deploy cannot run new code against an old schema.
+When the standalone worker is deployed, set `RUN_INLINE_SWEEP=false` so API replicas stop polling
+the database themselves.
+
+Deploy manifests: `fly.toml` and `railway.toml` here, `render.yaml` at the repo root.
+
 ## Architecture
 
 ```
-backend/app/
-├── main.py               # app factory, CORS, exception handlers, reservation-sweep worker
-├── core/                 # config, security (JWT/Argon2), db, errors, deps, ratelimit, types
-├── models/               # SQLAlchemy 2.0 typed models (32 tables)
-├── schemas/              # Pydantic v2 request/response contracts
-├── services/             # ALL business logic (routes stay thin)
-│   ├── order_service.py      # transactional checkout, edits, cancellations, sweep
-│   ├── inventory_service.py  # reservations, movement ledger, restock alerts
-│   ├── payment_service.py    # Razorpay/mock gateway, idempotent webhooks, retries
-│   ├── refund_service.py     # manager-approved, gateway-executed, idempotent
-│   ├── return_service.py     # 7-day window, exchanges, replacements, restock
-│   ├── shipping_service.py   # ShippingProvider abstraction + PIN-code rules
-│   ├── notification_service.py # email/whatsapp/sms channels, provider registry
-│   └── ...
-├── api/v1/               # versioned routers (/api/v1/...)
-└── tests/                # pytest suite (SQLite mirror)
+backend/
+├── app/
+│   ├── main.py           # app factory, CORS, exception handlers, /healthz + /readyz
+│   ├── core/             # config (fail-fast validation), security (JWT/Argon2), database,
+│   │                     # exceptions, deps (role guards), middleware (security headers +
+│   │                     # request id), uploads (magic-byte validation), logging (JSON/text),
+│   │                     # ratelimit, pagination, types
+│   ├── models/           # SQLAlchemy 2.0 typed models (32 tables)
+│   ├── schemas/          # Pydantic v2 request/response contracts
+│   ├── services/         # ALL business logic — routes stay thin
+│   │   ├── order_service.py       # transactional checkout, edits, cancellations, sweep
+│   │   ├── inventory_service.py   # reservations, movement ledger, restock alerts
+│   │   ├── payment_service.py     # Razorpay/mock gateway, idempotent webhooks, retries
+│   │   ├── refund_service.py      # manager-approved, gateway-executed, idempotent
+│   │   ├── return_service.py      # 7-day window, exchanges, replacements, restock
+│   │   ├── shipping_service.py    # ShippingProvider abstraction + PIN-code rules
+│   │   ├── notification_service.py # channel registry: Resend, log, manual wa.me
+│   │   ├── email_templates.py     # HTML + text render for every lifecycle event
+│   │   ├── storage_service.py     # local / Cloudinary / S3 providers
+│   │   └── ...
+│   ├── api/v1/           # versioned routers (/api/v1/...)
+│   └── tests/            # pytest suite (SQLite mirror, no external services)
+├── scripts/
+│   ├── seed_dev.py       # idempotent demo data + placeholder artwork
+│   └── worker.py         # background: reservation sweep, notification retries
+├── alembic/              # migrations
+├── gunicorn_conf.py      # production worker sizing and timeouts
+├── Dockerfile            # multi-stage, non-root, migrates before serving
+└── fly.toml, railway.toml
 ```
 
 ### Roles
@@ -140,7 +178,8 @@ Errors are uniform:
 ## Testing
 
 ```bash
-cd backend && pytest -q          # 55 tests, SQLite mirror, no external services
+cd backend && pytest -q          # 154 tests, SQLite mirror, no external services
+cd backend && pytest --cov=app   # 88% coverage
 ```
 
 Covers: registration/login/refresh rotation + reuse detection, role guards, password reset;

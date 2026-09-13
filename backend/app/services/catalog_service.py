@@ -19,7 +19,8 @@ def is_publicly_visible(product: Product) -> bool:
 
 def get_public_product(db: Session, slug: str) -> Product:
     product = db.scalar(
-        select(Product).options(joinedload(Product.variants), joinedload(Product.images))
+        select(Product)
+        .options(joinedload(Product.variants), joinedload(Product.images))
         .where(Product.slug == slug)
     )
     if product is None or not product.publicly_visible:

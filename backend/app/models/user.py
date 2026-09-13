@@ -1,30 +1,30 @@
 """Users, roles, refresh/auth tokens, addresses."""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
+from sqlalchemy import Boolean, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.types import UTCDateTime
 from app.core.database import Base, utcnow
+from app.core.types import UTCDateTime
 from app.models.base import Timestamps, UUIDPk, enum_col
 
 
-class UserRole(str, Enum):
+class UserRole(StrEnum):
     customer = "customer"
     staff = "staff"
     manager = "manager"
     admin = "admin"
 
 
-class AddressType(str, Enum):
+class AddressType(StrEnum):
     home = "home"
     work = "work"
     other = "other"
 
 
-class AuthTokenPurpose(str, Enum):
+class AuthTokenPurpose(StrEnum):
     refresh = "refresh"
     password_reset = "password_reset"
     email_verify = "email_verify"

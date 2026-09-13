@@ -1,17 +1,17 @@
 """Warehouses and the inventory movement ledger."""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.types import UTCDateTime
 from app.core.database import Base, utcnow
+from app.core.types import UTCDateTime
 from app.models.base import Timestamps, UUIDPk, enum_col
 
 
-class AdjustmentType(str, Enum):
+class AdjustmentType(StrEnum):
     # Manual adjustment reasons (business-specified)
     increase = "increase"
     decrease = "decrease"
@@ -40,9 +40,7 @@ class InventoryAdjustment(UUIDPk, Base):
 
     __tablename__ = "inventory_adjustments"
 
-    variant_id: Mapped[str] = mapped_column(
-        ForeignKey("product_variants.id", ondelete="CASCADE"), index=True
-    )
+    variant_id: Mapped[str] = mapped_column(ForeignKey("product_variants.id", ondelete="CASCADE"), index=True)
     warehouse_id: Mapped[str | None] = mapped_column(ForeignKey("warehouses.id"))
     user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
     adjustment_type: Mapped[AdjustmentType] = mapped_column(enum_col(AdjustmentType))

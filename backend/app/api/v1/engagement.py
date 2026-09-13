@@ -16,7 +16,6 @@ from app.models.commerce import (
     RestockStatus,
     RestockSubscription,
 )
-from app.models.user import User
 from app.schemas.common import Message, Page
 from app.schemas.ops import (
     BulkEnquiryCreate,
@@ -76,7 +75,9 @@ def create_enquiry(payload: BulkEnquiryCreate, db: Db):
     db.add(enquiry)
     db.flush()
     notification_service.notify(
-        db, event_type="bulk_enquiry_received", recipient="sales@blackhouse.internal",
+        db,
+        event_type="bulk_enquiry_received",
+        recipient="sales@blackhouse.internal",
         payload={"name": enquiry.name, "business": enquiry.business_name, "qty": enquiry.estimated_qty},
     )
     db.commit()
@@ -84,7 +85,9 @@ def create_enquiry(payload: BulkEnquiryCreate, db: Db):
 
 
 @router.get("/bulk-enquiries", response_model=Page[BulkEnquiryOut])
-def list_enquiries(params: Annotated[PageParams, Depends()], staff: StaffUser, db: Db, status: str | None = None):
+def list_enquiries(
+    params: Annotated[PageParams, Depends()], staff: StaffUser, db: Db, status: str | None = None
+):
     stmt = select(BulkEnquiry)
     if status:
         stmt = stmt.where(BulkEnquiry.status == status)
@@ -109,8 +112,10 @@ def update_enquiry(enquiry_id: str, payload: BulkEnquiryUpdate, staff: StaffUser
 @router.get("/notifications/me", response_model=list[NotificationOut])
 def my_notifications(user: CurrentUser, db: Db):
     return db.scalars(
-        select(Notification).where(Notification.recipient == user.email)
-        .order_by(Notification.created_at.desc()).limit(50)
+        select(Notification)
+        .where(Notification.recipient == user.email)
+        .order_by(Notification.created_at.desc())
+        .limit(50)
     ).all()
 
 
