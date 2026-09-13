@@ -26,9 +26,7 @@ def get_variant(db: Session, variant_id: str) -> ProductVariant:
 
 def _lock(db: Session, variant: ProductVariant) -> None:
     if supports_row_locking(db):
-        db.execute(
-            select(ProductVariant).where(ProductVariant.id == variant.id).with_for_update()
-        )
+        db.execute(select(ProductVariant).where(ProductVariant.id == variant.id).with_for_update())
 
 
 def _ledger(
@@ -103,8 +101,15 @@ def reserve(
     db.expire(variant)
     db.refresh(variant)
     _ledger(
-        db, variant, AdjustmentType.reserve, before, -qty,
-        user=user, reason="stock reserved", reference_type="order", reference_id=reference_id,
+        db,
+        variant,
+        AdjustmentType.reserve,
+        before,
+        -qty,
+        user=user,
+        reason="stock reserved",
+        reference_type="order",
+        reference_id=reference_id,
     )
 
 
@@ -116,8 +121,14 @@ def release(db: Session, variant: ProductVariant, qty: int, *, reference_id: str
         return
     variant.reserved_qty -= delta
     _ledger(
-        db, variant, AdjustmentType.release, before, delta,
-        reason="reservation released", reference_type="order", reference_id=reference_id,
+        db,
+        variant,
+        AdjustmentType.release,
+        before,
+        delta,
+        reason="reservation released",
+        reference_type="order",
+        reference_id=reference_id,
     )
 
 
@@ -138,8 +149,14 @@ def commit_reservation(
         variant.stock_qty -= delta
     variant.sold_qty += delta
     _ledger(
-        db, variant, AdjustmentType.sale, before, -delta,
-        reason="sale committed", reference_type="order", reference_id=reference_id,
+        db,
+        variant,
+        AdjustmentType.sale,
+        before,
+        -delta,
+        reason="sale committed",
+        reference_type="order",
+        reference_id=reference_id,
     )
 
 
@@ -167,8 +184,10 @@ def adjust(
         if qty_change >= 0:
             raise ValidationError("decrease requires a negative qty_change.")
         if before_stock + qty_change < 0:
-            raise ValidationError("Cannot decrease below on-hand stock.",
-                                  details={"stock_qty": before_stock, "requested": qty_change})
+            raise ValidationError(
+                "Cannot decrease below on-hand stock.",
+                details={"stock_qty": before_stock, "requested": qty_change},
+            )
         variant.stock_qty += qty_change
     elif adj_type == AdjustmentType.return_:
         if qty_change <= 0:
@@ -210,7 +229,10 @@ def adjust(
     db.add(entry)
 
     audit_service.record(
-        db, user=user, action="inventory.adjust", entity_type="product_variant",
+        db,
+        user=user,
+        action="inventory.adjust",
+        entity_type="product_variant",
         entity_id=variant.id,
         before={"stock_qty": before_stock},
         after={"stock_qty": variant.stock_qty, "type": adj_type.value, "reason": reason},
@@ -246,7 +268,9 @@ def _fire_restock_alerts(db: Session, variant: ProductVariant, before_avail: int
         )
         if sub.phone:
             notification_service.notify(
-                db, event_type="restock_alert", recipient=sub.phone,
+                db,
+                event_type="restock_alert",
+                recipient=sub.phone,
                 channel=NotificationChannel.whatsapp,
                 payload={"sku": variant.sku, "size": variant.size.value},
             )
@@ -259,7 +283,9 @@ def _fire_low_stock(db: Session, variant: ProductVariant, after_avail: int) -> N
     threshold = settings_service.get_setting(db, "low_stock_threshold") or 3
     if 0 < after_avail <= threshold:
         notification_service.notify(
-            db, event_type="low_inventory", recipient="ops@blackhouse.internal",
+            db,
+            event_type="low_inventory",
+            recipient="ops@blackhouse.internal",
             channel=NotificationChannel.internal,
             payload={"sku": variant.sku, "available": after_avail, "threshold": threshold},
         )
@@ -287,8 +313,15 @@ def record_return_intake(
         change = qty
         adj_type = AdjustmentType.return_
     _ledger(
-        db, variant, adj_type, before, change,
-        user=user, reason="return intake", reference_type="return", reference_id=reference_id,
+        db,
+        variant,
+        adj_type,
+        before,
+        change,
+        user=user,
+        reason="return intake",
+        reference_type="return",
+        reference_id=reference_id,
     )
     after_avail = variant.available_qty
     _fire_restock_alerts(db, variant, max(before - variant.reserved_qty, 0), after_avail)

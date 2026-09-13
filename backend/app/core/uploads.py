@@ -108,9 +108,7 @@ def _sniff(data: bytes) -> ImageFormat | None:
 def _looks_like_markup(data: bytes) -> bool:
     """Detect SVG/HTML/XML so the error message can be specific and helpful."""
     head = data[:512].lstrip().lower()
-    return head.startswith(
-        (b"<svg", b"<?xml", b"<!doctype html", b"<html", b"<!doctype svg", b"<script")
-    )
+    return head.startswith((b"<svg", b"<?xml", b"<!doctype html", b"<html", b"<!doctype svg", b"<script"))
 
 
 def _read_dimensions(data: bytes, fmt: ImageFormat) -> tuple[int, int] | None:

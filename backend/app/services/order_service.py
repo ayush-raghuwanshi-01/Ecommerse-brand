@@ -61,9 +61,7 @@ def next_order_number(db: Session) -> str:
     from app.models.commerce import Counter
 
     prefix = settings_service.get_setting(db, "order_number_prefix") or "BH"
-    db.execute(
-        sa_update(Counter).where(Counter.name == "order").values(value=Counter.value + 1)
-    )
+    db.execute(sa_update(Counter).where(Counter.name == "order").values(value=Counter.value + 1))
     row = db.get(Counter, "order")
     if row is None:
         db.add(Counter(name="order", value=1))
@@ -141,7 +139,9 @@ def _create_order_record(
         created_by_staff_id=staff.id if staff else None,
         order_source=source,
         payment_method=payment_method,
-        payment_status=PaymentStatus.pending_cod if payment_method == PaymentMethod.cod else PaymentStatus.created,
+        payment_status=PaymentStatus.pending_cod
+        if payment_method == PaymentMethod.cod
+        else PaymentStatus.created,
         status=OrderStatus.confirmed if payment_method == PaymentMethod.cod else OrderStatus.pending_payment,
         currency=totals["currency"],
         subtotal_paise=totals["subtotal_paise"],
@@ -246,9 +246,10 @@ def place_order(
         discount = coupon_service.validate_coupon(db, coupon, lines, customer_id=customer.id)
 
     shipping_charge = provider.get_shipping_rate(
-        db, shipping_snap["postal_code"], shipping_snap.get("state", ""), sum(
-            ln.line_gross_paise for ln in lines
-        )
+        db,
+        shipping_snap["postal_code"],
+        shipping_snap.get("state", ""),
+        sum(ln.line_gross_paise for ln in lines),
     )
     totals = pricing_service.finalize(lines, discount_paise=discount, shipping_paise=shipping_charge)
 
@@ -290,8 +291,11 @@ def place_order(
         db,
         event_type="order_placed",
         recipient=customer.email,
-        payload={"subject": f"Order {order.number} received", "order_number": order.number,
-                 "total_paise": order.grand_total_paise},
+        payload={
+            "subject": f"Order {order.number} received",
+            "order_number": order.number,
+            "total_paise": order.grand_total_paise,
+        },
     )
     return order
 
@@ -362,7 +366,9 @@ def staff_create_order(
     if not svc.serviceable:
         raise PolicyError(svc.reason or "Address not serviceable.")
     shipping_charge = provider.get_shipping_rate(
-        db, shipping_address["postal_code"], shipping_address.get("state", ""),
+        db,
+        shipping_address["postal_code"],
+        shipping_address.get("state", ""),
         sum(ln.line_gross_paise for ln in lines),
     )
     totals = pricing_service.finalize(lines, discount_paise=discount, shipping_paise=shipping_charge)
@@ -400,17 +406,24 @@ def staff_create_order(
     db.flush()
 
     audit_service.record(
-        db, user=staff, action="order.create_staff", entity_type="order", entity_id=order.id,
+        db,
+        user=staff,
+        action="order.create_staff",
+        entity_type="order",
+        entity_id=order.id,
         after={"number": order.number, "source": source.value, "total": totals["grand_total_paise"]},
     )
     notification_service.notify(
-        db, event_type="order_placed", recipient=customer.email,
+        db,
+        event_type="order_placed",
+        recipient=customer.email,
         payload={"subject": f"Order {order.number} received", "order_number": order.number},
     )
     return order
 
 
 # ── Status transitions ──────────────────────────────────────────────────────
+
 
 def _commit_stock_for(db: Session, order: Order) -> None:
     for item in order.items:
@@ -460,7 +473,9 @@ def set_status(
     if new_status == OrderStatus.shipped:
         from app.models.returns import Shipment
 
-        shipment = db.scalar(select(Shipment).where(Shipment.order_id == order.id, Shipment.direction == "forward"))
+        shipment = db.scalar(
+            select(Shipment).where(Shipment.order_id == order.id, Shipment.direction == "forward")
+        )
         if shipment is None:
             shipping_service.get_provider().create_shipment(db, order)
 
@@ -484,16 +499,25 @@ def set_status(
     order.status = new_status
     db.add(
         OrderStatusHistory(
-            order_id=order.id, from_status=old.value, to_status=new_status.value,
-            changed_by=actor.id, note=note,
+            order_id=order.id,
+            from_status=old.value,
+            to_status=new_status.value,
+            changed_by=actor.id,
+            note=note,
         )
     )
     if actor.role.value in ("manager", "admin") or new_status in (
-        OrderStatus.cancelled, OrderStatus.cancel_requested,
+        OrderStatus.cancelled,
+        OrderStatus.cancel_requested,
     ):
         audit_service.record(
-            db, user=actor, action="order.status_change", entity_type="order", entity_id=order.id,
-            before={"status": old.value}, after={"status": new_status.value, "note": note},
+            db,
+            user=actor,
+            action="order.status_change",
+            entity_type="order",
+            entity_id=order.id,
+            before={"status": old.value},
+            after={"status": new_status.value, "note": note},
         )
     _notify_status(db, order, new_status)
     db.flush()
@@ -529,7 +553,9 @@ def _notify_status(db: Session, order: Order, status: OrderStatus) -> None:
     event = mapping.get(status)
     if event:
         notification_service.notify(
-            db, event_type=event, recipient=customer.email,
+            db,
+            event_type=event,
+            recipient=customer.email,
             payload={"order_number": order.number, "subject": f"Order {order.number} update"},
         )
 
@@ -546,25 +572,38 @@ def request_cancellation(db: Session, order: Order, *, actor: User, reason: str,
     order.cancellation_decision_note = note
     db.add(
         OrderStatusHistory(
-            order_id=order.id, from_status=None, to_status=OrderStatus.cancel_requested.value,
-            changed_by=actor.id, note=note or reason,
+            order_id=order.id,
+            from_status=None,
+            to_status=OrderStatus.cancel_requested.value,
+            changed_by=actor.id,
+            note=note or reason,
         )
     )
     audit_service.record(
-        db, user=actor, action="order.cancel_request", entity_type="order", entity_id=order.id,
+        db,
+        user=actor,
+        action="order.cancel_request",
+        entity_type="order",
+        entity_id=order.id,
         after={"reason": reason, "note": note},
     )
     db.flush()
     return order
 
 
-def decide_cancellation(db: Session, order: Order, *, approver: User, approve: bool, note: str | None) -> Order:
+def decide_cancellation(
+    db: Session, order: Order, *, approver: User, approve: bool, note: str | None
+) -> Order:
     if order.status != OrderStatus.cancel_requested:
         raise ValidationError("Order has no pending cancellation request.")
     if approve:
         set_status(db, order, OrderStatus.cancelled, actor=approver, note=note or "cancellation approved")
         audit_service.record(
-            db, user=approver, action="order.cancel_approve", entity_type="order", entity_id=order.id,
+            db,
+            user=approver,
+            action="order.cancel_approve",
+            entity_type="order",
+            entity_id=order.id,
             after={"note": note},
         )
     else:
@@ -580,17 +619,26 @@ def decide_cancellation(db: Session, order: Order, *, approver: User, approve: b
         order.cancellation_decision_note = note
         db.add(
             OrderStatusHistory(
-                order_id=order.id, from_status=from_status.value,
-                to_status=restored.value, changed_by=approver.id, note=note or "cancellation rejected",
+                order_id=order.id,
+                from_status=from_status.value,
+                to_status=restored.value,
+                changed_by=approver.id,
+                note=note or "cancellation rejected",
             )
         )
         audit_service.record(
-            db, user=approver, action="order.cancel_reject", entity_type="order", entity_id=order.id,
+            db,
+            user=approver,
+            action="order.cancel_reject",
+            entity_type="order",
+            entity_id=order.id,
             after={"note": note},
         )
         if order.customer:
             notification_service.notify(
-                db, event_type="cancellation_rejected", recipient=order.customer.email,
+                db,
+                event_type="cancellation_rejected",
+                recipient=order.customer.email,
                 payload={"order_number": order.number},
             )
     db.flush()
@@ -622,7 +670,11 @@ def edit_order(db: Session, order: Order, *, actor: User, changes: dict) -> Orde
             raise NotFoundError("Order item not found.")
         variant = inventory_service.get_variant(db, item.variant_id)
         new_qty = line_change.get("qty", item.qty)
-        new_variant = inventory_service.get_variant(db, line_change["variant_id"]) if line_change.get("variant_id") else variant
+        new_variant = (
+            inventory_service.get_variant(db, line_change["variant_id"])
+            if line_change.get("variant_id")
+            else variant
+        )
         delta = new_qty - item.qty
         if delta > 0:
             inventory_service.reserve(
@@ -657,12 +709,19 @@ def edit_order(db: Session, order: Order, *, actor: User, changes: dict) -> Orde
 
     db.add(
         OrderStatusHistory(
-            order_id=order.id, from_status=order.status.value, to_status=order.status.value,
-            changed_by=actor.id, note="order edited",
+            order_id=order.id,
+            from_status=order.status.value,
+            to_status=order.status.value,
+            changed_by=actor.id,
+            note="order edited",
         )
     )
     audit_service.record(
-        db, user=actor, action="order.edit", entity_type="order", entity_id=order.id,
+        db,
+        user=actor,
+        action="order.edit",
+        entity_type="order",
+        entity_id=order.id,
         before=before,
         after={
             "shipping_address": order.shipping_address,
@@ -720,8 +779,10 @@ def sweep_expired_reservations(db: Session) -> int:
         order.cancellation_reason = CancellationReason.payment_issue
         db.add(
             OrderStatusHistory(
-                order_id=order.id, from_status=OrderStatus.pending_payment.value,
-                to_status=OrderStatus.cancelled.value, changed_by=None,
+                order_id=order.id,
+                from_status=OrderStatus.pending_payment.value,
+                to_status=OrderStatus.cancelled.value,
+                changed_by=None,
                 note="payment window expired; reservation released",
             )
         )
@@ -731,8 +792,7 @@ def sweep_expired_reservations(db: Session) -> int:
 
 def get_order_for_user(db: Session, order_id: str, user: User) -> Order:
     order = db.scalar(
-        select(Order).options(joinedload(Order.items), joinedload(Order.history))
-        .where(Order.id == order_id)
+        select(Order).options(joinedload(Order.items), joinedload(Order.history)).where(Order.id == order_id)
     )
     if order is None:
         raise NotFoundError("Order not found.")

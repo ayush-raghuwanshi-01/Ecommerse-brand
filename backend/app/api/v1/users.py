@@ -78,7 +78,9 @@ def list_customers(params: Annotated[PageParams, Depends()], staff: StaffUser, d
     if params.q:
         like = f"%{params.q}%"
         stmt = stmt.where(or_(User.email.ilike(like), User.full_name.ilike(like), User.phone.ilike(like)))
-    items, total = paginate(db, stmt, params, sort_columns={"created_at": User.created_at, "email": User.email})
+    items, total = paginate(
+        db, stmt, params, sort_columns={"created_at": User.created_at, "email": User.email}
+    )
     return Page(items=items, meta=page_meta(params, total))
 
 
@@ -89,13 +91,20 @@ def get_customer(customer_id: str, staff: StaffUser, db: Db):
         raise NotFoundError("Customer not found.")
     from app.models.order import Order
 
-    orders = db.query(Order).filter_by(customer_id=customer_id).order_by(Order.created_at.desc()).limit(25).all()
+    orders = (
+        db.query(Order).filter_by(customer_id=customer_id).order_by(Order.created_at.desc()).limit(25).all()
+    )
     return {
         "customer": UserOut.model_validate(customer),
         "addresses": [AddressOut.model_validate(a) for a in customer.addresses],
         "recent_orders": [
-            {"id": o.id, "number": o.number, "status": o.status.value,
-             "grand_total_paise": o.grand_total_paise, "created_at": o.created_at}
+            {
+                "id": o.id,
+                "number": o.number,
+                "status": o.status.value,
+                "grand_total_paise": o.grand_total_paise,
+                "created_at": o.created_at,
+            }
             for o in orders
         ],
     }
@@ -111,8 +120,15 @@ def change_role(user_id: str, role: str, admin: AdminUser, db: Db):
         raise NotFoundError("User not found.")
     before = target.role.value
     target.role = UserRole(role)
-    audit_service.record(db, user=admin, action="user.role_change", entity_type="user",
-                         entity_id=target.id, before={"role": before}, after={"role": role})
+    audit_service.record(
+        db,
+        user=admin,
+        action="user.role_change",
+        entity_type="user",
+        entity_id=target.id,
+        before={"role": before},
+        after={"role": role},
+    )
     db.flush()
     db.commit()
     return target

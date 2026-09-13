@@ -13,7 +13,7 @@ from app.models.base import Timestamps, UUIDPk, enum_col
 
 
 class CouponType(StrEnum):
-    fixed = "fixed"          # flat amount off (paise)
+    fixed = "fixed"  # flat amount off (paise)
     percentage = "percentage"  # percent off eligible subtotal (value = percent * 100)
 
 
@@ -116,7 +116,9 @@ class BulkEnquiry(UUIDPk, Timestamps, Base):
     product_interest: Mapped[str] = mapped_column(String(300))
     estimated_qty: Mapped[int | None] = mapped_column(Integer)
     message: Mapped[str | None] = mapped_column(Text)
-    status: Mapped[BulkEnquiryStatus] = mapped_column(enum_col(BulkEnquiryStatus), default=BulkEnquiryStatus.new)
+    status: Mapped[BulkEnquiryStatus] = mapped_column(
+        enum_col(BulkEnquiryStatus), default=BulkEnquiryStatus.new
+    )
     staff_notes: Mapped[str | None] = mapped_column(Text)
 
 
@@ -140,7 +142,9 @@ class Notification(UUIDPk, Base):
     channel: Mapped[NotificationChannel] = mapped_column(enum_col(NotificationChannel))
     event_type: Mapped[str] = mapped_column(String(60), index=True)
     payload_json: Mapped[dict | None] = mapped_column(JSON)
-    status: Mapped[NotificationStatus] = mapped_column(enum_col(NotificationStatus), default=NotificationStatus.pending)
+    status: Mapped[NotificationStatus] = mapped_column(
+        enum_col(NotificationStatus), default=NotificationStatus.pending
+    )
     provider_message_id: Mapped[str | None] = mapped_column(String(120))
     retry_count: Mapped[int] = mapped_column(Integer, default=0)
     sent_at: Mapped[datetime | None] = mapped_column(UTCDateTime())

@@ -28,8 +28,9 @@ def list_categories(db: Db):
 
 @router.post("/categories", response_model=CategoryOut, status_code=201)
 def create_category(payload: CategoryCreate, manager: ManagerUser, db: Db):
-    category = Category(name=payload.name, slug=payload.slug or _slugify(payload.name),
-                        parent_id=payload.parent_id)
+    category = Category(
+        name=payload.name, slug=payload.slug or _slugify(payload.name), parent_id=payload.parent_id
+    )
     db.add(category)
     db.commit()
     return category
@@ -42,8 +43,9 @@ def list_collections(db: Db):
 
 @router.post("/collections", response_model=CollectionOut, status_code=201)
 def create_collection(payload: CollectionCreate, manager: ManagerUser, db: Db):
-    collection = Collection(name=payload.name, slug=payload.slug or _slugify(payload.name),
-                            description=payload.description)
+    collection = Collection(
+        name=payload.name, slug=payload.slug or _slugify(payload.name), description=payload.description
+    )
     db.add(collection)
     db.commit()
     return collection

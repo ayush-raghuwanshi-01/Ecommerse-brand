@@ -85,7 +85,9 @@ class ProviderNotConfiguredError(AppError):
 
 
 def _payload(code: str, message: str, details: dict[str, Any] | None = None) -> JSONResponse:
-    return JSONResponse(status_code=400, content={"error": {"code": code, "message": message, "details": details or {}}})
+    return JSONResponse(
+        status_code=400, content={"error": {"code": code, "message": message, "details": details or {}}}
+    )
 
 
 def register_exception_handlers(app: FastAPI) -> None:

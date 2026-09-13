@@ -65,9 +65,7 @@ proc_name = "blackhouse-api"
 
 
 def when_ready(server):  # pragma: no cover - gunicorn hook
-    server.log.info(
-        "blackhouse-api ready: bind=%s workers=%s timeout=%ss", bind, workers, timeout
-    )
+    server.log.info("blackhouse-api ready: bind=%s workers=%s timeout=%ss", bind, workers, timeout)
 
 
 def post_fork(server, worker):  # pragma: no cover - gunicorn hook

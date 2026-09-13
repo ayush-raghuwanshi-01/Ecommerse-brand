@@ -59,6 +59,7 @@ class _FakeResponse:
 # Provider selection
 # ══════════════════════════════════════════════════════════════════════════
 
+
 def test_local_is_the_default(monkeypatch):
     monkeypatch.setattr(settings, "storage_provider", "local", raising=False)
     assert isinstance(get_storage(), LocalStorage)
@@ -84,6 +85,7 @@ def test_unknown_provider_falls_back_to_local(monkeypatch):
 # Local storage
 # ══════════════════════════════════════════════════════════════════════════
 
+
 def test_local_put_writes_and_returns_served_url(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "storage_local_path", str(tmp_path), raising=False)
     monkeypatch.setattr(settings, "storage_public_base_url", "/static/uploads", raising=False)
@@ -107,11 +109,10 @@ def test_local_delete_is_idempotent(tmp_path, monkeypatch):
 # Cloudinary configuration
 # ══════════════════════════════════════════════════════════════════════════
 
+
 def test_cloudinary_parses_dashboard_url(monkeypatch):
     monkeypatch.setattr(settings, "storage_provider", "cloudinary", raising=False)
-    monkeypatch.setattr(
-        settings, "cloudinary_url", "cloudinary://mykey:mysecret@mycloud", raising=False
-    )
+    monkeypatch.setattr(settings, "cloudinary_url", "cloudinary://mykey:mysecret@mycloud", raising=False)
     storage = CloudinaryStorage()
     assert storage._cloud == "mycloud"
     assert storage._key == "mykey"
@@ -146,6 +147,7 @@ def test_unconfigured_cloudinary_raises_with_actionable_message(monkeypatch):
 # Cloudinary signature
 # ══════════════════════════════════════════════════════════════════════════
 
+
 def test_signature_matches_cloudinary_algorithm(cloudinary_env):
     """Sorted k=v pairs joined by &, secret appended, SHA-1 hex.
 
@@ -172,6 +174,7 @@ def test_signature_ignores_empty_values(cloudinary_env):
 # Cloudinary upload
 # ══════════════════════════════════════════════════════════════════════════
 
+
 def test_upload_posts_signed_multipart_and_returns_url(cloudinary_env, monkeypatch):
     captured: dict[str, Any] = {}
 
@@ -197,17 +200,18 @@ def test_upload_posts_signed_multipart_and_returns_url(cloudinary_env, monkeypat
 def test_upload_strips_the_extension_for_public_id(cloudinary_env, monkeypatch):
     seen = {}
     monkeypatch.setattr(
-        httpx, "post",
-        lambda url, data=None, files=None, timeout=None: seen.update(data=data)
-        or _FakeResponse(200, {"public_id": data["public_id"]}),
+        httpx,
+        "post",
+        lambda url, data=None, files=None, timeout=None: (
+            seen.update(data=data) or _FakeResponse(200, {"public_id": data["public_id"]})
+        ),
     )
     CloudinaryStorage().put("products/p1/hero.webp", b"RIFF....WEBP", "image/webp")
     assert seen["data"]["public_id"] == "products/p1/hero"
 
 
 def test_upload_rejection_raises_storage_error(cloudinary_env, monkeypatch):
-    monkeypatch.setattr(httpx, "post",
-                        lambda *a, **k: _FakeResponse(401, text="Invalid signature"))
+    monkeypatch.setattr(httpx, "post", lambda *a, **k: _FakeResponse(401, text="Invalid signature"))
     with pytest.raises(StorageError) as exc:
         CloudinaryStorage().put("a.jpg", b"\xff\xd8\xff", "image/jpeg")
     assert "401" in str(exc.value)
@@ -224,14 +228,14 @@ def test_network_failure_raises_storage_error(cloudinary_env, monkeypatch):
 
 def test_delete_failure_is_logged_not_raised(cloudinary_env, monkeypatch):
     """An already-unreferenced object must not fail the caller's request."""
-    monkeypatch.setattr(httpx, "post",
-                        lambda *a, **k: _FakeResponse(420, text="rate limited"))
+    monkeypatch.setattr(httpx, "post", lambda *a, **k: _FakeResponse(420, text="rate limited"))
     CloudinaryStorage().delete("products/gone.jpg")  # must not raise
 
 
 # ══════════════════════════════════════════════════════════════════════════
 # Responsive delivery URLs
 # ══════════════════════════════════════════════════════════════════════════
+
 
 def test_url_for_adds_auto_format_and_width(cloudinary_env):
     url = CloudinaryStorage().url_for("products/hero", width=800)
@@ -257,8 +261,7 @@ def test_image_url_transforms_cloudinary_urls(cloudinary_env, monkeypatch):
 
 def test_image_url_does_not_double_apply_transforms(cloudinary_env, monkeypatch):
     monkeypatch.setattr(httpx, "post", lambda *a, **k: _FakeResponse(200, {}))
-    already = ("https://res.cloudinary.com/blackhouse/image/upload/"
-               "f_auto,q_80,dpr_auto,w_400/products/hero")
+    already = "https://res.cloudinary.com/blackhouse/image/upload/f_auto,q_80,dpr_auto,w_400/products/hero"
     out = image_url(already, width=400)
     assert out.count("f_auto") == 1, "transforms must not stack"
 
@@ -277,6 +280,7 @@ def test_image_url_handles_empty():
 # ══════════════════════════════════════════════════════════════════════════
 # S3 URL construction (no boto3 calls — client init is stubbed)
 # ══════════════════════════════════════════════════════════════════════════
+
 
 @pytest.fixture()
 def s3_env(monkeypatch):
@@ -316,14 +320,11 @@ def test_s3_requires_a_bucket(monkeypatch):
 
 def test_s3_public_url_uses_bucket_endpoint(s3_env):
     storage = storage_service.S3Storage()
-    assert storage.public_url("a/b.jpg") == (
-        "https://blackhouse-media.s3.ap-south-1.amazonaws.com/a/b.jpg"
-    )
+    assert storage.public_url("a/b.jpg") == ("https://blackhouse-media.s3.ap-south-1.amazonaws.com/a/b.jpg")
 
 
 def test_s3_public_url_prefers_cdn(s3_env, monkeypatch):
-    monkeypatch.setattr(settings, "storage_cdn_base_url", "https://cdn.blackhouse.example/",
-                        raising=False)
+    monkeypatch.setattr(settings, "storage_cdn_base_url", "https://cdn.blackhouse.example/", raising=False)
     storage = storage_service.S3Storage()
     assert storage.public_url("a/b.jpg") == "https://cdn.blackhouse.example/a/b.jpg"
 
@@ -337,6 +338,7 @@ def test_s3_has_no_image_transforms(s3_env):
 # ══════════════════════════════════════════════════════════════════════════
 # Filename sanitising
 # ══════════════════════════════════════════════════════════════════════════
+
 
 def test_safe_filename_strips_path_traversal():
     out = safe_filename("../../etc/passwd")

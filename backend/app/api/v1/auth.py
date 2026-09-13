@@ -23,12 +23,15 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 Db = Annotated[Session, Depends(get_db)]
 
 
-@router.post("/register", response_model=TokenPair, status_code=201,
-             dependencies=[Depends(rate_limit(10))])
+@router.post("/register", response_model=TokenPair, status_code=201, dependencies=[Depends(rate_limit(10))])
 def register(payload: RegisterRequest, request: Request, db: Db):
     _user, tokens = auth_service.register(
-        db, email=payload.email, password=payload.password, full_name=payload.full_name,
-        phone=payload.phone, request_meta=request_context(request),
+        db,
+        email=payload.email,
+        password=payload.password,
+        full_name=payload.full_name,
+        phone=payload.phone,
+        request_meta=request_context(request),
     )
     db.commit()
     return tokens
@@ -45,7 +48,9 @@ def login(payload: LoginRequest, request: Request, db: Db):
 
 @router.post("/refresh", response_model=TokenPair)
 def refresh(payload: RefreshRequest, request: Request, db: Db):
-    _user, tokens = auth_service.rotate_refresh(db, payload.refresh_token, request_meta=request_context(request))
+    _user, tokens = auth_service.rotate_refresh(
+        db, payload.refresh_token, request_meta=request_context(request)
+    )
     db.commit()
     return tokens
 

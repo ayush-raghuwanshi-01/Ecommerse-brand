@@ -24,34 +24,33 @@ from app.core.uploads import ImageFormat, validate_image
 # bytes are padding because validation deliberately never decodes the image.
 
 PNG_BYTES = (
-    b"\x89PNG\r\n\x1a\n"          # signature
-    b"\x00\x00\x00\rIHDR"         # chunk length + type
-    b"\x00\x00\x04\xb0"           # width  = 1200
-    b"\x00\x00\x06\x40"           # height = 1600
-    b"\x08\x06\x00\x00\x00"       # bit depth, colour type, …
-    + b"\x00" * 32
+    b"\x89PNG\r\n\x1a\n"  # signature
+    b"\x00\x00\x00\rIHDR"  # chunk length + type
+    b"\x00\x00\x04\xb0"  # width  = 1200
+    b"\x00\x00\x06\x40"  # height = 1600
+    b"\x08\x06\x00\x00\x00" + b"\x00" * 32  # bit depth, colour type, …
 )
 
 # SOI + APP0/JFIF, then a SOF0 frame carrying the dimensions.
 JPEG_BYTES = (
-    b"\xff\xd8"                                        # SOI
+    b"\xff\xd8"  # SOI
     b"\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"  # APP0
-    b"\xff\xc0\x00\x11\x08"                            # SOF0, precision 8
-    b"\x02\x58"                                        # height = 600
-    b"\x03\x20"                                        # width  = 800
-    b"\x03\x01\x22\x00\x02\x11\x01\x03\x11\x01"        # 3 components
-    b"\xff\xd9"                                        # EOI
+    b"\xff\xc0\x00\x11\x08"  # SOF0, precision 8
+    b"\x02\x58"  # height = 600
+    b"\x03\x20"  # width  = 800
+    b"\x03\x01\x22\x00\x02\x11\x01\x03\x11\x01"  # 3 components
+    b"\xff\xd9"  # EOI
 )
 
 WEBP_BYTES = (
     b"RIFF"
-    b"\x24\x00\x00\x00"    # file size - 8
+    b"\x24\x00\x00\x00"  # file size - 8
     b"WEBP"
     b"VP8X"
-    b"\x0a\x00\x00\x00"    # chunk size
-    b"\x00\x00\x00\x00"    # flags
-    b"\xbf\x02\x00"        # width - 1  = 704
-    b"\x3f\x03\x00"        # height - 1 = 832
+    b"\x0a\x00\x00\x00"  # chunk size
+    b"\x00\x00\x00\x00"  # flags
+    b"\xbf\x02\x00"  # width - 1  = 704
+    b"\x3f\x03\x00"  # height - 1 = 832
 )
 
 # ISO base media file format: 4-byte big-endian box size, then `ftyp`, then brand.
@@ -69,8 +68,9 @@ HTML_PAYLOAD = b"<!doctype html><html><body><script>alert(document.cookie)</scri
 GIF_BYTES = b"GIF89a" + b"\x00" * 64
 
 
-def _upload(client: TestClient, product_id: str, headers: dict, *, filename: str,
-            content_type: str, payload: bytes):
+def _upload(
+    client: TestClient, product_id: str, headers: dict, *, filename: str, content_type: str, payload: bytes
+):
     return client.post(
         f"/api/v1/products/{product_id}/images/upload",
         headers=headers,
@@ -82,6 +82,7 @@ def _upload(client: TestClient, product_id: str, headers: dict, *, filename: str
 # ══════════════════════════════════════════════════════════════════════════
 # Format sniffing — the allow-list itself
 # ══════════════════════════════════════════════════════════════════════════
+
 
 @pytest.mark.parametrize(
     ("payload", "expected"),
@@ -114,16 +115,14 @@ def test_jpeg_lied_about_as_png_is_corrected():
 def test_svg_is_rejected():
     """The stored-XSS vector. Must be refused with an actionable message."""
     with pytest.raises(ValidationError) as exc:
-        validate_image(SVG_PAYLOAD, declared_content_type="image/svg+xml",
-                       declared_filename="hero.svg")
+        validate_image(SVG_PAYLOAD, declared_content_type="image/svg+xml", declared_filename="hero.svg")
     assert "SVG" in exc.value.message
     assert exc.value.status_code == 422
 
 
 def test_html_is_rejected():
     with pytest.raises(ValidationError):
-        validate_image(HTML_PAYLOAD, declared_content_type="text/html",
-                       declared_filename="index.html")
+        validate_image(HTML_PAYLOAD, declared_content_type="text/html", declared_filename="index.html")
 
 
 def test_unsupported_raster_format_is_rejected():
@@ -163,6 +162,7 @@ def test_polyglot_jpeg_with_trailing_script_is_still_accepted():
 
 # ── Dimension parsing (used for the undersized-artwork warning) ────────────
 
+
 def test_png_dimensions_parsed():
     assert validate_image(PNG_BYTES).width_height == (1200, 1600)
 
@@ -184,9 +184,16 @@ def test_truncated_header_returns_no_dimensions_instead_of_raising():
 # Endpoint integration — proving the route actually uses the validator
 # ══════════════════════════════════════════════════════════════════════════
 
+
 def test_endpoint_rejects_svg_upload(client, product, manager_headers):
-    r = _upload(client, product.id, manager_headers, filename="payload.svg",
-                content_type="image/svg+xml", payload=SVG_PAYLOAD)
+    r = _upload(
+        client,
+        product.id,
+        manager_headers,
+        filename="payload.svg",
+        content_type="image/svg+xml",
+        payload=SVG_PAYLOAD,
+    )
     assert r.status_code == 422
     body = r.json()["error"]
     assert body["code"] == "VALIDATION_ERROR"
@@ -195,27 +202,41 @@ def test_endpoint_rejects_svg_upload(client, product, manager_headers):
 
 def test_endpoint_rejects_html_disguised_as_jpeg(client, product, manager_headers):
     """Lying Content-Type must not smuggle markup through."""
-    r = _upload(client, product.id, manager_headers, filename="photo.jpg",
-                content_type="image/jpeg", payload=HTML_PAYLOAD)
+    r = _upload(
+        client,
+        product.id,
+        manager_headers,
+        filename="photo.jpg",
+        content_type="image/jpeg",
+        payload=HTML_PAYLOAD,
+    )
     assert r.status_code == 422
 
 
 def test_endpoint_accepts_real_png(client, product, manager_headers):
-    r = _upload(client, product.id, manager_headers, filename="hero.png",
-                content_type="image/png", payload=PNG_BYTES)
+    r = _upload(
+        client, product.id, manager_headers, filename="hero.png", content_type="image/png", payload=PNG_BYTES
+    )
     assert r.status_code == 201, r.text
     assert r.json()["url"].endswith(".png")
 
 
 def test_upload_requires_manager_role(client, product, customer_headers):
-    r = _upload(client, product.id, customer_headers, filename="hero.png",
-                content_type="image/png", payload=PNG_BYTES)
+    r = _upload(
+        client, product.id, customer_headers, filename="hero.png", content_type="image/png", payload=PNG_BYTES
+    )
     assert r.status_code == 403
 
 
 def test_upload_for_missing_product_is_404(client, manager_headers):
-    r = _upload(client, "00000000-0000-0000-0000-000000000000", manager_headers,
-                filename="hero.png", content_type="image/png", payload=PNG_BYTES)
+    r = _upload(
+        client,
+        "00000000-0000-0000-0000-000000000000",
+        manager_headers,
+        filename="hero.png",
+        content_type="image/png",
+        payload=PNG_BYTES,
+    )
     assert r.status_code == 404
 
 

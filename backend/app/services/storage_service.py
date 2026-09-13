@@ -146,9 +146,7 @@ class CloudinaryStorage(StorageProvider):
         ``api_key``/``signature`` are excluded — they are not part of the signed
         set.
         """
-        to_sign = "&".join(
-            f"{k}={params[k]}" for k in sorted(params) if params[k] not in (None, "")
-        )
+        to_sign = "&".join(f"{k}={params[k]}" for k in sorted(params) if params[k] not in (None, ""))
         return hashlib.sha1(f"{to_sign}{self._secret}".encode()).hexdigest()
 
     def put(self, key: str, data: bytes, content_type: str) -> str:
@@ -184,15 +182,16 @@ class CloudinaryStorage(StorageProvider):
 
         if response.status_code not in {200, 201}:
             raise StorageError(
-                f"Cloudinary rejected the upload ({response.status_code}): "
-                f"{response.text[:300]}"
+                f"Cloudinary rejected the upload ({response.status_code}): {response.text[:300]}"
             )
 
         payload = response.json()
         stored_id = payload.get("public_id") or public_id
         log.info(
             "cloudinary upload ok public_id=%s bytes=%d format=%s",
-            stored_id, len(data), payload.get("format"),
+            stored_id,
+            len(data),
+            payload.get("format"),
         )
         # Store the *untransformed* URL; delivery transforms are applied on read
         # by url_for() so width can vary per placement.
@@ -200,8 +199,11 @@ class CloudinaryStorage(StorageProvider):
 
     def delete(self, key: str) -> None:
         public_id = key.removesuffix(Path(key).suffix) or key
-        params: dict[str, object] = {"timestamp": int(time.time()), "public_id": public_id,
-                                     "invalidate": "true"}
+        params: dict[str, object] = {
+            "timestamp": int(time.time()),
+            "public_id": public_id,
+            "invalidate": "true",
+        }
         form = {
             **{k: str(v) for k, v in params.items()},
             "api_key": self._key,
@@ -222,7 +224,9 @@ class CloudinaryStorage(StorageProvider):
         if response.status_code not in {200, 201}:
             log.warning(
                 "cloudinary destroy returned %s for %s: %s",
-                response.status_code, public_id, response.text[:200],
+                response.status_code,
+                public_id,
+                response.text[:200],
             )
 
     def public_url(self, key: str) -> str:
@@ -238,10 +242,7 @@ class CloudinaryStorage(StorageProvider):
         transform = f"f_auto,q_{settings.image_quality},dpr_auto"
         if width:
             transform += f",w_{int(width)}"
-        return (
-            f"{self.DELIVERY_BASE}/{self._cloud}/{self.RESOURCE_TYPE}/upload/"
-            f"{transform}/{key}"
-        )
+        return f"{self.DELIVERY_BASE}/{self._cloud}/{self.RESOURCE_TYPE}/upload/{transform}/{key}"
 
 
 class S3Storage(StorageProvider):  # pragma: no cover - requires boto3 + credentials
@@ -258,8 +259,7 @@ class S3Storage(StorageProvider):  # pragma: no cover - requires boto3 + credent
             import boto3  # optional dependency: pip install ".[s3]"
         except ImportError as exc:  # pragma: no cover
             raise StorageError(
-                "STORAGE_PROVIDER=s3 requires boto3. Install with: "
-                'pip install "blackhouse-backend[s3]"'
+                'STORAGE_PROVIDER=s3 requires boto3. Install with: pip install "blackhouse-backend[s3]"'
             ) from exc
 
         if not settings.storage_bucket:

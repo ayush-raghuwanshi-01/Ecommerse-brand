@@ -23,7 +23,10 @@ def create_shipment(payload: ShipmentCreate, staff: StaffUser, db: Db):
     if order is None:
         raise NotFoundError("Order not found.")
     shipment = shipping_service.get_provider().create_shipment(
-        db, order, provider=payload.provider, tracking_number=payload.tracking_number,
+        db,
+        order,
+        provider=payload.provider,
+        tracking_number=payload.tracking_number,
         tracking_url=payload.tracking_url,
     )
     db.commit()
@@ -45,14 +48,25 @@ def update_shipment(shipment_id: str, payload: ShipmentUpdate, staff: StaffUser,
         order = shipment.order
         if order and order.customer and payload.status in ("in_transit", "out_for_delivery", "delivered"):
             notification_service.notify(
-                db, event_type="tracking_updated", recipient=order.customer.email,
-                payload={"order_number": order.number, "status": payload.status,
-                         "tracking_number": shipment.tracking_number},
+                db,
+                event_type="tracking_updated",
+                recipient=order.customer.email,
+                payload={
+                    "order_number": order.number,
+                    "status": payload.status,
+                    "tracking_number": shipment.tracking_number,
+                },
             )
-    audit_service.record(db, user=staff, action="shipment.update", entity_type="shipment",
-                         entity_id=shipment.id, before=before,
-                         after={"status": shipment.status.value, "tracking_number": shipment.tracking_number},
-                         request=request)
+    audit_service.record(
+        db,
+        user=staff,
+        action="shipment.update",
+        entity_type="shipment",
+        entity_id=shipment.id,
+        before=before,
+        after={"status": shipment.status.value, "tracking_number": shipment.tracking_number},
+        request=request,
+    )
     db.commit()
     return shipment
 

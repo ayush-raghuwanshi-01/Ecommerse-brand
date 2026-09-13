@@ -55,6 +55,7 @@ def no_sleep(monkeypatch):
 # Provider selection
 # ══════════════════════════════════════════════════════════════════════════
 
+
 def test_log_provider_is_the_development_default(monkeypatch):
     monkeypatch.setattr(settings, "email_provider", "log", raising=False)
     assert isinstance(_provider_for(NotificationChannel.email), LogEmailProvider)
@@ -83,6 +84,7 @@ def test_whatsapp_and_sms_are_explicitly_unconfigured():
 # Resend provider configuration guards
 # ══════════════════════════════════════════════════════════════════════════
 
+
 def test_resend_without_api_key_raises_with_actionable_message(monkeypatch):
     monkeypatch.setattr(settings, "email_provider", "resend", raising=False)
     monkeypatch.setattr(settings, "email_api_key", "", raising=False)
@@ -104,6 +106,7 @@ def test_resend_with_invalid_sender_raises(monkeypatch):
 # Resend request shape
 # ══════════════════════════════════════════════════════════════════════════
 
+
 def test_successful_send_returns_provider_message_id(resend_configured, monkeypatch):
     captured: dict[str, Any] = {}
 
@@ -114,8 +117,9 @@ def test_successful_send_returns_provider_message_id(resend_configured, monkeypa
     monkeypatch.setattr(httpx, "post", fake_post)
 
     provider = ResendEmailProvider()
-    message_id = provider.send("customer@example.com", "order_placed",
-                               {"order_number": "BH-1042", "total_paise": 1850000})
+    message_id = provider.send(
+        "customer@example.com", "order_placed", {"order_number": "BH-1042", "total_paise": 1850000}
+    )
 
     assert message_id == "msg_abc123"
     assert captured["url"] == "https://api.resend.com/emails"
@@ -170,6 +174,7 @@ def test_invalid_recipient_is_rejected_before_calling_the_api(resend_configured,
 # Retry behaviour
 # ══════════════════════════════════════════════════════════════════════════
 
+
 def test_retries_on_rate_limit_then_succeeds(resend_configured, no_sleep, monkeypatch):
     attempts = []
 
@@ -186,8 +191,9 @@ def test_retries_on_rate_limit_then_succeeds(resend_configured, no_sleep, monkey
 
 def test_retries_on_server_error_then_gives_up(resend_configured, no_sleep, monkeypatch):
     attempts = []
-    monkeypatch.setattr(httpx, "post",
-                        lambda *a, **k: attempts.append(1) or _FakeResponse(503, text="unavailable"))
+    monkeypatch.setattr(
+        httpx, "post", lambda *a, **k: attempts.append(1) or _FakeResponse(503, text="unavailable")
+    )
 
     with pytest.raises(EmailDeliveryError) as exc:
         ResendEmailProvider().send("a@b.c", "order_placed", {})
@@ -199,8 +205,9 @@ def test_retries_on_server_error_then_gives_up(resend_configured, no_sleep, monk
 def test_does_not_retry_a_permanent_rejection(resend_configured, no_sleep, monkeypatch):
     """422 = unverified sender domain. Retrying wastes quota and delays the answer."""
     attempts = []
-    monkeypatch.setattr(httpx, "post",
-                        lambda *a, **k: attempts.append(1) or _FakeResponse(422, text="domain not verified"))
+    monkeypatch.setattr(
+        httpx, "post", lambda *a, **k: attempts.append(1) or _FakeResponse(422, text="domain not verified")
+    )
 
     with pytest.raises(EmailDeliveryError) as exc:
         ResendEmailProvider().send("a@b.c", "order_placed", {})
@@ -223,8 +230,7 @@ def test_network_timeout_is_retryable(resend_configured, no_sleep, monkeypatch):
 
 
 def test_dns_failure_is_retryable(resend_configured, no_sleep, monkeypatch):
-    monkeypatch.setattr(httpx, "post",
-                        lambda *a, **k: (_ for _ in ()).throw(httpx.ConnectError("dns")))
+    monkeypatch.setattr(httpx, "post", lambda *a, **k: (_ for _ in ()).throw(httpx.ConnectError("dns")))
     with pytest.raises(EmailDeliveryError) as exc:
         ResendEmailProvider().send("a@b.c", "order_placed", {})
     assert exc.value.retryable is True
@@ -234,6 +240,7 @@ def test_dns_failure_is_retryable(resend_configured, no_sleep, monkeypatch):
 # Dispatch must never break the request path
 # ══════════════════════════════════════════════════════════════════════════
 
+
 def test_notify_records_failure_without_raising(clean_db, monkeypatch):
     """The critical contract: a down email vendor must not fail an order."""
     monkeypatch.setattr(settings, "email_provider", "resend", raising=False)
@@ -242,8 +249,13 @@ def test_notify_records_failure_without_raising(clean_db, monkeypatch):
     monkeypatch.setattr(httpx, "post", lambda *a, **k: _FakeResponse(500, text="boom"))
     monkeypatch.setattr(notification_service.time, "sleep", lambda _s: None)
 
-    row = notify(clean_db, event_type="order_placed", recipient="c@example.com",
-                 payload={"order_number": "BH-1"}, channel=NotificationChannel.email)
+    row = notify(
+        clean_db,
+        event_type="order_placed",
+        recipient="c@example.com",
+        payload={"order_number": "BH-1"},
+        channel=NotificationChannel.email,
+    )
 
     assert row.status == NotificationStatus.failed
     assert "500" in (row.failure_reason or "")
@@ -256,8 +268,13 @@ def test_notify_records_success(clean_db, monkeypatch):
     monkeypatch.setattr(settings, "email_from", "orders@blackhouse.example", raising=False)
     monkeypatch.setattr(httpx, "post", lambda *a, **k: _FakeResponse(200, {"id": "msg_ok"}))
 
-    row = notify(clean_db, event_type="payment_successful", recipient="c@example.com",
-                 payload={"order_number": "BH-2"}, channel=NotificationChannel.email)
+    row = notify(
+        clean_db,
+        event_type="payment_successful",
+        recipient="c@example.com",
+        payload={"order_number": "BH-2"},
+        channel=NotificationChannel.email,
+    )
 
     assert row.status == NotificationStatus.sent
     assert row.provider_message_id == "msg_ok"
@@ -266,8 +283,14 @@ def test_notify_records_success(clean_db, monkeypatch):
 
 def test_retry_notification_clears_previous_failure(clean_db, monkeypatch):
     monkeypatch.setattr(settings, "email_provider", "log", raising=False)
-    row = notify(clean_db, event_type="order_placed", recipient="c@example.com",
-                 payload={}, channel=NotificationChannel.email, dispatch=False)
+    row = notify(
+        clean_db,
+        event_type="order_placed",
+        recipient="c@example.com",
+        payload={},
+        channel=NotificationChannel.email,
+        dispatch=False,
+    )
     row.status = NotificationStatus.failed
     row.failure_reason = "transient"
 
@@ -282,8 +305,14 @@ def test_dispatch_false_persists_without_sending(clean_db, monkeypatch):
     monkeypatch.setattr(settings, "email_provider", "log", raising=False)
     monkeypatch.setattr(LogEmailProvider, "send", lambda *a, **k: calls.append(1) or "x")
 
-    row = notify(clean_db, event_type="order_placed", recipient="c@example.com",
-                 payload={}, channel=NotificationChannel.email, dispatch=False)
+    row = notify(
+        clean_db,
+        event_type="order_placed",
+        recipient="c@example.com",
+        payload={},
+        channel=NotificationChannel.email,
+        dispatch=False,
+    )
     assert row.status == NotificationStatus.pending
     assert calls == []
 
@@ -291,6 +320,7 @@ def test_dispatch_false_persists_without_sending(clean_db, monkeypatch):
 # ══════════════════════════════════════════════════════════════════════════
 # Templates
 # ══════════════════════════════════════════════════════════════════════════
+
 
 def test_every_mapped_event_renders_both_mime_parts():
     for event in email_templates.TEMPLATES:
@@ -319,9 +349,7 @@ def test_payload_subject_overrides_the_template():
 
 
 def test_html_escapes_injected_values():
-    rendered = email_templates.render(
-        "order_placed", {"order_number": '"><script>alert(1)</script>'}
-    )
+    rendered = email_templates.render("order_placed", {"order_number": '"><script>alert(1)</script>'})
     assert "<script>alert(1)</script>" not in rendered.html
     assert "&lt;script&gt;" in rendered.html
 
@@ -333,6 +361,7 @@ def test_missing_fields_omit_rows_rather_than_rendering_empty_labels():
 
 def test_template_bug_cannot_break_dispatch(monkeypatch):
     """A raising renderer must degrade to the generic template."""
+
     def boom(_payload):
         raise RuntimeError("template exploded")
 
@@ -349,6 +378,7 @@ def test_return_window_in_delivered_email_matches_settings():
 # ══════════════════════════════════════════════════════════════════════════
 # Manual WhatsApp links (the channel the business actually uses)
 # ══════════════════════════════════════════════════════════════════════════
+
 
 def test_whatsapp_link_strips_formatting_and_encodes_message():
     link = whatsapp_link("+91 98765-43210", "Hello, order BH-1 is ready & packed")

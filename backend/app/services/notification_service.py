@@ -62,7 +62,10 @@ class LogEmailProvider(ChannelProvider):
         email = email_templates.render(event_type, payload)
         log.info(
             "EMAIL(to=%s, event=%s, subject=%s, html=%d bytes)",
-            recipient, event_type, email.subject, len(email.html),
+            recipient,
+            event_type,
+            email.subject,
+            len(email.html),
         )
         if settings.app_debug:
             log.debug("EMAIL BODY(to=%s)\n%s", recipient, email.text)
@@ -142,7 +145,9 @@ class ResendEmailProvider(ChannelProvider):
                     message_id = str(response.json().get("id") or "")
                     log.info(
                         "email sent via resend to=%s event=%s id=%s",
-                        recipient, event_type, message_id,
+                        recipient,
+                        event_type,
+                        message_id,
                     )
                     return message_id
 
@@ -157,7 +162,10 @@ class ResendEmailProvider(ChannelProvider):
                 if not retryable:
                     log.error(
                         "email permanently rejected to=%s event=%s status=%s body=%s",
-                        recipient, event_type, response.status_code, response.text[:300],
+                        recipient,
+                        event_type,
+                        response.status_code,
+                        response.text[:300],
                     )
                     raise last_error
 
@@ -165,7 +173,10 @@ class ResendEmailProvider(ChannelProvider):
                 delay = 0.4 * attempt
                 log.warning(
                     "resend attempt %d/%d failed (%s); retrying in %.1fs",
-                    attempt, self.MAX_ATTEMPTS, last_error, delay,
+                    attempt,
+                    self.MAX_ATTEMPTS,
+                    last_error,
+                    delay,
                 )
                 time.sleep(delay)
 

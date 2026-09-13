@@ -21,9 +21,14 @@ Db = Annotated[Session, Depends(get_db)]
 def create_return(payload: ReturnCreate, user: CurrentUser, db: Db):
     order = order_service.get_order_for_user(db, payload.order_id, user)
     ret = return_service.create_return(
-        db, customer=user, order=order, order_item_id=payload.order_item_id,
-        return_type=ReturnType(payload.return_type), reason=ReturnReason(payload.reason),
-        notes=payload.notes, exchange_variant_id=payload.exchange_variant_id,
+        db,
+        customer=user,
+        order=order,
+        order_item_id=payload.order_item_id,
+        return_type=ReturnType(payload.return_type),
+        reason=ReturnReason(payload.reason),
+        notes=payload.notes,
+        exchange_variant_id=payload.exchange_variant_id,
     )
     db.commit()
     return ret
@@ -35,7 +40,9 @@ def my_returns(user: CurrentUser, db: Db):
 
 
 @router.get("", response_model=Page[ReturnOut])
-def list_returns(params: Annotated[PageParams, Depends()], staff: StaffUser, db: Db, status: str | None = None):
+def list_returns(
+    params: Annotated[PageParams, Depends()], staff: StaffUser, db: Db, status: str | None = None
+):
     stmt = select(ReturnRequest)
     if status:
         stmt = stmt.where(ReturnRequest.status == status)
@@ -49,8 +56,12 @@ def advance(return_id: str, payload: ReturnStatusUpdate, staff: StaffUser, db: D
     if ret is None:
         raise NotFoundError("Return not found.")
     return_service.advance_return(
-        db, ret, actor=staff, new_status=ReturnStatus(payload.status),
-        staff_notes=payload.staff_notes, accept_items=payload.accept_items,
+        db,
+        ret,
+        actor=staff,
+        new_status=ReturnStatus(payload.status),
+        staff_notes=payload.staff_notes,
+        accept_items=payload.accept_items,
     )
     db.commit()
     return ret

@@ -42,4 +42,3 @@ def paginate(db: Session, stmt: Select, params: PageParams, sort_columns: dict[s
 def page_meta(params: PageParams, total: int) -> dict:
     pages = (total + params.page_size - 1) // params.page_size if total else 0
     return {"page": params.page, "page_size": params.page_size, "total": total, "pages": pages}
-

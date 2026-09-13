@@ -21,9 +21,11 @@ _CONFIGURED = False
 
 # Fields that are part of every LogRecord and would otherwise be duplicated
 # inside the JSON payload.
-_RESERVED = frozenset(
-    logging.LogRecord("", 0, "", 0, "", (), None).__dict__
-) | {"message", "asctime", "taskName"}
+_RESERVED = frozenset(logging.LogRecord("", 0, "", 0, "", (), None).__dict__) | {
+    "message",
+    "asctime",
+    "taskName",
+}
 
 
 class JsonFormatter(logging.Formatter):
@@ -36,9 +38,7 @@ class JsonFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, object] = {
-            "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(
-                timespec="milliseconds"
-            ),
+            "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(timespec="milliseconds"),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -58,9 +58,13 @@ class JsonFormatter(logging.Formatter):
             return json.dumps(payload, default=str, ensure_ascii=False)
         except (TypeError, ValueError):  # pragma: no cover - defensive
             return json.dumps(
-                {"timestamp": payload["timestamp"], "level": record.levelname,
-                 "logger": record.name, "message": record.getMessage(),
-                 "unserialisable_extra": True}
+                {
+                    "timestamp": payload["timestamp"],
+                    "level": record.levelname,
+                    "logger": record.name,
+                    "message": record.getMessage(),
+                    "unserialisable_extra": True,
+                }
             )
 
 

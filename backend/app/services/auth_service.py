@@ -38,12 +38,21 @@ def _temporary_password() -> str:
     return secrets.token_urlsafe(12)
 
 
-def register(db: Session, *, email: str, password: str, full_name: str, phone: str | None,
-             request_meta: dict | None = None) -> tuple[User, dict]:
+def register(
+    db: Session,
+    *,
+    email: str,
+    password: str,
+    full_name: str,
+    phone: str | None,
+    request_meta: dict | None = None,
+) -> tuple[User, dict]:
     user = create_customer_record(db, email=email, full_name=full_name, phone=phone, password=password)
     verify_raw = _issue_token(db, user, AuthTokenPurpose.email_verify, family=None)
     notification_service.notify(
-        db, event_type="account_created", recipient=user.email,
+        db,
+        event_type="account_created",
+        recipient=user.email,
         payload={"subject": "Welcome to Black House", "verify_token": verify_raw},
     )
     tokens = issue_session(db, user, request_meta=request_meta)
@@ -60,8 +69,14 @@ def issue_session(db: Session, user: User, *, request_meta: dict | None = None) 
     }
 
 
-def _issue_token(db: Session, user: User, purpose: AuthTokenPurpose, *, family: str | None = None,
-                 request_meta: dict | None = None) -> str:
+def _issue_token(
+    db: Session,
+    user: User,
+    purpose: AuthTokenPurpose,
+    *,
+    family: str | None = None,
+    request_meta: dict | None = None,
+) -> str:
     raw, digest = security.generate_opaque_token()
     if purpose == AuthTokenPurpose.refresh:
         expires = utcnow() + timedelta(days=settings.refresh_token_expire_days)
@@ -101,9 +116,7 @@ def rotate_refresh(db: Session, raw_refresh: str, request_meta: dict | None = No
     if token.revoked_at or token.used_at:
         # Reuse detected: revoke the whole family (stolen-token mitigation).
         if token.family_id:
-            for t in db.scalars(
-                select(AuthToken).where(AuthToken.family_id == token.family_id)
-            ):
+            for t in db.scalars(select(AuthToken).where(AuthToken.family_id == token.family_id)):
                 t.revoked_at = utcnow()
         db.commit()  # security-critical revocation must survive the error response
         raise TokenError("Refresh token reuse detected; session family revoked.")
@@ -113,7 +126,9 @@ def rotate_refresh(db: Session, raw_refresh: str, request_meta: dict | None = No
     user = db.get(User, token.user_id)
     if user is None or not user.is_active:
         raise AuthenticationError("Account unavailable.")
-    new_raw = _issue_token(db, user, AuthTokenPurpose.refresh, family=token.family_id, request_meta=request_meta)
+    new_raw = _issue_token(
+        db, user, AuthTokenPurpose.refresh, family=token.family_id, request_meta=request_meta
+    )
     return user, {
         "access_token": security.create_access_token(user_id=user.id, role=user.role.value),
         "refresh_token": new_raw,
@@ -149,7 +164,9 @@ def request_password_reset(db: Session, email: str) -> None:
         return  # do not leak account existence
     raw = _issue_token(db, user, AuthTokenPurpose.password_reset)
     notification_service.notify(
-        db, event_type="password_reset_requested", recipient=user.email,
+        db,
+        event_type="password_reset_requested",
+        recipient=user.email,
         payload={"subject": "Reset your Black House password", "reset_token": raw},
     )
 
@@ -157,7 +174,9 @@ def request_password_reset(db: Session, email: str) -> None:
 def reset_password(db: Session, token: str, new_password: str) -> None:
     digest = security.hash_token(token)
     row = db.scalar(
-        select(AuthToken).where(AuthToken.token_hash == digest, AuthToken.purpose == AuthTokenPurpose.password_reset)
+        select(AuthToken).where(
+            AuthToken.token_hash == digest, AuthToken.purpose == AuthTokenPurpose.password_reset
+        )
     )
     if row is None or row.used_at or row.revoked_at or row.expires_at < utcnow():
         raise TokenError("Reset token is invalid or expired.")
@@ -171,7 +190,9 @@ def reset_password(db: Session, token: str, new_password: str) -> None:
 def request_email_verification(db: Session, user: User) -> None:
     raw = _issue_token(db, user, AuthTokenPurpose.email_verify)
     notification_service.notify(
-        db, event_type="account_created", recipient=user.email,
+        db,
+        event_type="account_created",
+        recipient=user.email,
         payload={"subject": "Verify your email", "verify_token": raw},
     )
 
@@ -179,7 +200,9 @@ def request_email_verification(db: Session, user: User) -> None:
 def verify_email(db: Session, token: str) -> User:
     digest = security.hash_token(token)
     row = db.scalar(
-        select(AuthToken).where(AuthToken.token_hash == digest, AuthToken.purpose == AuthTokenPurpose.email_verify)
+        select(AuthToken).where(
+            AuthToken.token_hash == digest, AuthToken.purpose == AuthTokenPurpose.email_verify
+        )
     )
     if row is None or row.used_at or row.expires_at < utcnow():
         raise TokenError("Verification token is invalid or expired.")

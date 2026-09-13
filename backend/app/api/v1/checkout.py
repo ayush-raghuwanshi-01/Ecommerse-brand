@@ -90,9 +90,7 @@ def place_order(
     cart = cart_service.get_or_create_cart(db, user)
 
     if idempotency_key:
-        request_hash = hashlib.sha256(
-            json.dumps(payload.model_dump(), sort_keys=True).encode()
-        ).hexdigest()
+        request_hash = hashlib.sha256(json.dumps(payload.model_dump(), sort_keys=True).encode()).hexdigest()
         existing = db.scalar(
             select(IdempotencyKey).where(
                 IdempotencyKey.key == idempotency_key, IdempotencyKey.user_id == user.id

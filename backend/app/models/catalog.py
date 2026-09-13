@@ -77,7 +77,9 @@ class Product(UUIDPk, Timestamps, Base):
     slug: Mapped[str] = mapped_column(String(180), unique=True, index=True)
     short_description: Mapped[str | None] = mapped_column(String(500))
     description: Mapped[str | None] = mapped_column(Text)
-    status: Mapped[ProductStatus] = mapped_column(enum_col(ProductStatus), default=ProductStatus.draft, index=True)
+    status: Mapped[ProductStatus] = mapped_column(
+        enum_col(ProductStatus), default=ProductStatus.draft, index=True
+    )
     product_type: Mapped[str | None] = mapped_column(String(80))  # overcoat, trench, jacket...
     category_id: Mapped[str | None] = mapped_column(ForeignKey("categories.id"))
     collection_id: Mapped[str | None] = mapped_column(ForeignKey("collections.id"))
@@ -146,8 +148,8 @@ class ProductVariant(UUIDPk, Timestamps, Base):
     price_paise: Mapped[int] = mapped_column(Integer)
     gst_percentage: Mapped[float] = mapped_column(Numeric(5, 2), default=5.0)
 
-    stock_qty: Mapped[int] = mapped_column(Integer, default=0)        # on-hand sellable
-    reserved_qty: Mapped[int] = mapped_column(Integer, default=0)     # held by unpaid/pending orders
+    stock_qty: Mapped[int] = mapped_column(Integer, default=0)  # on-hand sellable
+    reserved_qty: Mapped[int] = mapped_column(Integer, default=0)  # held by unpaid/pending orders
     sold_qty: Mapped[int] = mapped_column(Integer, default=0)
     damaged_qty: Mapped[int] = mapped_column(Integer, default=0)
     defective_qty: Mapped[int] = mapped_column(Integer, default=0)

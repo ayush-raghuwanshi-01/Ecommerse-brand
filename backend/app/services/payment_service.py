@@ -71,7 +71,9 @@ class MockGateway(PaymentGateway):
         )
 
     def _sig(self, payload: str) -> str:
-        return hmac.new(settings.razorpay_key_secret.encode() or b"mock", payload.encode(), hashlib.sha256).hexdigest()
+        return hmac.new(
+            settings.razorpay_key_secret.encode() or b"mock", payload.encode(), hashlib.sha256
+        ).hexdigest()
 
     @staticmethod
     def sign_checkout(order_id: str, payment_id: str) -> str:
@@ -102,7 +104,12 @@ class RazorpayGateway(PaymentGateway):  # pragma: no cover - requires live keys
     def create_order(self, amount_paise: int, receipt: str, notes: dict) -> str:
         data = self._post(
             "/orders",
-            {"amount": amount_paise, "currency": settings.default_currency, "receipt": receipt, "notes": notes},
+            {
+                "amount": amount_paise,
+                "currency": settings.default_currency,
+                "receipt": receipt,
+                "notes": notes,
+            },
         )
         return data["id"]
 
@@ -110,9 +117,7 @@ class RazorpayGateway(PaymentGateway):  # pragma: no cover - requires live keys
         return self._get(f"/payments/{provider_payment_id}")["status"]
 
     def create_refund(self, provider_payment_id: str, amount_paise: int, notes: dict) -> str:
-        data = self._post(
-            f"/payments/{provider_payment_id}/refund", {"amount": amount_paise, "notes": notes}
-        )
+        data = self._post(f"/payments/{provider_payment_id}/refund", {"amount": amount_paise, "notes": notes})
         return data["id"]
 
     def verify_checkout_signature(self, order_id: str, payment_id: str, signature: str) -> bool:
@@ -122,9 +127,7 @@ class RazorpayGateway(PaymentGateway):  # pragma: no cover - requires live keys
         return hmac.compare_digest(expected, signature)
 
     def verify_webhook_signature(self, raw_body: bytes, signature: str) -> bool:
-        expected = hmac.new(
-            settings.razorpay_webhook_secret.encode(), raw_body, hashlib.sha256
-        ).hexdigest()
+        expected = hmac.new(settings.razorpay_webhook_secret.encode(), raw_body, hashlib.sha256).hexdigest()
         return hmac.compare_digest(expected, signature)
 
 
@@ -187,7 +190,10 @@ def retry_payment(db: Session, order: Order) -> dict:
 
     cooldown = int(settings_service.get_setting(db, "payment_retry_cooldown_seconds") or 120)
     age = (utcnow() - payment.updated_at).total_seconds()
-    if payment.status in (PaymentRecordStatus.failed.value, PaymentRecordStatus.expired.value) and age < cooldown:
+    if (
+        payment.status in (PaymentRecordStatus.failed.value, PaymentRecordStatus.expired.value)
+        and age < cooldown
+    ):
         raise ConflictError(
             "Please wait before retrying payment.",
             details={"retry_after_seconds": int(cooldown - age)},
@@ -245,14 +251,18 @@ def confirm_payment_success(
         )
     if order.customer:
         notification_service.notify(
-            db, event_type="payment_successful", recipient=order.customer.email,
+            db,
+            event_type="payment_successful",
+            recipient=order.customer.email,
             payload={"order_number": order.number, "subject": f"Payment received for {order.number}"},
         )
     db.flush()
     return order
 
 
-def mark_payment_failed(db: Session, order: Order, *, reason: str, webhook_event_id: str | None = None) -> None:
+def mark_payment_failed(
+    db: Session, order: Order, *, reason: str, webhook_event_id: str | None = None
+) -> None:
     payment = latest_payment(db, order)
     if payment.status == PaymentRecordStatus.paid.value:
         return
@@ -262,7 +272,9 @@ def mark_payment_failed(db: Session, order: Order, *, reason: str, webhook_event
     order.payment_status = PaymentStatus.failed
     if order.customer:
         notification_service.notify(
-            db, event_type="payment_failed", recipient=order.customer.email,
+            db,
+            event_type="payment_failed",
+            recipient=order.customer.email,
             payload={"order_number": order.number, "reason": reason},
         )
     db.flush()
@@ -279,7 +291,9 @@ def verify_frontend_payment(db: Session, order: Order, payment_id: str, signatur
         if status != "captured":
             raise ConflictError("Gateway has not captured this payment.", details={"gateway_status": status})
     return confirm_payment_success(
-        db, order, provider_payment_id=payment_id,
+        db,
+        order,
+        provider_payment_id=payment_id,
         gateway_meta={"verified_via": "checkout_signature"},
     )
 
@@ -311,21 +325,21 @@ def process_webhook(db: Session, raw_body: bytes, signature: str) -> dict:
 
     if event_type == "payment.captured" and order:
         confirm_payment_success(
-            db, order,
+            db,
+            order,
             provider_payment_id=entity.get("id", ""),
             gateway_meta={"webhook": event_type, "raw": entity},
             webhook_event_id=event_id,
         )
     elif event_type == "payment.failed" and order:
-        mark_payment_failed(db, order, reason=entity.get("error_description") or "payment failed",
-                            webhook_event_id=event_id)
+        mark_payment_failed(
+            db, order, reason=entity.get("error_description") or "payment failed", webhook_event_id=event_id
+        )
     elif event_type.startswith("refund.") and payment:
         from app.models.returns import Refund
         from app.services import refund_service
 
-        refund = db.scalar(
-            select(Refund).where(Refund.provider_refund_id == entity.get("id"))
-        )
+        refund = db.scalar(select(Refund).where(Refund.provider_refund_id == entity.get("id")))
         if refund:
             refund_service.complete_refund(db, refund, gateway_meta={"webhook": event_type})
     event.processed_at = utcnow()
@@ -340,13 +354,22 @@ def collect_cod(db: Session, order: Order, *, actor: User, method_note: str | No
         raise ConflictError("Payment already collected.")
     payment = latest_payment(db, order)
     payment.status = PaymentRecordStatus.paid
-    payment.metadata_json = {"collected_by": actor.id, "method_note": method_note, "collected_at": utcnow().isoformat()}
+    payment.metadata_json = {
+        "collected_by": actor.id,
+        "method_note": method_note,
+        "collected_at": utcnow().isoformat(),
+    }
     order.payment_status = PaymentStatus.paid
     from app.services import audit_service
 
     audit_service.record(
-        db, user=actor, action="payment.status_change", entity_type="order", entity_id=order.id,
-        before={"payment_status": "pending_cod"}, after={"payment_status": "paid", "note": method_note},
+        db,
+        user=actor,
+        action="payment.status_change",
+        entity_type="order",
+        entity_id=order.id,
+        before={"payment_status": "pending_cod"},
+        after={"payment_status": "paid", "note": method_note},
     )
     db.flush()
     return order

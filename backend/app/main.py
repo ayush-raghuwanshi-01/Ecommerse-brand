@@ -29,7 +29,10 @@ async def lifespan(app: FastAPI):
     configure_logging()
     log.info(
         "starting %s (env=%s, log_format=%s, inline_sweep=%s)",
-        settings.project_name, settings.app_env, settings.log_format, settings.run_inline_sweep,
+        settings.project_name,
+        settings.app_env,
+        settings.log_format,
+        settings.run_inline_sweep,
     )
 
     async def _sweep_loop():

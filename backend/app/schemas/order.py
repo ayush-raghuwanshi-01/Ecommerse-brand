@@ -164,8 +164,8 @@ class StaffAddressInput(BaseModel):
 
 
 class StaffOrderCreateRequest(BaseModel):
-    customer_id: str | None = None           # existing customer
-    new_customer: dict | None = None         # {email, full_name, phone} auto-creates
+    customer_id: str | None = None  # existing customer
+    new_customer: dict | None = None  # {email, full_name, phone} auto-creates
     order_source: str = Field(pattern="^(whatsapp|instagram|physical_store|staff_manual)$")
     lines: list[StaffOrderLine] = Field(min_length=1)
     shipping_address: StaffAddressInput
@@ -180,7 +180,7 @@ class OrderEditRequest(BaseModel):
     shipping_address: StaffAddressInput | None = None
     billing_address: StaffAddressInput | None = None
     customer_notes: str | None = None
-    line_updates: list[dict] | None = None   # [{order_item_id, qty?, variant_id?}]
+    line_updates: list[dict] | None = None  # [{order_item_id, qty?, variant_id?}]
 
 
 class CancelRequest(BaseModel):

@@ -117,8 +117,15 @@ def create_product(payload: ProductCreate, manager: ManagerUser, db: Db, request
         product.tags.append(tag)
     db.add(product)
     db.flush()
-    audit_service.record(db, user=manager, action="product.create", entity_type="product",
-                         entity_id=product.id, after={"name": product.name, "slug": slug}, request=request)
+    audit_service.record(
+        db,
+        user=manager,
+        action="product.create",
+        entity_type="product",
+        entity_id=product.id,
+        after={"name": product.name, "slug": slug},
+        request=request,
+    )
     db.commit()
     return product
 
@@ -133,13 +140,30 @@ def update_product(product_id: str, payload: ProductUpdate, manager: ManagerUser
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(product, key, value)
     db.flush()
-    audit_service.record(db, user=manager, action="product.update", entity_type="product",
-                         entity_id=product.id, before=before, after=payload.model_dump(exclude_unset=True),
-                         request=request)
-    if "base_price_paise" in payload.model_dump(exclude_unset=True) and price_before != product.base_price_paise:
-        audit_service.record(db, user=manager, action="product.price_change", entity_type="product",
-                             entity_id=product.id, before={"base_price_paise": price_before},
-                             after={"base_price_paise": product.base_price_paise}, request=request)
+    audit_service.record(
+        db,
+        user=manager,
+        action="product.update",
+        entity_type="product",
+        entity_id=product.id,
+        before=before,
+        after=payload.model_dump(exclude_unset=True),
+        request=request,
+    )
+    if (
+        "base_price_paise" in payload.model_dump(exclude_unset=True)
+        and price_before != product.base_price_paise
+    ):
+        audit_service.record(
+            db,
+            user=manager,
+            action="product.price_change",
+            entity_type="product",
+            entity_id=product.id,
+            before={"base_price_paise": price_before},
+            after={"base_price_paise": product.base_price_paise},
+            request=request,
+        )
     db.commit()
     return product
 
@@ -151,9 +175,16 @@ def publish_product(product_id: str, manager: ManagerUser, db: Db, request: Requ
         raise NotFoundError("Product not found.")
     before = product.status.value
     product.status = ProductStatus.active
-    audit_service.record(db, user=manager, action="product.publish", entity_type="product",
-                         entity_id=product.id, before={"status": before}, after={"status": "active"},
-                         request=request)
+    audit_service.record(
+        db,
+        user=manager,
+        action="product.publish",
+        entity_type="product",
+        entity_id=product.id,
+        before={"status": before},
+        after={"status": "active"},
+        request=request,
+    )
     db.commit()
     return product
 
@@ -165,9 +196,16 @@ def archive_product(product_id: str, manager: ManagerUser, db: Db, request: Requ
         raise NotFoundError("Product not found.")
     before = product.status.value
     product.status = ProductStatus.archived
-    audit_service.record(db, user=manager, action="product.archive", entity_type="product",
-                         entity_id=product.id, before={"status": before}, after={"status": "archived"},
-                         request=request)
+    audit_service.record(
+        db,
+        user=manager,
+        action="product.archive",
+        entity_type="product",
+        entity_id=product.id,
+        before={"status": before},
+        after={"status": "archived"},
+        request=request,
+    )
     db.commit()
     return product
 
@@ -183,8 +221,15 @@ def create_variant(product_id: str, payload: VariantCreate, manager: ManagerUser
     variant = ProductVariant(product_id=product.id, **payload.model_dump())
     db.add(variant)
     db.flush()
-    audit_service.record(db, user=manager, action="variant.update", entity_type="product_variant",
-                         entity_id=variant.id, after=payload.model_dump(), request=request)
+    audit_service.record(
+        db,
+        user=manager,
+        action="variant.update",
+        entity_type="product_variant",
+        entity_id=variant.id,
+        after=payload.model_dump(),
+        request=request,
+    )
     db.commit()
     out = VariantOut.model_validate(variant)
     out.availability = variant.availability().value
@@ -200,9 +245,16 @@ def update_variant(variant_id: str, payload: VariantUpdate, manager: ManagerUser
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(variant, key, value)
     db.flush()
-    audit_service.record(db, user=manager, action="variant.update", entity_type="product_variant",
-                         entity_id=variant.id, before=before, after=payload.model_dump(exclude_unset=True),
-                         request=request)
+    audit_service.record(
+        db,
+        user=manager,
+        action="variant.update",
+        entity_type="product_variant",
+        entity_id=variant.id,
+        before=before,
+        after=payload.model_dump(exclude_unset=True),
+        request=request,
+    )
     db.commit()
     out = VariantOut.model_validate(variant)
     out.availability = variant.availability().value
@@ -218,9 +270,15 @@ def add_image(product_id: str, payload: ProductImageCreate, manager: ManagerUser
     url, key = payload.url, None
     if not url:
         raise ValidationError("Provide a url (or use the upload endpoint).")
-    image = ProductImage(product_id=product.id, url=url, storage_key=key,
-                         alt_text=payload.alt_text, sort_order=payload.sort_order,
-                         is_primary=payload.is_primary, variant_id=payload.variant_id)
+    image = ProductImage(
+        product_id=product.id,
+        url=url,
+        storage_key=key,
+        alt_text=payload.alt_text,
+        sort_order=payload.sort_order,
+        is_primary=payload.is_primary,
+        variant_id=payload.variant_id,
+    )
     if image.is_primary:
         for i in product.images:
             i.is_primary = False
@@ -231,8 +289,14 @@ def add_image(product_id: str, payload: ProductImageCreate, manager: ManagerUser
 
 
 @router.post("/{product_id}/images/upload", response_model=ProductImageOut, status_code=201)
-def upload_image(product_id: str, manager: ManagerUser, db: Db,
-                 file: UploadFile = File(...), alt_text: str | None = None, is_primary: bool = False):
+def upload_image(
+    product_id: str,
+    manager: ManagerUser,
+    db: Db,
+    file: UploadFile = File(...),
+    alt_text: str | None = None,
+    is_primary: bool = False,
+):
     """Upload product imagery.
 
     The file's *contents* decide the format (see ``app/core/uploads.py``): the
@@ -258,15 +322,19 @@ def upload_image(product_id: str, manager: ManagerUser, db: Db,
     if dims and is_primary and dims[0] < settings.image_min_width:
         log.warning(
             "primary image for product %s is %dx%d (recommended >= %dpx wide)",
-            product_id, dims[0], dims[1], settings.image_min_width,
+            product_id,
+            dims[0],
+            dims[1],
+            settings.image_min_width,
         )
 
     image_id = uuid4().hex
     key = uploads.storage_key_for(prefix=f"products/{product_id}", image=image, unique_id=image_id)
     url = storage_service.get_storage().put(key, image.data, image.content_type)
 
-    record = ProductImage(product_id=product.id, url=url, storage_key=key, alt_text=alt_text,
-                          is_primary=is_primary)
+    record = ProductImage(
+        product_id=product.id, url=url, storage_key=key, alt_text=alt_text, is_primary=is_primary
+    )
     if is_primary:
         for existing in product.images:
             existing.is_primary = False

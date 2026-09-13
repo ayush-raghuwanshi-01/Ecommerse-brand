@@ -27,8 +27,8 @@ class OrderSource(StrEnum):
 
 
 class PaymentMethod(StrEnum):
-    razorpay = "razorpay"      # cards / netbanking / wallets via gateway
-    upi = "upi"                # UPI via Razorpay
+    razorpay = "razorpay"  # cards / netbanking / wallets via gateway
+    upi = "upi"  # UPI via Razorpay
     cod = "cod"
 
 
@@ -93,11 +93,17 @@ class Order(UUIDPk, Timestamps, Base):
     number: Mapped[str] = mapped_column(String(32), unique=True, index=True)
     customer_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), index=True)
     created_by_staff_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
-    order_source: Mapped[OrderSource] = mapped_column(enum_col(OrderSource), default=OrderSource.website, index=True)
+    order_source: Mapped[OrderSource] = mapped_column(
+        enum_col(OrderSource), default=OrderSource.website, index=True
+    )
 
     payment_method: Mapped[PaymentMethod] = mapped_column(enum_col(PaymentMethod))
-    payment_status: Mapped[PaymentStatus] = mapped_column(enum_col(PaymentStatus), default=PaymentStatus.created, index=True)
-    status: Mapped[OrderStatus] = mapped_column(enum_col(OrderStatus), default=OrderStatus.pending_payment, index=True)
+    payment_status: Mapped[PaymentStatus] = mapped_column(
+        enum_col(PaymentStatus), default=PaymentStatus.created, index=True
+    )
+    status: Mapped[OrderStatus] = mapped_column(
+        enum_col(OrderStatus), default=OrderStatus.pending_payment, index=True
+    )
     fulfillment_status: Mapped[FulfillmentStatus] = mapped_column(
         enum_col(FulfillmentStatus), default=FulfillmentStatus.unfulfilled
     )

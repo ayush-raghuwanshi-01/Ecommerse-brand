@@ -32,10 +32,9 @@ class RetryPaymentRequest(BaseModel):
 
 class AdjustmentRequest(BaseModel):
     """qty_change must be non-zero; sign conventions enforced per adjustment type."""
+
     variant_id: str
-    adjustment_type: str = Field(
-        pattern="^(increase|decrease|return|damage|defect|correction)$"
-    )
+    adjustment_type: str = Field(pattern="^(increase|decrease|return|damage|defect|correction)$")
     qty_change: int
     reason: str | None = None
 
@@ -214,9 +213,7 @@ class BulkEnquiryCreate(BaseModel):
 
 
 class BulkEnquiryUpdate(BaseModel):
-    status: str | None = Field(
-        default=None, pattern="^(new|contacted|in_progress|quoted|closed|cancelled)$"
-    )
+    status: str | None = Field(default=None, pattern="^(new|contacted|in_progress|quoted|closed|cancelled)$")
     staff_notes: str | None = None
 
 

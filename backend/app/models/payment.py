@@ -38,7 +38,9 @@ class Payment(UUIDPk, Timestamps, Base):
     amount_paise: Mapped[int] = mapped_column(Integer)
     currency: Mapped[str] = mapped_column(String(3), default="INR")
     method: Mapped[str] = mapped_column(String(40))  # razorpay | upi | cod
-    status: Mapped[PaymentRecordStatus] = mapped_column(enum_col(PaymentRecordStatus), default=PaymentRecordStatus.created)
+    status: Mapped[PaymentRecordStatus] = mapped_column(
+        enum_col(PaymentRecordStatus), default=PaymentRecordStatus.created
+    )
     webhook_event_id: Mapped[str | None] = mapped_column(String(120))
     metadata_json: Mapped[dict | None] = mapped_column(JSON)
     failure_reason: Mapped[str | None] = mapped_column(String(300))
@@ -72,4 +74,3 @@ class IdempotencyKey(UUIDPk, Base):
     response_json: Mapped[dict | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     expires_at: Mapped[datetime] = mapped_column(UTCDateTime())
-

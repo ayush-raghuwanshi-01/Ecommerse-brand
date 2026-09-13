@@ -92,7 +92,7 @@ def _layout(*, preheader: str, heading: str, body_html: str, cta: tuple[str, str
         cta_html = (
             '<tr><td align="center" style="padding:28px 0 8px;">'
             f'<a href="{_escape(url)}" style="background:{_GOLD};color:#141210;'
-            'text-decoration:none;font-weight:700;font-size:15px;padding:14px 30px;'
+            "text-decoration:none;font-weight:700;font-size:15px;padding:14px 30px;"
             'border-radius:2px;display:inline-block;">'
             f"{_escape(label)}</a>"
             "</td></tr>"
@@ -201,6 +201,7 @@ def _storefront_url(path: str = "") -> str:
 # Each returns a RenderedEmail. `payload` always wins for the subject when the
 # caller supplied one, so ops can override copy without a deploy.
 
+
 def _account_created(p: dict[str, Any]) -> RenderedEmail:
     heading = "Welcome to Black House"
     body = (
@@ -211,10 +212,15 @@ def _account_created(p: dict[str, Any]) -> RenderedEmail:
     )
     return RenderedEmail(
         subject=_get(p, "subject") or "Welcome to Black House",
-        html=_layout(preheader="Your account is ready", heading=heading, body_html=body,
-                     cta=("Visit your account", _storefront_url("account"))),
-        text=_text_body(heading, ["Your Black House account is ready.",
-                                  "Track orders and manage returns at:"], p),
+        html=_layout(
+            preheader="Your account is ready",
+            heading=heading,
+            body_html=body,
+            cta=("Visit your account", _storefront_url("account")),
+        ),
+        text=_text_body(
+            heading, ["Your Black House account is ready.", "Track orders and manage returns at:"], p
+        ),
     )
 
 
@@ -225,15 +231,26 @@ def _password_reset(p: dict[str, Any]) -> RenderedEmail:
     body = (
         "<p>We received a request to reset your password. The link below expires "
         "shortly and can be used once.</p>"
-        "<p style=\"color:#9a8f7a;font-size:13px;\">If you did not request this, "
+        '<p style="color:#9a8f7a;font-size:13px;">If you did not request this, '
         "you can safely ignore this email — your password will not change.</p>"
     )
     return RenderedEmail(
         subject=_get(p, "subject") or "Reset your Black House password",
-        html=_layout(preheader="Use this link to choose a new password", heading=heading,
-                     body_html=body, cta=("Reset password", url) if url else None),
-        text=_text_body(heading, ["Open this link to choose a new password:", url,
-                                  "If you did not request this, ignore this email."], p),
+        html=_layout(
+            preheader="Use this link to choose a new password",
+            heading=heading,
+            body_html=body,
+            cta=("Reset password", url) if url else None,
+        ),
+        text=_text_body(
+            heading,
+            [
+                "Open this link to choose a new password:",
+                url,
+                "If you did not request this, ignore this email.",
+            ],
+            p,
+        ),
     )
 
 
@@ -249,10 +266,13 @@ def _order_placed(p: dict[str, Any]) -> RenderedEmail:
     )
     return RenderedEmail(
         subject=_get(p, "subject") or heading,
-        html=_layout(preheader="We have received your order", heading=heading, body_html=body,
-                     cta=("View your order", _storefront_url("orders"))),
-        text=_text_body(heading, ["Thank you — we have your order.",
-                                  "We will email you when it ships."], p),
+        html=_layout(
+            preheader="We have received your order",
+            heading=heading,
+            body_html=body,
+            cta=("View your order", _storefront_url("orders")),
+        ),
+        text=_text_body(heading, ["Thank you — we have your order.", "We will email you when it ships."], p),
     )
 
 
@@ -266,8 +286,12 @@ def _payment_successful(p: dict[str, Any]) -> RenderedEmail:
     )
     return RenderedEmail(
         subject=_get(p, "subject") or heading,
-        html=_layout(preheader="Payment confirmed", heading=heading, body_html=body,
-                     cta=("View receipt", _storefront_url("orders"))),
+        html=_layout(
+            preheader="Payment confirmed",
+            heading=heading,
+            body_html=body,
+            cta=("View receipt", _storefront_url("orders")),
+        ),
         text=_text_body(heading, ["Your payment was successful."], p),
     )
 
@@ -284,12 +308,21 @@ def _payment_failed(p: dict[str, Any]) -> RenderedEmail:
     )
     return RenderedEmail(
         subject=_get(p, "subject") or heading,
-        html=_layout(preheader="Your payment did not go through — your items are held briefly",
-                     heading=heading, body_html=body,
-                     cta=("Retry payment", _storefront_url("orders"))),
-        text=_text_body(heading, ["We could not process your payment.",
-                                  "Your items are reserved for a short window.",
-                                  "Retry from your order page."], p),
+        html=_layout(
+            preheader="Your payment did not go through — your items are held briefly",
+            heading=heading,
+            body_html=body,
+            cta=("Retry payment", _storefront_url("orders")),
+        ),
+        text=_text_body(
+            heading,
+            [
+                "We could not process your payment.",
+                "Your items are reserved for a short window.",
+                "Retry from your order page.",
+            ],
+            p,
+        ),
     )
 
 
@@ -306,8 +339,12 @@ def _order_shipped(p: dict[str, Any]) -> RenderedEmail:
     cta = ("Track shipment", track_url) if track_url else ("View your order", _storefront_url("orders"))
     return RenderedEmail(
         subject=_get(p, "subject") or heading,
-        html=_layout(preheader=f"Tracking {tracking}" if tracking else "Your order is on its way",
-                     heading=heading, body_html=body, cta=cta),
+        html=_layout(
+            preheader=f"Tracking {tracking}" if tracking else "Your order is on its way",
+            heading=heading,
+            body_html=body,
+            cta=cta,
+        ),
         text=_text_body(heading, ["Your order is on its way."], p),
     )
 
@@ -324,8 +361,12 @@ def _order_delivered(p: dict[str, Any]) -> RenderedEmail:
     )
     return RenderedEmail(
         subject=_get(p, "subject") or heading,
-        html=_layout(preheader=f"Returns open for {days} days", heading=heading, body_html=body,
-                     cta=("Manage this order", _storefront_url("orders"))),
+        html=_layout(
+            preheader=f"Returns open for {days} days",
+            heading=heading,
+            body_html=body,
+            cta=("Manage this order", _storefront_url("orders")),
+        ),
         text=_text_body(heading, [f"Delivered. Returns are open for {days} days."], p),
     )
 
@@ -352,8 +393,12 @@ def _refund(p: dict[str, Any]) -> RenderedEmail:
     body = lead + _order_details(p)
     return RenderedEmail(
         subject=_get(p, "subject") or heading,
-        html=_layout(preheader=heading, heading=heading, body_html=body,
-                     cta=("View refund status", _storefront_url("orders"))),
+        html=_layout(
+            preheader=heading,
+            heading=heading,
+            body_html=body,
+            cta=("View refund status", _storefront_url("orders")),
+        ),
         text=_text_body(heading, ["Refund status updated on your order."], p),
     )
 
@@ -369,8 +414,12 @@ def _return_approved(p: dict[str, Any]) -> RenderedEmail:
     )
     return RenderedEmail(
         subject=_get(p, "subject") or heading,
-        html=_layout(preheader="Return approved — pickup details inside", heading=heading,
-                     body_html=body, cta=("View return", _storefront_url("orders"))),
+        html=_layout(
+            preheader="Return approved — pickup details inside",
+            heading=heading,
+            body_html=body,
+            cta=("View return", _storefront_url("orders")),
+        ),
         text=_text_body(heading, ["Your return request has been approved."], p),
     )
 
@@ -392,8 +441,9 @@ def _cancellation(p: dict[str, Any]) -> RenderedEmail:
     body = lead + _order_details(p)
     return RenderedEmail(
         subject=_get(p, "subject") or heading,
-        html=_layout(preheader=heading, heading=heading, body_html=body,
-                     cta=("View order", _storefront_url("orders"))),
+        html=_layout(
+            preheader=heading, heading=heading, body_html=body, cta=("View order", _storefront_url("orders"))
+        ),
         text=_text_body(heading, ["Cancellation decision recorded on your order."], p),
     )
 
@@ -409,8 +459,12 @@ def _generic(p: dict[str, Any]) -> RenderedEmail:
     body = f"<p>{_escape(_get(p, 'message') or 'There is an update on your account.')}</p>{_order_details(p)}"
     return RenderedEmail(
         subject=heading,
-        html=_layout(preheader=heading[:90], heading=heading, body_html=body,
-                     cta=("Visit Black House", _storefront_url())),
+        html=_layout(
+            preheader=heading[:90],
+            heading=heading,
+            body_html=body,
+            cta=("Visit Black House", _storefront_url()),
+        ),
         text=_text_body(heading, [_get(p, "message") or "There is an update on your account."], p),
     )
 

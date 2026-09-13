@@ -9,13 +9,31 @@ from app.models.commerce import AuditLog
 from app.models.user import User
 
 AUDITABLE = {
-    "product.create", "product.update", "product.publish", "product.archive", "product.price_change",
-    "variant.update", "inventory.adjust", "order.create_staff", "order.edit", "order.status_change",
-    "order.cancel_request", "order.cancel_approve", "order.cancel_reject",
-    "refund.approve", "refund.reject", "refund.complete",
-    "return.approve", "return.reject", "return.status_change",
-    "coupon.create", "coupon.update", "user.role_change",
-    "shipment.update", "payment.status_change", "settings.update",
+    "product.create",
+    "product.update",
+    "product.publish",
+    "product.archive",
+    "product.price_change",
+    "variant.update",
+    "inventory.adjust",
+    "order.create_staff",
+    "order.edit",
+    "order.status_change",
+    "order.cancel_request",
+    "order.cancel_approve",
+    "order.cancel_reject",
+    "refund.approve",
+    "refund.reject",
+    "refund.complete",
+    "return.approve",
+    "return.reject",
+    "return.status_change",
+    "coupon.create",
+    "coupon.update",
+    "user.role_change",
+    "shipment.update",
+    "payment.status_change",
+    "settings.update",
 }
 
 

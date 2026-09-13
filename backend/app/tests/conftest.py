@@ -67,8 +67,9 @@ def client():
 
 @pytest.fixture()
 def warehouse(clean_db: Session) -> Warehouse:
-    wh = Warehouse(name="Bhopal Fulfilment Centre", city="Bhopal", state="Madhya Pradesh",
-                   country="IN", is_default=True)
+    wh = Warehouse(
+        name="Bhopal Fulfilment Centre", city="Bhopal", state="Madhya Pradesh", country="IN", is_default=True
+    )
     clean_db.add(wh)
     clean_db.commit()
     return wh
@@ -137,9 +138,15 @@ def admin_headers(client, admin) -> dict:
 @pytest.fixture()
 def address(clean_db: Session, customer: User, postal_code="462001") -> Address:
     addr = Address(
-        user_id=customer.id, full_name=customer.full_name, phone="9876500000",
-        line1="12 Mall Road", city="Bhopal", state="Madhya Pradesh",
-        postal_code=postal_code, country="IN", is_default_shipping=True,
+        user_id=customer.id,
+        full_name=customer.full_name,
+        phone="9876500000",
+        line1="12 Mall Road",
+        city="Bhopal",
+        state="Madhya Pradesh",
+        postal_code=postal_code,
+        country="IN",
+        is_default_shipping=True,
     )
     clean_db.add(addr)
     clean_db.commit()
@@ -161,26 +168,39 @@ def make_product(
 ) -> Product:
     name = name or f"Test Coat {uuid4().hex[:5]}"
     product = Product(
-        name=name, slug=f"{name.lower().replace(' ', '-')}",
-        short_description="test", description="test product",
-        status=status, base_price_paise=price, gst_percentage=gst,
-        is_preorder=preorder, is_sale_item=sale_item,
+        name=name,
+        slug=f"{name.lower().replace(' ', '-')}",
+        short_description="test",
+        description="test product",
+        status=status,
+        base_price_paise=price,
+        gst_percentage=gst,
+        is_preorder=preorder,
+        is_sale_item=sale_item,
         restock_note="Restock next month" if status == ProductStatus.out_of_stock else None,
         preorder_fulfillment_note="Ships in 4 weeks" if preorder else None,
     )
     clean_db.add(product)
     clean_db.flush()
-    clean_db.add(ProductImage(product_id=product.id, url="/static/uploads/test.jpg",
-                              alt_text=name, is_primary=True))
+    clean_db.add(
+        ProductImage(product_id=product.id, url="/static/uploads/test.jpg", alt_text=name, is_primary=True)
+    )
     stock = stock or {"M": 5, "L": 0}
     for order, size in enumerate(sizes or list(VariantSize)):
-        clean_db.add(ProductVariant(
-            product_id=product.id, sku=f"T-{uuid4().hex[:6]}-{size.value}".upper(),
-            size=size, price_paise=price + (10000 if size in (VariantSize.XL, VariantSize.XXL) else 0),
-            gst_percentage=gst, stock_qty=stock.get(size.value, 0),
-            is_purchasable=not preorder, is_preorder=preorder,
-            warehouse_id=warehouse_id, sort_order=order,
-        ))
+        clean_db.add(
+            ProductVariant(
+                product_id=product.id,
+                sku=f"T-{uuid4().hex[:6]}-{size.value}".upper(),
+                size=size,
+                price_paise=price + (10000 if size in (VariantSize.XL, VariantSize.XXL) else 0),
+                gst_percentage=gst,
+                stock_qty=stock.get(size.value, 0),
+                is_purchasable=not preorder,
+                is_preorder=preorder,
+                warehouse_id=warehouse_id,
+                sort_order=order,
+            )
+        )
     clean_db.commit()
     clean_db.expire_all()
     return product

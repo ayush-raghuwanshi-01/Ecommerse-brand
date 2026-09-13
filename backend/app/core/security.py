@@ -34,7 +34,9 @@ def create_access_token(*, user_id: str, role: str, expires_minutes: int | None 
         "role": role,
         "type": "access",
         "iat": int(now.timestamp()),
-        "exp": int((now + timedelta(minutes=expires_minutes or settings.access_token_expire_minutes)).timestamp()),
+        "exp": int(
+            (now + timedelta(minutes=expires_minutes or settings.access_token_expire_minutes)).timestamp()
+        ),
         "jti": secrets.token_hex(8),
     }
     return jwt.encode(payload, settings.secret_key, algorithm=settings.jwt_algorithm)

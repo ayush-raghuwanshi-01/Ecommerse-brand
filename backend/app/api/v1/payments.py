@@ -35,7 +35,9 @@ def create_session(order_id: str, user: CurrentUser, db: Db):
 @router.post("/verify", response_model=dict)
 def verify(payload: VerifyPaymentRequest, user: CurrentUser, db: Db):
     order = _own_order(db, payload.order_id, user)
-    payment_service.verify_frontend_payment(db, order, payload.razorpay_payment_id, payload.razorpay_signature)
+    payment_service.verify_frontend_payment(
+        db, order, payload.razorpay_payment_id, payload.razorpay_signature
+    )
     db.commit()
     return {"status": "paid", "order_number": order.number}
 
@@ -60,7 +62,8 @@ def mock_capture(order_id: str, user: CurrentUser, db: Db):
     order = _own_order(db, order_id, user)
     payment = payment_service.latest_payment(db, order)
     payment_service.confirm_payment_success(
-        db, order,
+        db,
+        order,
         provider_payment_id=f"mock_pay_{order.number}",
         gateway_meta={"mock_capture": True},
     )

@@ -38,8 +38,15 @@ def get_settings(manager: ManagerUser, db: Db):
 def update_settings(payload: SettingsUpdate, admin: AdminUser, db: Db, request: Request):
     for key, value in payload.settings.items():
         settings_service.set_setting(db, key, value)
-    audit_service.record(db, user=admin, action="settings.update", entity_type="settings",
-                         entity_id=None, after=payload.settings, request=request)
+    audit_service.record(
+        db,
+        user=admin,
+        action="settings.update",
+        entity_type="settings",
+        entity_id=None,
+        after=payload.settings,
+        request=request,
+    )
     db.commit()
     return SettingsOut(settings=settings_service.all_settings(db))
 
@@ -54,8 +61,15 @@ def create_rule(payload: ShippingRuleCreate, admin: AdminUser, db: Db, request: 
     rule = ShippingRule(**payload.model_dump())
     db.add(rule)
     db.flush()
-    audit_service.record(db, user=admin, action="settings.update", entity_type="shipping_rule",
-                         entity_id=rule.id, after=payload.model_dump(), request=request)
+    audit_service.record(
+        db,
+        user=admin,
+        action="settings.update",
+        entity_type="shipping_rule",
+        entity_id=rule.id,
+        after=payload.model_dump(),
+        request=request,
+    )
     db.commit()
     return rule
 
@@ -64,8 +78,16 @@ def create_rule(payload: ShippingRuleCreate, admin: AdminUser, db: Db, request: 
 def delete_rule(rule_id: str, admin: AdminUser, db: Db, request: Request):
     rule = db.get(ShippingRule, rule_id)
     if rule:
-        audit_service.record(db, user=admin, action="settings.update", entity_type="shipping_rule",
-                             entity_id=rule_id, before={"kind": rule.kind.value}, after=None, request=request)
+        audit_service.record(
+            db,
+            user=admin,
+            action="settings.update",
+            entity_type="shipping_rule",
+            entity_id=rule_id,
+            before={"kind": rule.kind.value},
+            after=None,
+            request=request,
+        )
         db.delete(rule)
         db.commit()
 
@@ -74,7 +96,11 @@ def delete_rule(rule_id: str, admin: AdminUser, db: Db, request: Request):
 def reports(manager: ManagerUser, db: Db, period_days: int = 30):
     since = utcnow() - timedelta(days=period_days)
     orders = db.scalars(select(Order).where(Order.created_at >= since)).all()
-    paid = [o for o in orders if o.payment_status in (PaymentStatus.paid, PaymentStatus.partially_refunded, PaymentStatus.refunded)]
+    paid = [
+        o
+        for o in orders
+        if o.payment_status in (PaymentStatus.paid, PaymentStatus.partially_refunded, PaymentStatus.refunded)
+    ]
     revenue = sum(o.grand_total_paise for o in paid)
     by_status: dict[str, int] = {}
     for o in orders:
@@ -96,10 +122,17 @@ def reports(manager: ManagerUser, db: Db, period_days: int = 30):
         revenue_by_source=by_source,
         low_stock_variants=[
             VariantStockOut(
-                variant_id=v.id, sku=v.sku, product_name=v.product.name if v.product else "",
-                size=v.size.value, stock_qty=v.stock_qty, reserved_qty=v.reserved_qty,
-                available_qty=v.available_qty, sold_qty=v.sold_qty, damaged_qty=v.damaged_qty,
-                defective_qty=v.defective_qty, returned_qty=v.returned_qty,
+                variant_id=v.id,
+                sku=v.sku,
+                product_name=v.product.name if v.product else "",
+                size=v.size.value,
+                stock_qty=v.stock_qty,
+                reserved_qty=v.reserved_qty,
+                available_qty=v.available_qty,
+                sold_qty=v.sold_qty,
+                damaged_qty=v.damaged_qty,
+                defective_qty=v.defective_qty,
+                returned_qty=v.returned_qty,
                 is_low_stock=0 < v.available_qty <= threshold,
             )
             for v in low
@@ -108,8 +141,13 @@ def reports(manager: ManagerUser, db: Db, period_days: int = 30):
 
 
 @router.get("/audit-logs", response_model=Page[AuditLogOut])
-def audit_logs(params: Annotated[PageParams, Depends()], manager: ManagerUser, db: Db,
-               entity_type: str | None = None, action: str | None = None):
+def audit_logs(
+    params: Annotated[PageParams, Depends()],
+    manager: ManagerUser,
+    db: Db,
+    entity_type: str | None = None,
+    action: str | None = None,
+):
     stmt = select(AuditLog)
     if entity_type:
         stmt = stmt.where(AuditLog.entity_type == entity_type)

@@ -21,7 +21,13 @@ from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Placeholders that must never reach a non-development environment.
-_INSECURE_SECRETS = {"dev-only-insecure-secret", "change-me-to-a-long-random-string", "", "secret", "changeme"}
+_INSECURE_SECRETS = {
+    "dev-only-insecure-secret",
+    "change-me-to-a-long-random-string",
+    "",
+    "secret",
+    "changeme",
+}
 _INSECURE_WEBHOOK_SECRETS = {"whsec_dev", "", "changeme"}
 
 
@@ -206,7 +212,7 @@ class Settings(BaseSettings):
             if self.secret_key.strip().lower() in _INSECURE_SECRETS or len(self.secret_key) < 32:
                 problems.append(
                     "SECRET_KEY is missing or too short — generate one with "
-                    "`python -c \"import secrets; print(secrets.token_urlsafe(48))\"`"
+                    '`python -c "import secrets; print(secrets.token_urlsafe(48))"`'
                 )
             if self.is_sqlite:
                 problems.append("DATABASE_URL points at SQLite; use PostgreSQL in deployed environments")
@@ -217,14 +223,19 @@ class Settings(BaseSettings):
             if self.razorpay_webhook_secret.strip().lower() in _INSECURE_WEBHOOK_SECRETS:
                 problems.append("RAZORPAY_WEBHOOK_SECRET is unset — webhooks cannot be trusted")
             if self.storage_provider == "local":
-                problems.append("STORAGE_PROVIDER=local is not durable across container restarts; use s3/cloudinary")
+                problems.append(
+                    "STORAGE_PROVIDER=local is not durable across container restarts; use s3/cloudinary"
+                )
 
             if problems:
                 raise ValueError(
                     f"Unsafe configuration for APP_ENV={self.app_env}:\n  - " + "\n  - ".join(problems)
                 )
 
-        if self.razorpay_enabled and self.razorpay_webhook_secret.strip().lower() in _INSECURE_WEBHOOK_SECRETS:
+        if (
+            self.razorpay_enabled
+            and self.razorpay_webhook_secret.strip().lower() in _INSECURE_WEBHOOK_SECRETS
+        ):
             raise ValueError(
                 "RAZORPAY_WEBHOOK_SECRET must be set when Razorpay keys are configured, "
                 "otherwise gateway callbacks cannot be signature-verified."

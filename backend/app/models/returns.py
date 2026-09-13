@@ -87,7 +87,9 @@ class ReturnRequest(UUIDPk, Timestamps, Base):
     customer_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
     return_type: Mapped[ReturnType] = mapped_column(enum_col(ReturnType))
     reason: Mapped[ReturnReason] = mapped_column(enum_col(ReturnReason))
-    status: Mapped[ReturnStatus] = mapped_column(enum_col(ReturnStatus), default=ReturnStatus.requested, index=True)
+    status: Mapped[ReturnStatus] = mapped_column(
+        enum_col(ReturnStatus), default=ReturnStatus.requested, index=True
+    )
     notes: Mapped[str | None] = mapped_column(Text)
     staff_notes: Mapped[str | None] = mapped_column(Text)
     company_pays_shipping: Mapped[bool] = mapped_column(Boolean, default=False)
