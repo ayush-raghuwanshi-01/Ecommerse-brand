@@ -40,6 +40,18 @@ class Settings(BaseSettings):
     api_v1_str: str = "/api/v1"
     secret_key: str = "dev-only-insecure-secret"
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+    # `json` for platform log aggregation (one parseable line per event);
+    # `text` for human-readable local development.
+    log_format: Literal["json", "text"] = "text"
+    # Optional. When set, unhandled exceptions and error-level logs are reported.
+    sentry_dsn: str = ""
+    sentry_traces_sample_rate: float = 0.0
+
+    # Run the reservation sweep inside the API process. True is convenient for
+    # single-container and local development; set false in production once the
+    # standalone worker (scripts/worker.py) is deployed, so web traffic and
+    # background work do not compete for the same pool.
+    run_inline_sweep: bool = True
 
     # Public origin of this API and of the storefront, used to build absolute
     # links (webhook callbacks, wa.me messages, email deep links).

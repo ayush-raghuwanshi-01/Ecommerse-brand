@@ -1,0 +1,22 @@
+# Railway — API service configuration.
+#
+# Railway reads this from the service's root directory. Attach a PostgreSQL
+# plugin and a Redis plugin in the dashboard; Railway injects DATABASE_URL and
+# REDIS_URL automatically, which is all this app needs to find them.
+#
+# The companion `railway.json` at the repo root carries the same intent for
+# monorepo detection. Keep the two in sync if you change the start command.
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "pip install --upgrade pip && pip install -e \".[redis,observability]\""
+
+[deploy]
+startCommand = "gunicorn app.main:app -c gunicorn_conf.py"
+# Migrate before serving traffic: a deploy must never run new code against an
+# old schema.
+preDeployCommand = "alembic upgrade head"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+healthcheckPath = "/healthz"
+healthcheckTimeout = 300

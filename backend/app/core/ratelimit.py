@@ -36,6 +36,21 @@ def _get_redis():
     return _redis
 
 
+def redis_status() -> str:
+    """Report Redis reachability for the readiness probe.
+
+    Returns ``"disabled"`` when no URL is configured (the in-process limiter is
+    then the intended behaviour, not a fault), ``"ok"``, or ``"unavailable"``.
+    Never raises — a health check that throws is worse than no health check.
+    """
+    if not settings.redis_url:
+        return "disabled"
+    try:
+        return "ok" if _get_redis() is not None else "unavailable"
+    except Exception:  # pragma: no cover - infra dependent
+        return "unavailable"
+
+
 def rate_limit(limit: int | None = None, window_seconds: int = 60) -> Callable[[Request], None]:
     limit = limit or settings.rate_limit_per_minute
 

@@ -1,0 +1,144 @@
+# ═════════════════════════════════════════════════════════════════════════════
+# Render — infrastructure as code for the Black House stack.
+#
+#   render up   (or push to the branch Render watches)
+#
+# Creates: managed PostgreSQL, Redis, the API service and a background worker.
+# Secrets are referenced as `sync: false` so Render prompts for them once and
+# they never live in this file or in git.
+#
+# The web service is defined too, but if you deploy the storefront to Vercel or
+# Netlify instead, delete it — those platforms handle the SPA build better.
+# ═════════════════════════════════════════════════════════════════════════════
+
+databases:
+  - name: blackhouse-db
+    databaseName: blackhouse
+    user: blackhouse
+    plan: starter          # 1 GB RAM / 20 GB disk — comfortable for 1k concurrent
+    postgresMajorVersion: 16
+    # Retention is the difference between an inconvenience and a disaster.
+    backupRetentionDays: 30
+
+services:
+  # ── Commerce API ──────────────────────────────────────────────────────────
+  - type: web
+    name: blackhouse-api
+    runtime: python
+    plan: standard          # 2 GB / 1 vCPU; scale out horizontally later
+    region: singapore       # closest Render region to Bhopal
+    rootDir: backend
+    buildCommand: pip install --upgrade pip && pip install -e ".[redis,observability]"
+    # Migrate before serving so a deploy never runs new code on an old schema.
+    preDeployCommand: alembic upgrade head
+    startCommand: gunicorn app.main:app -c gunicorn_conf.py
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: LOG_FORMAT
+        value: json
+      # Render injects the internal hostname; use the pooler for connection limits.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: blackhouse-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: blackhouse-redis
+          type: redis
+          property: connectionString
+      - key: WEB_CONCURRENCY
+        value: "3"
+      - key: STORAGE_PROVIDER
+        value: cloudinary
+      - key: EMAIL_PROVIDER
+        value: resend
+      # ── Secrets: prompted once, never committed ────────────────────────────
+      - key: SECRET_KEY
+        sync: false
+      - key: CLOUDINARY_URL
+        sync: false
+      - key: EMAIL_API_KEY
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      # Must be set to the deployed storefront origin, or the browser is blocked.
+      - key: CORS_ORIGINS
+        sync: false
+      - key: API_BASE_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+
+  # ── Background worker ─────────────────────────────────────────────────────
+  # Separated from the API so the reservation sweep and email retries are not
+  # competing with request latency for CPU, and can be scaled independently.
+  - type: worker
+    name: blackhouse-worker
+    runtime: python
+    plan: starter
+    region: singapore
+    rootDir: backend
+    buildCommand: pip install --upgrade pip && pip install -e ".[redis,observability]"
+    startCommand: python -m scripts.worker
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: APP_ENV
+        value: production
+      - key: LOG_FORMAT
+        value: json
+      - key: DATABASE_URL
+        fromDatabase:
+          name: blackhouse-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: blackhouse-redis
+          type: redis
+          property: connectionString
+      - key: SECRET_KEY
+        sync: false
+      - key: EMAIL_API_KEY
+        sync: false
+
+  # ── Redis ─────────────────────────────────────────────────────────────────
+  - type: redis
+    name: blackhouse-redis
+    plan: free
+    region: singapore
+    # Shared rate limiting across replicas; the app degrades to in-process
+    # limiting if Redis is unavailable, so a free plan is an acceptable start.
+    ipAllowList: []
+    maxmemoryPolicy: volatile-lru
+
+  # ── Storefront (delete if deploying to Vercel/Netlify instead) ────────────
+  - type: web
+    name: blackhouse-web
+    runtime: docker
+    plan: starter
+    region: singapore
+    rootDir: frontend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: /api/v1
+      - key: BACKEND_ORIGIN
+        fromService:
+          name: blackhouse-api
+          type: web
+          property: hostport

@@ -1,0 +1,63 @@
+# ═════════════════════════════════════════════════════════════════════════════
+# Fly.io — API service.
+#
+#   fly launch --copy-config --no-deploy   (first time, from backend/)
+#   fly postgres create                     (managed database)
+#   fly secrets set SECRET_KEY=... DATABASE_URL=...
+#   fly deploy
+#
+# Fly is the best fit of the three if you want the API close to your customers:
+# `fly regions add bom` puts a replica in Mumbai, which matters a lot for an
+# India-first storefront.
+# ═════════════════════════════════════════════════════════════════════════════
+
+app = "blackhouse-api"
+primary_region = "bom"        # Mumbai — lowest latency for Indian customers
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  APP_ENV            = "production"
+  APP_DEBUG          = "false"
+  LOG_FORMAT         = "json"
+  STORAGE_PROVIDER   = "cloudinary"
+  EMAIL_PROVIDER     = "resend"
+  WEB_CONCURRENCY    = "3"
+  # The standalone worker owns the sweep in production, so the API does not poll.
+  RUN_INLINE_SWEEP   = "false"
+
+# Secrets (never in this file):
+#   fly secrets set SECRET_KEY=... DATABASE_URL=... REDIS_URL=... \
+#     CLOUDINARY_URL=... EMAIL_API_KEY=... RAZORPAY_KEY_ID=... \
+#     RAZORPAY_KEY_SECRET=... RAZORPAY_WEBHOOK_SECRET=... \
+#     CORS_ORIGINS='["https://shop.blackhouse.example"]'
+
+[http_service]
+  internal_port          = 8000
+  force_https            = true
+  auto_stop_machines     = "stop"     # scale to zero on a hobby plan
+  auto_start_machines    = true
+  min_machines_running   = 1          # keep one warm so the first request is fast
+
+  [http_service.concurrency]
+    type      = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout  = "5s"
+    grace_period = "30s"
+    method   = "get"
+    path     = "/readyz"
+
+# Release phase runs once per deploy, before new machines take traffic — the
+# correct place for migrations, so they are not applied N times by N replicas.
+[deploy]
+  release_command = "alembic upgrade head"
+
+[[vm]]
+  memory   = "1gb"
+  cpu_kind = "shared"
+  cpus     = 1
