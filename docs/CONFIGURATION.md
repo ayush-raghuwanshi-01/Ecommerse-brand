@@ -33,6 +33,9 @@ the same container image can be promoted across environments by changing env alo
 | `FRONTEND_URL` | `http://localhost:5173` | Storefront origin. Used in email links (`View your order`). |
 | `SENTRY_DSN` | *(empty)* | Optional. Requires `pip install ".[observability]"`. |
 | `SENTRY_TRACES_SAMPLE_RATE` | `0.0` | 0.0–1.0. Start at `0.1` in production; performance tracing costs quota. |
+| `METRICS_ENABLED` | `true` | Serves `/metrics`. When `false` the endpoint returns 404 (not 403) so a prober cannot confirm it exists. |
+| `METRICS_TOKEN` | *(empty)* | When set, `/metrics` requires `Authorization: Bearer <token>`. Counters leak traffic shape and internal route names, so set this unless the endpoint is network-isolated. |
+| `PROMETHEUS_MULTIPROC_DIR` | `/tmp/prometheus_multiproc` | **Required with >1 worker.** Without it each worker keeps its own counters and a scrape is answered by a random worker, so metrics undercount by the worker count. Set by `gunicorn_conf.py` and the Dockerfile. |
 
 ### `SECRET_KEY` ⚠
 

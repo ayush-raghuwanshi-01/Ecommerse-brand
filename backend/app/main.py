@@ -1,18 +1,22 @@
 """FastAPI application factory: modular monolith entrypoint."""
 
 import asyncio
+import secrets
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
+from app.core.metrics import PROMETHEUS_AVAILABLE
+from app.core.metrics import render as render_metrics
 from app.core.middleware import (
+    MetricsMiddleware,
     RateLimitMiddleware,
     RequestContextMiddleware,
     SecurityHeadersMiddleware,
@@ -101,6 +105,13 @@ def create_app() -> FastAPI:
     #    the defensive headers.
     #  * RateLimit innermost: it must not spend a caller's budget on a preflight,
     #    and anything it rejects still flows back out through the three above.
+    #  * RateLimit outside Metrics so latency series reflect handler time, and
+    #    throttled requests are counted separately by rate_limit_rejected_total
+    #    rather than polluting the per-route latency histogram.
+    #  * Metrics innermost of all: routing has resolved scope["route"] by then,
+    #    which is what lets the `path` label be the route template instead of the
+    #    concrete URL (see app/core/metrics.py on cardinality).
+    app.add_middleware(MetricsMiddleware)
     app.add_middleware(RateLimitMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestContextMiddleware)
@@ -173,6 +184,57 @@ def create_app() -> FastAPI:
             "checks": checks,
         }
         return JSONResponse(status_code=200 if healthy else 503, content=body)
+
+    @app.get("/metrics", tags=["meta"], include_in_schema=False)
+    def metrics(request: Request):
+        """Prometheus scrape endpoint.
+
+        Hidden from the OpenAPI schema: it is an operational endpoint for a
+        scraper, not part of the commerce API surface.
+
+        Three failure modes are handled explicitly rather than crashing:
+          * ``METRICS_ENABLED=false`` -> 404, so the endpoint does not exist as
+            far as an unauthenticated prober is concerned;
+          * ``prometheus-client`` not installed (it is in the ``observability``
+            extra) -> 503 with an actionable message, because silently serving
+            an empty 200 would look like a healthy target with no traffic;
+          * ``METRICS_TOKEN`` set and not matched -> 401.
+        """
+        if not settings.metrics_enabled:
+            return JSONResponse(
+                status_code=404, content={"error": {"code": "NOT_FOUND", "message": "Not found."}}
+            )
+
+        if not PROMETHEUS_AVAILABLE:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "error": {
+                        "code": "METRICS_UNAVAILABLE",
+                        "message": (
+                            "Metrics are not enabled in this build. "
+                            'Install with: pip install ".[observability]"'
+                        ),
+                        "details": {},
+                    }
+                },
+            )
+
+        expected = settings.metrics_token
+        if expected:
+            supplied = (request.headers.get("authorization") or "").removeprefix("Bearer ").strip()
+            # compare_digest: a plain == leaks the token length through timing.
+            if not secrets.compare_digest(supplied, expected):
+                return JSONResponse(
+                    status_code=401,
+                    content={"error": {"code": "UNAUTHENTICATED", "message": "Invalid metrics token."}},
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+        body, content_type = render_metrics()
+        # never-store: metrics are a point-in-time sample and must not be cached
+        # by an intermediary, or a scraper would read stale counters.
+        return Response(content=body, media_type=content_type, headers={"Cache-Control": "no-store"})
 
     return app
 

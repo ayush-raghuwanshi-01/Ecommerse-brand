@@ -177,6 +177,14 @@ class Settings(BaseSettings):
     # X-Forwarded-For header becomes a rate-limit bypass.
     trust_proxy_headers: bool = True
 
+    # ── Metrics ─────────────────────────────────────────────────────────────
+    # /metrics leaks traffic shape and internal route names, so it is gated.
+    # METRICS_TOKEN, when set, requires `Authorization: Bearer <token>`; a
+    # scraper on the same private network can then be authorised without
+    # exposing the endpoint to the public internet.
+    metrics_enabled: bool = True
+    metrics_token: str = ""
+
     # ── Normalisers ─────────────────────────────────────────────────────────
     @field_validator("cors_origins", mode="before")
     @classmethod

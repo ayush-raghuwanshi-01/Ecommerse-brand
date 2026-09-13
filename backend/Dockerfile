@@ -25,7 +25,11 @@ RUN apt-get update \
 
 COPY pyproject.toml README.md ./
 COPY app ./app
-RUN pip wheel --wheel-dir /wheels .
+# Extras are built into wheels here too, so the runtime stage can install them
+# offline. Without the extras the image silently ships without Redis (rate
+# limiting degrades to per-worker buckets) or prometheus-client (/metrics
+# returns 503) - a gap that only shows up after deploy.
+RUN pip wheel --wheel-dir /wheels ".[redis,observability]"
 
 
 # ── Stage 2: runtime ─────────────────────────────────────────────────────────
@@ -35,7 +39,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PATH="/srv/.venv/bin:$PATH"
+    PATH="/srv/.venv/bin:$PATH" \
+    # Required for correct metrics with >1 worker; see gunicorn_conf.py.
+    PROMETHEUS_MULTIPROC_DIR=/srv/metrics
 
 WORKDIR /srv
 
@@ -49,7 +55,7 @@ RUN apt-get update \
 
 COPY --from=builder /wheels /wheels
 RUN python -m venv /srv/.venv \
-    && pip install --no-index --find-links=/wheels blackhouse-backend \
+    && pip install --no-index --find-links=/wheels "blackhouse-backend[redis,observability]" \
     && rm -rf /wheels
 
 COPY alembic.ini ./
@@ -59,7 +65,7 @@ COPY gunicorn_conf.py ./
 
 # Uploaded media when STORAGE_PROVIDER=local. In production this should be a
 # mounted volume or, better, Cloudinary/S3 — local files do not survive a redeploy.
-RUN mkdir -p /srv/storage/uploads && chown -R app:app /srv
+RUN mkdir -p /srv/storage/uploads /srv/metrics && chown -R app:app /srv
 
 USER app
 

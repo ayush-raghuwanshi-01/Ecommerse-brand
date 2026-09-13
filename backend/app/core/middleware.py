@@ -26,6 +26,15 @@ from starlette.responses import JSONResponse, Response
 from app.core.config import settings
 from app.core.exceptions import RateLimitedError
 from app.core.logging import get_logger
+from app.core.metrics import (
+    PROMETHEUS_AVAILABLE,
+    http_request_duration_seconds,
+    http_requests_total,
+    observe_pool,
+    rate_limit_rejected_total,
+    route_label,
+    unhandled_exceptions_total,
+)
 from app.core.net import client_ip
 from app.core.ratelimit import global_rate_limit
 
@@ -184,6 +193,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             global_rate_limit(request)
         except RateLimitedError as exc:
             retry_after = str(exc.details.get("retry_after", 60))
+            if PROMETHEUS_AVAILABLE:
+                # The route is not resolved yet (limiting happens pre-routing),
+                # so fall back to the raw path only for this counter. It is
+                # bounded because these are real registered routes being abused.
+                rate_limit_rejected_total.labels(path, "global").inc()
             log.warning(
                 "rate limited %s %s",
                 request.method,
@@ -215,3 +229,49 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return response
 
         return await call_next(request)
+
+
+# Polling endpoints are excluded from HTTP metrics: the platform probes them
+# every few seconds and Prometheus scrapes /metrics on its own interval, so
+# including them would dominate every series with traffic nobody is debugging.
+_METRICS_EXEMPT = frozenset({"/healthz", "/readyz", "/metrics"})
+
+
+class MetricsMiddleware(BaseHTTPMiddleware):
+    """Record request count and latency per route template.
+
+    Placed innermost (see ``create_app``) so that by the time it runs, routing
+    has already resolved ``scope["route"]`` and the ``path`` label can be the
+    *template* rather than the concrete URL. That distinction is what keeps time
+    series bounded: labelling on the concrete URL would mint a new series for
+    every product id and order number ever requested.
+    """
+
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        if not PROMETHEUS_AVAILABLE or request.url.path in _METRICS_EXEMPT:
+            return await call_next(request)
+
+        started = time.perf_counter()
+        try:
+            response = await call_next(request)
+        except Exception:
+            # Count the failure before re-raising; the exception middleware above
+            # will turn it into a 500.
+            elapsed = time.perf_counter() - started
+            path = route_label(request)
+            http_requests_total.labels(request.method, path, "500").inc()
+            http_request_duration_seconds.labels(request.method, path).observe(elapsed)
+            unhandled_exceptions_total.labels(path).inc()
+            raise
+
+        elapsed = time.perf_counter() - started
+        path = route_label(request)
+        http_requests_total.labels(request.method, path, str(response.status_code)).inc()
+        http_request_duration_seconds.labels(request.method, path).observe(elapsed)
+        if response.status_code >= 500:
+            unhandled_exceptions_total.labels(path).inc()
+        # Keep this worker's pool gauge fresh so a livesum scrape is accurate.
+        observe_pool()
+        return response

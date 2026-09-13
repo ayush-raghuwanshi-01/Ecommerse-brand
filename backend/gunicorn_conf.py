@@ -78,6 +78,28 @@ proc_name = "blackhouse-api"
 # (and TRUST_PROXY_HEADERS=false) or X-Forwarded-For becomes a rate-limit bypass.
 forwarded_allow_ips = os.environ.get("FORWARDED_ALLOW_IPS", "*")
 
+# ── Prometheus multiprocess mode ─────────────────────────────────────────────
+# With several workers, prometheus_client's default in-process counters mean a
+# scrape is answered by whichever worker accepts it - so metrics undercount by
+# the worker count and jump between scrapes. Setting this directory makes the
+# client mmap counters to shared files that MultiProcessCollector aggregates
+# across all live workers. See app/core/metrics.py.
+#
+# Must be set in the master *before* workers are forked (they inherit the env),
+# and stale files must be cleared on boot: a recycled pid would otherwise
+# resurrect a dead worker's counters.
+_multiproc_dir = os.environ.get("PROMETHEUS_MULTIPROC_DIR", "/tmp/prometheus_multiproc")
+os.environ["PROMETHEUS_MULTIPROC_DIR"] = _multiproc_dir
+
+
+def on_starting(server):  # pragma: no cover - gunicorn hook
+    """Runs once in the master, before any worker is forked."""
+    from app.core.metrics import clear_multiproc_dir
+
+    os.makedirs(_multiproc_dir, exist_ok=True)
+    clear_multiproc_dir()
+    server.log.info("prometheus multiprocess dir ready: %s", _multiproc_dir)
+
 
 def when_ready(server):  # pragma: no cover - gunicorn hook
     server.log.info("blackhouse-api ready: bind=%s workers=%s timeout=%ss", bind, workers, timeout)

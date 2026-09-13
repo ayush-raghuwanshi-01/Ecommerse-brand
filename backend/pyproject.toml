@@ -41,6 +41,9 @@ dev = [
     "pytest-cov>=5.0",
     "ruff>=0.7",
     "redis>=5.2",
+    # Metrics tests assert on /metrics output, so the optional observability
+    # extra must be present in CI too.
+    "prometheus-client>=0.21",
 ]
 
 [tool.setuptools.packages.find]
