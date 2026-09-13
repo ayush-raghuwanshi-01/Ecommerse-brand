@@ -1,8 +1,10 @@
 /** Typed API client with refresh-token rotation + retry-once on 401. */
 
+import { config } from '../config';
 import type { User } from './types';
 
-export const API = '/api/v1';
+/** Base path/origin for every call — see `VITE_API_BASE_URL` in `.env.example`. */
+export const API = config.apiBase;
 
 const ACCESS_KEY = 'bh_access';
 const REFRESH_KEY = 'bh_refresh';

@@ -1,0 +1,146 @@
+# ═════════════════════════════════════════════════════════════════════════════
+# Black House — full local/dev stack
+#
+#   cp .env.example .env       # then set SECRET_KEY
+#   docker compose up --build
+#
+#   web  → http://localhost:8080   (nginx serving the storefront + proxying /api)
+#   api  → http://localhost:8000   (FastAPI, OpenAPI at /docs)
+#   db   → localhost:5432          (PostgreSQL 16)
+#   redis→ localhost:6379          (rate limiting)
+#
+# Useful subsets:
+#   docker compose up db redis          # infra only (run the API on your machine)
+#   docker compose up api db redis      # backend only (run Vite on your machine)
+#   docker compose --profile tools run --rm seed      # load demo data
+#   docker compose --profile tools run --rm migrate   # apply migrations by hand
+#   docker compose down -v              # tear down and DELETE all data
+# ═════════════════════════════════════════════════════════════════════════════
+
+name: blackhouse
+
+x-backend-env: &backend-env
+  # Container-network overrides. Everything else comes from `env_file: .env`.
+  APP_ENV: ${APP_ENV:-development}
+  APP_DEBUG: ${APP_DEBUG:-true}
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-blackhouse}:${POSTGRES_PASSWORD:-blackhouse}@db:5432/${POSTGRES_DB:-blackhouse}
+  REDIS_URL: redis://redis:6379/0
+  STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
+  STORAGE_LOCAL_PATH: /srv/storage/uploads
+
+services:
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-blackhouse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-blackhouse}
+      POSTGRES_DB: ${POSTGRES_DB:-blackhouse}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blackhouse} -d ${POSTGRES_DB:-blackhouse}"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  # ── Redis (rate limiting only; the app works without it) ────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  # ── FastAPI commerce backend ────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      <<: *backend-env
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:8000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - uploads:/srv/storage/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # CMD already runs `alembic upgrade head` before uvicorn.
+
+  # ── React storefront (nginx; proxies /api → api) ────────────────────────────
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /api/v1
+        VITE_BRAND_NAME: ${VITE_BRAND_NAME:-Black House}
+        VITE_CONTACT_EMAIL: ${VITE_CONTACT_EMAIL:-hello@blackhouse.example}
+        VITE_WHATSAPP_NUMBER: ${WHATSAPP_BUSINESS_NUMBER:-910000000000}
+        VITE_APP_ENV: ${APP_ENV:-development}
+    restart: unless-stopped
+    environment:
+      BACKEND_ORIGIN: http://api:8000
+      NGINX_PORT: 80
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - api
+
+  # ── One-shot maintenance jobs (`docker compose --profile tools run --rm X`) ─
+  migrate:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+    env_file: .env
+    environment:
+      <<: *backend-env
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  seed:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+    env_file: .env
+    environment:
+      <<: *backend-env
+    command: ["python", "-m", "scripts.seed_dev"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  psql:
+    profiles: ["tools"]
+    image: postgres:16-alpine
+    env_file: .env
+    environment:
+      PGUSER: ${POSTGRES_USER:-blackhouse}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-blackhouse}
+      PGDATABASE: ${POSTGRES_DB:-blackhouse}
+    entrypoint: ["sh", "-c", "psql -h db -U $$PGUSER -d $$PGDATABASE"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:

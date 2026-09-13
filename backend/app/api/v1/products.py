@@ -1,13 +1,17 @@
 from typing import Annotated
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.deps import ManagerUser, StaffUser
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.logging import get_logger
 from app.core.pagination import PageParams, page_meta, paginate
+from app.core import uploads
 from app.models.catalog import (
     Product,
     ProductImage,
@@ -29,6 +33,8 @@ from app.schemas.catalog import (
 from app.schemas.common import Page
 from app.services import audit_service, catalog_service, storage_service
 from app.services.settings_service import get_setting
+
+log = get_logger("products")
 
 router = APIRouter(prefix="/products", tags=["products"])
 Db = Annotated[Session, Depends(get_db)]
@@ -227,23 +233,47 @@ def add_image(product_id: str, payload: ProductImageCreate, manager: ManagerUser
 @router.post("/{product_id}/images/upload", response_model=ProductImageOut, status_code=201)
 def upload_image(product_id: str, manager: ManagerUser, db: Db,
                  file: UploadFile = File(...), alt_text: str | None = None, is_primary: bool = False):
+    """Upload product imagery.
+
+    The file's *contents* decide the format (see ``app/core/uploads.py``): the
+    declared Content-Type and filename are never trusted, and SVG/HTML are
+    rejected outright because they are served from this origin and can carry
+    script. This closes a stored-XSS path to admin sessions.
+    """
     product = db.get(Product, product_id)
     if product is None:
         raise NotFoundError("Product not found.")
-    data = file.file.read()
-    if len(data) > 8 * 1024 * 1024:
-        raise ValidationError("Image too large (max 8 MB).")
-    key = f"products/{product_id}/{storage_service.safe_filename(file.filename or 'image.jpg')}"
-    url = storage_service.get_storage().put(key, data, file.content_type or "image/jpeg")
-    image = ProductImage(product_id=product.id, url=url, storage_key=key, alt_text=alt_text,
-                         is_primary=is_primary)
+
+    raw = uploads.read_upload(file.file, max_bytes=settings.image_max_upload_bytes)
+    image = uploads.validate_image(
+        raw,
+        declared_content_type=file.content_type,
+        declared_filename=file.filename,
+        max_bytes=settings.image_max_upload_bytes,
+    )
+
+    # Soft quality gate: warn an operator who uploads artwork too small to look
+    # good on a retina PDP, without blocking the upload.
+    dims = image.width_height
+    if dims and is_primary and dims[0] < settings.image_min_width:
+        log.warning(
+            "primary image for product %s is %dx%d (recommended >= %dpx wide)",
+            product_id, dims[0], dims[1], settings.image_min_width,
+        )
+
+    image_id = uuid4().hex
+    key = uploads.storage_key_for(prefix=f"products/{product_id}", image=image, unique_id=image_id)
+    url = storage_service.get_storage().put(key, image.data, image.content_type)
+
+    record = ProductImage(product_id=product.id, url=url, storage_key=key, alt_text=alt_text,
+                          is_primary=is_primary)
     if is_primary:
-        for i in product.images:
-            i.is_primary = False
-    db.add(image)
+        for existing in product.images:
+            existing.is_primary = False
+    db.add(record)
     db.flush()
     db.commit()
-    return image
+    return record
 
 
 def _slugify(name: str) -> str:

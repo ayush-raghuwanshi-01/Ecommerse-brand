@@ -3,7 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
-import { useScrolled } from './bits';
+import { useScrolled } from '../hooks/useScrolled';
 
 export default function Nav() {
   const scrolled = useScrolled();

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { inr } from '../lib/format';
 
 /** Scroll-reveal wrapper (respects prefers-reduced-motion via CSS). */
@@ -52,15 +52,4 @@ export function Spinner({ label = 'Loading' }: { label?: string }) {
       <small>{label}…</small>
     </div>
   );
-}
-
-export function useScrolled(threshold = 30) {
-  const [scrolled, set] = useState(false);
-  useEffect(() => {
-    const fn = () => set(window.scrollY > threshold);
-    fn();
-    addEventListener('scroll', fn);
-    return () => removeEventListener('scroll', fn);
-  }, [threshold]);
-  return scrolled;
 }

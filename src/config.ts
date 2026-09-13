@@ -1,2 +1,0 @@
-export const config = { brandName: 'Black House', whatsappNumber: '910000000000', contactEmail: 'hello@blackhouse.example' } as const;
-export const getWhatsAppLink = (message: string): string => `https://wa.me/${config.whatsappNumber}?text=${encodeURIComponent(message)}`;

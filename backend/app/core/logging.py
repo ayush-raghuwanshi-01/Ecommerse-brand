@@ -12,7 +12,10 @@ def configure_logging() -> None:
     global _CONFIGURED
     if _CONFIGURED:
         return
-    level = logging.DEBUG if settings.app_debug else logging.INFO
+    # Explicit LOG_LEVEL wins; otherwise debug mode implies DEBUG.
+    level = getattr(logging, settings.log_level.upper(), logging.INFO)
+    if settings.app_debug and settings.log_level == "INFO":
+        level = logging.DEBUG
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(
         logging.Formatter(

@@ -2,13 +2,20 @@
 
 from datetime import datetime
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.types import UTCDateTime
 from app.core.database import Base, utcnow
+from app.core.types import UTCDateTime
 from app.models.base import Timestamps, UUIDPk, enum_col
+
+if TYPE_CHECKING:
+    # Import-for-typing only: `Payment` lives in a sibling module that itself
+    # references Order, so importing it at runtime would be circular. SQLAlchemy
+    # resolves the string annotation through its mapper registry instead.
+    from app.models.payment import Payment
 
 
 class OrderSource(str, Enum):

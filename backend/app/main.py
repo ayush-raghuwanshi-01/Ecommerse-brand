@@ -11,6 +11,7 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
+from app.core.middleware import RequestContextMiddleware, SecurityHeadersMiddleware
 from app.services import order_service
 
 log = get_logger("main")
@@ -66,13 +67,19 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         openapi_url="/openapi.json",
     )
+    # Middleware order matters: Starlette wraps in reverse, so the LAST added
+    # runs FIRST. Request context is added last so it is outermost — it times the
+    # whole request and guarantees an X-Request-ID even when a later middleware
+    # or the route raises.
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(RequestContextMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["Idempotency-Key"],
+        expose_headers=["Idempotency-Key", "X-Request-ID"],
     )
     register_exception_handlers(app)
     app.include_router(api_router, prefix=settings.api_v1_str)
