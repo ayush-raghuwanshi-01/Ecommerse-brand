@@ -84,6 +84,9 @@ class Settings(BaseSettings):
     email_provider: str = "log"
     email_api_key: str = ""
     email_from: str = "orders@blackhouse.example"
+    # Where replies land. Defaults to email_from; set this to a monitored inbox
+    # (support@…) so customer replies reach a human rather than a no-reply alias.
+    email_reply_to: str = ""
     sms_provider: str = ""
     sms_api_key: str = ""
     whatsapp_provider: str = ""
@@ -107,6 +110,9 @@ class Settings(BaseSettings):
     cloudinary_url: str = ""
     # S3/CDN: public base URL prepended to object keys (CloudFront, Spaces CDN…).
     storage_cdn_base_url: str = ""
+    # Custom S3 endpoint for non-AWS stores (DigitalOcean Spaces, Wasabi, MinIO).
+    # Leave empty for AWS S3 itself.
+    storage_endpoint_url: str = ""
     # Image delivery: JPEG/PNG/WebP/AVIF are accepted; SVG/HTML are rejected
     # outright because they can carry script (see app/core/uploads.py).
     image_max_upload_bytes: int = 8 * 1024 * 1024

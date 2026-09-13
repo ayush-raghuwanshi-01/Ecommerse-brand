@@ -8,9 +8,9 @@ concurrent checkouts can never oversell.
 from datetime import timedelta
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 
-from app.core.database import utcnow
+from app.core.database import supports_row_locking, utcnow
 from app.core.exceptions import (
     InsufficientStockError,
     NotFoundError,
@@ -685,14 +685,34 @@ def add_internal_note(db: Session, order: Order, *, actor: User, note: str) -> O
 
 
 def sweep_expired_reservations(db: Session) -> int:
-    """Worker tick: unpaid prepaid orders past TTL release their stock."""
+    """Worker tick: unpaid prepaid orders past TTL release their stock.
+
+    Safe with multiple API replicas. On PostgreSQL the candidate rows are claimed
+    with ``FOR UPDATE SKIP LOCKED``, so every replica sweeps a *disjoint* set of
+    orders. Without it, N replicas all select the same expired orders before any
+    of them commits and each appends its own ``OrderStatusHistory`` row — the
+    stock math stays correct (``inventory_service.release`` row-locks and clamps
+    the delta to what is still reserved), but the audit trail gets duplicated
+    entries and the replicas serialise on each other's row locks.
+
+    ``selectinload`` is used rather than ``joinedload`` on purpose: PostgreSQL
+    rejects ``FOR UPDATE`` on the nullable side of the LEFT OUTER JOIN that
+    joinedload emits.
+
+    On SQLite (dev/test) row locking is unavailable and the sweep is
+    single-process, so it degrades to a plain scan.
+    """
     now = utcnow()
-    expired = db.scalars(
+    stmt = (
         select(Order)
         .where(Order.status == OrderStatus.pending_payment, Order.reserved_until.is_not(None))
         .where(Order.reserved_until < now)
-        .options(joinedload(Order.items))
-    ).unique().all()
+        .options(selectinload(Order.items))
+    )
+    if supports_row_locking(db):
+        stmt = stmt.with_for_update(skip_locked=True)
+
+    expired = db.scalars(stmt).unique().all()
     for order in expired:
         _release_stock_for(db, order)
         order.status = OrderStatus.cancelled
