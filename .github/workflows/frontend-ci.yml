@@ -1,0 +1,54 @@
+name: frontend-ci
+
+on:
+  push:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+  pull_request:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    strategy:
+      matrix:
+        # Node 22 LTS, matching the version the tree is developed against.
+        node-version: ["22"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # `npm ci` (not `npm install`) so CI resolves the exact locked tree and
+      # fails loudly if package-lock.json is out of sync with package.json.
+      - name: Install dependencies
+        run: npm ci
+
+      # --- Gates, cheapest first ---
+      - name: Prettier format check
+        run: npm run format:check
+      - name: Typecheck
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint
+
+      # Build last: it is the slowest step and also proves the bundle emits.
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 7
+          if-no-files-found: error
