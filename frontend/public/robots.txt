@@ -1,0 +1,24 @@
+# Black House storefront
+#
+# Set VITE_SITE_URL to your production origin at build time; the sitemap line
+# below must point at the live domain or crawlers will ignore it.
+
+User-agent: *
+Allow: /
+
+# Per-account and per-order pages carry personal data and must never be indexed.
+Disallow: /account
+Disallow: /orders
+Disallow: /order/
+Disallow: /checkout
+Disallow: /admin
+Disallow: /login
+
+# API and uploaded media are not documents; crawling them wastes crawl budget.
+Disallow: /api/
+Disallow: /static/
+
+# Social and payment callbacks must never be fetched by a crawler.
+Disallow: /webhooks/
+
+# Sitemap: https://REPLACE-WITH-YOUR-DOMAIN/sitemap.xml

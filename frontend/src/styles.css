@@ -309,3 +309,69 @@ footer > small { grid-column: 1 / -1; color: #625c50; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* ── legal & policy pages ─────────────────────────────────────────────── */
+/* Long-form documents: generous measure, clear hierarchy, printable. These
+   pages are read by customers mid-dispute and reviewed by a payment-gateway
+   compliance officer, so legibility outranks brand flourish. */
+.legal { max-width: 780px; }
+.legal-updated { font-size: 12px; color: var(--dim); letter-spacing: .04em; margin-top: -12px; }
+
+.legal-body { font-size: 15px; line-height: 1.75; color: var(--text); }
+.legal-body > p { margin: 0 0 18px; color: var(--dim); }
+
+.legal-section { margin: 0 0 34px; padding-bottom: 26px; border-bottom: 1px solid var(--border); }
+.legal-section:last-of-type { border-bottom: 0; }
+.legal-section h2 {
+  font-family: Fraunces, serif; font-weight: 500; font-size: 19px;
+  color: var(--text); margin: 0 0 12px; letter-spacing: .01em;
+}
+.legal-section p { margin: 0 0 12px; color: var(--dim); }
+.legal-section ul, .legal-section ol { margin: 0 0 14px; padding-left: 22px; color: var(--dim); }
+.legal-section li { margin-bottom: 8px; }
+.legal-section li::marker { color: var(--gold); }
+.legal-section strong { color: var(--text); font-weight: 600; }
+
+.legal-body a, .legal-address a {
+  color: var(--gold-bright); text-decoration: underline;
+  text-decoration-color: #c9a24b55; text-underline-offset: 3px;
+}
+.legal-body a:hover, .legal-address a:hover { text-decoration-color: var(--gold-bright); }
+
+/* Registered seller block — the detail a compliance reviewer looks for first. */
+.legal-address {
+  font-style: normal; font-size: 14px; line-height: 1.8; color: var(--dim);
+  background: var(--card); border: 1px solid var(--border); border-left: 2px solid var(--gold);
+  padding: 18px 20px; margin: 14px 0; border-radius: 2px;
+}
+.legal-address strong { color: var(--text); font-size: 15px; }
+
+/* Unfilled business detail. Deliberately loud: shipping a policy with a blank
+   address, or an invented one, are both worse than an obvious gap. */
+mark.todo {
+  background: #c9a24b22; color: var(--gold-bright); padding: 1px 6px;
+  border: 1px dashed var(--gold); border-radius: 2px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px;
+  letter-spacing: .06em;
+}
+
+/* Cross-links between policies, so a reader can reach the rest without the footer. */
+.legal-nav {
+  display: flex; flex-wrap: wrap; gap: 10px 20px; margin-top: 34px;
+  padding-top: 22px; border-top: 1px solid var(--border); font-size: 12px;
+}
+.legal-nav a { color: var(--dim); text-decoration: none; letter-spacing: .04em; }
+.legal-nav a:hover { color: var(--gold-bright); }
+
+/* ── footer: policy row ───────────────────────────────────────────────── */
+footer { grid-template-columns: 1fr auto 1fr; }
+.footer-legal { grid-column: 1 / -1; flex-wrap: wrap; gap: 16px !important; padding-top: 4px; }
+.footer-legal a { color: #6f6858; }
+.footer-legal a:hover { color: var(--gold-bright); }
+
+@media print {
+  /* Customers print policies during disputes; hide the chrome. */
+  nav, .cart-drawer, .skip-link, .legal-nav, footer { display: none !important; }
+  .legal-body, .legal-section p, .legal-section li { color: #000; }
+  body { background: #fff; }
+}

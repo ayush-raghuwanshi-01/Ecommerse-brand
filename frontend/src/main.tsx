@@ -19,6 +19,20 @@ import Shop from './pages/Shop';
 import StoryPage from './pages/Story';
 import './styles.css';
 
+// Legal pages are lazy-loaded: they are needed for compliance and payment-gateway
+// review, but no shopper wants them in the critical path of the storefront bundle.
+const PrivacyPolicyPage = lazy(() =>
+  import('./pages/Legal').then((m) => ({ default: m.PrivacyPolicyPage })),
+);
+const TermsPage = lazy(() => import('./pages/Legal').then((m) => ({ default: m.TermsPage })));
+const ReturnsPolicyPage = lazy(() =>
+  import('./pages/Legal').then((m) => ({ default: m.ReturnsPolicyPage })),
+);
+const ShippingPolicyPage = lazy(() =>
+  import('./pages/Legal').then((m) => ({ default: m.ShippingPolicyPage })),
+);
+const ContactPage = lazy(() => import('./pages/Legal').then((m) => ({ default: m.ContactPage })));
+
 const AdminPage = lazy(() => import('./pages/Admin'));
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -58,6 +72,13 @@ function App() {
                   <Route path="/orders" element={<RequireAuth><OrdersPage /></RequireAuth>} />
                   <Route path="/order/:id" element={<RequireAuth><OrderDetailPage /></RequireAuth>} />
                   <Route path="/admin" element={<AdminPage />} />
+                  {/* Legal & policy pages — required for e-commerce compliance and
+                      reviewed by Razorpay during merchant KYC. */}
+                  <Route path="/policies/privacy" element={<PrivacyPolicyPage />} />
+                  <Route path="/policies/terms" element={<TermsPage />} />
+                  <Route path="/policies/returns" element={<ReturnsPolicyPage />} />
+                  <Route path="/policies/shipping" element={<ShippingPolicyPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
                   <Route path="*" element={<main className="page"><p className="empty">Page not found.</p></main>} />
                 </Routes>
               </Suspense>

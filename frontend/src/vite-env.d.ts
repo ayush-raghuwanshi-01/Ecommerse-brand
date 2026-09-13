@@ -21,6 +21,25 @@ interface ImportMetaEnv {
   readonly VITE_WHATSAPP_NUMBER?: string;
   readonly VITE_SUPPORT_PHONE?: string;
 
+  /** Registered business identity — printed on legal pages and invoices. */
+  readonly VITE_LEGAL_NAME?: string;
+  readonly VITE_ADDRESS_LINE1?: string;
+  readonly VITE_ADDRESS_LINE2?: string;
+  readonly VITE_CITY?: string;
+  readonly VITE_STATE?: string;
+  readonly VITE_POSTAL_CODE?: string;
+  readonly VITE_COUNTRY?: string;
+  readonly VITE_GSTIN?: string;
+  readonly VITE_CIN?: string;
+
+  /** Policy terms surfaced on the legal pages and at checkout. */
+  readonly VITE_RETURN_WINDOW_DAYS?: string;
+  readonly VITE_SHIPPING_SLA?: string;
+  readonly VITE_SUPPORT_HOURS?: string;
+
+  /** Canonical origin for canonical URLs, sitemap and OG metadata. */
+  readonly VITE_SITE_URL?: string;
+
   readonly VITE_GA_MEASUREMENT_ID?: string;
   readonly VITE_SENTRY_DSN?: string;
 
