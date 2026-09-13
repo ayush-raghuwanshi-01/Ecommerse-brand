@@ -21,13 +21,9 @@ import './styles.css';
 
 // Legal pages are lazy-loaded: they are needed for compliance and payment-gateway
 // review, but no shopper wants them in the critical path of the storefront bundle.
-const PrivacyPolicyPage = lazy(() =>
-  import('./pages/Legal').then((m) => ({ default: m.PrivacyPolicyPage })),
-);
+const PrivacyPolicyPage = lazy(() => import('./pages/Legal').then((m) => ({ default: m.PrivacyPolicyPage })));
 const TermsPage = lazy(() => import('./pages/Legal').then((m) => ({ default: m.TermsPage })));
-const ReturnsPolicyPage = lazy(() =>
-  import('./pages/Legal').then((m) => ({ default: m.ReturnsPolicyPage })),
-);
+const ReturnsPolicyPage = lazy(() => import('./pages/Legal').then((m) => ({ default: m.ReturnsPolicyPage })));
 const ShippingPolicyPage = lazy(() =>
   import('./pages/Legal').then((m) => ({ default: m.ShippingPolicyPage })),
 );
@@ -38,7 +34,12 @@ const AdminPage = lazy(() => import('./pages/Admin'));
 function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const location = useLocation();
-  if (loading) return <main className="page"><Spinner /></main>;
+  if (loading)
+    return (
+      <main className="page">
+        <Spinner />
+      </main>
+    );
   if (!user) return <Navigate to={`/login?next=${encodeURIComponent(location.pathname)}`} replace />;
   return <>{children}</>;
 }
@@ -56,10 +57,18 @@ function App() {
         <CartProvider>
           <BrowserRouter>
             <ScrollTop />
-            <a className="skip-link" href="#content">Skip to content</a>
+            <a className="skip-link" href="#content">
+              Skip to content
+            </a>
             <Nav />
             <div id="content">
-              <Suspense fallback={<main className="page"><Spinner /></main>}>
+              <Suspense
+                fallback={
+                  <main className="page">
+                    <Spinner />
+                  </main>
+                }
+              >
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/shop" element={<Shop />} />
@@ -67,10 +76,38 @@ function App() {
                   <Route path="/story" element={<StoryPage />} />
                   <Route path="/bulk" element={<BulkPage />} />
                   <Route path="/login" element={<AuthPage />} />
-                  <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
-                  <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
-                  <Route path="/orders" element={<RequireAuth><OrdersPage /></RequireAuth>} />
-                  <Route path="/order/:id" element={<RequireAuth><OrderDetailPage /></RequireAuth>} />
+                  <Route
+                    path="/account"
+                    element={
+                      <RequireAuth>
+                        <AccountPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/checkout"
+                    element={
+                      <RequireAuth>
+                        <Checkout />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/orders"
+                    element={
+                      <RequireAuth>
+                        <OrdersPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/order/:id"
+                    element={
+                      <RequireAuth>
+                        <OrderDetailPage />
+                      </RequireAuth>
+                    }
+                  />
                   <Route path="/admin" element={<AdminPage />} />
                   {/* Legal & policy pages — required for e-commerce compliance and
                       reviewed by Razorpay during merchant KYC. */}
@@ -79,7 +116,14 @@ function App() {
                   <Route path="/policies/returns" element={<ReturnsPolicyPage />} />
                   <Route path="/policies/shipping" element={<ShippingPolicyPage />} />
                   <Route path="/contact" element={<ContactPage />} />
-                  <Route path="*" element={<main className="page"><p className="empty">Page not found.</p></main>} />
+                  <Route
+                    path="*"
+                    element={
+                      <main className="page">
+                        <p className="empty">Page not found.</p>
+                      </main>
+                    }
+                  />
                 </Routes>
               </Suspense>
             </div>

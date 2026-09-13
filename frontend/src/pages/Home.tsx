@@ -43,8 +43,13 @@ export default function Home() {
           </h1>
           <p className="lede">Small-batch layers for considered movement. Cut with intent, built to stay.</p>
           <div className="actions">
-            <Link className="button" to="/shop">View the collection</Link>
-            <a className="textlink" href={getWhatsAppLink('Hello Black House, I would like to view the collection.')}>
+            <Link className="button" to="/shop">
+              View the collection
+            </Link>
+            <a
+              className="textlink"
+              href={getWhatsAppLink('Hello Black House, I would like to view the collection.')}
+            >
               Message us on WhatsApp ↗
             </a>
           </div>
@@ -73,7 +78,9 @@ export default function Home() {
           ))}
         </div>
         <div className="center-cta">
-          <Link className="button ghost" to="/shop">Browse all pieces</Link>
+          <Link className="button ghost" to="/shop">
+            Browse all pieces
+          </Link>
         </div>
       </section>
 
@@ -82,14 +89,16 @@ export default function Home() {
           <p className="eyebrow">The house</p>
           <blockquote>“A wardrobe should become more itself with time.”</blockquote>
           <p>
-            Black House began with a simple premise: the everyday layer deserves the same attention
-            as the occasion piece.
+            Black House began with a simple premise: the everyday layer deserves the same attention as the
+            occasion piece.
           </p>
           <p>
-            We work slowly, in small batches, with durable cloth and hardware that earns its patina.
-            No noise. Just clothes with a point of view.
+            We work slowly, in small batches, with durable cloth and hardware that earns its patina. No noise.
+            Just clothes with a point of view.
           </p>
-          <Link className="textlink" to="/story">Read the full story →</Link>
+          <Link className="textlink" to="/story">
+            Read the full story →
+          </Link>
         </Reveal>
         <Reveal className="story-panel">
           <div className="panel-mark">BH</div>
@@ -104,10 +113,12 @@ export default function Home() {
             Outfitting a team? <em>Let’s talk.</em>
           </h2>
           <p>
-            Hotels, studios and enterprises — small-batch production runs for teams that care
-            about what they wear.
+            Hotels, studios and enterprises — small-batch production runs for teams that care about what they
+            wear.
           </p>
-          <Link className="button" to="/bulk">Start a bulk enquiry</Link>
+          <Link className="button" to="/bulk">
+            Start a bulk enquiry
+          </Link>
         </Reveal>
       </section>
     </>

@@ -1,10 +1,7 @@
-export const inr = (paise: number): string =>
-  `₹${Math.round(paise / 100).toLocaleString('en-IN')}`;
+export const inr = (paise: number): string => `₹${Math.round(paise / 100).toLocaleString('en-IN')}`;
 
 export const dateFmt = (iso: string | null | undefined): string =>
-  iso
-    ? new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-    : '—';
+  iso ? new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
 export const ORDER_FLOW = [
   'pending_payment',

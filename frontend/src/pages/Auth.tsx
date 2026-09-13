@@ -37,17 +37,56 @@ export default function AuthPage() {
       <Seo title={mode === 'login' ? 'Sign in — Black House' : 'Create account — Black House'} />
       <form className="panel narrow" onSubmit={submit}>
         <p className="eyebrow">Members</p>
-        <h1>{mode === 'login' ? <>Sign <em>in</em></> : <>Create <em>account</em></>}</h1>
+        <h1>
+          {mode === 'login' ? (
+            <>
+              Sign <em>in</em>
+            </>
+          ) : (
+            <>
+              Create <em>account</em>
+            </>
+          )}
+        </h1>
         {mode === 'register' && (
           <>
-            <label>Full name<input required value={name} onChange={(e) => setName(e.target.value)} /></label>
-            <label>Phone (optional)<input inputMode="numeric" pattern="[0-9]{10}" value={phone} onChange={(e) => setPhone(e.target.value)} /></label>
+            <label>
+              Full name
+              <input required value={name} onChange={(e) => setName(e.target.value)} />
+            </label>
+            <label>
+              Phone (optional)
+              <input
+                inputMode="numeric"
+                pattern="[0-9]{10}"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </label>
           </>
         )}
-        <label>Email<input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-        <label>Password<input required type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} /></label>
-        <button className="button wide" disabled={busy}>{busy ? 'One moment…' : mode === 'login' ? 'Sign in' : 'Create account'}</button>
-        <button type="button" className="textlink" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
+        <label>
+          Email
+          <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </label>
+        <label>
+          Password
+          <input
+            required
+            type="password"
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+        <button className="button wide" disabled={busy}>
+          {busy ? 'One moment…' : mode === 'login' ? 'Sign in' : 'Create account'}
+        </button>
+        <button
+          type="button"
+          className="textlink"
+          onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+        >
           {mode === 'login' ? 'New here? Create an account' : 'Already a member? Sign in'}
         </button>
         <p className="dim small-note">

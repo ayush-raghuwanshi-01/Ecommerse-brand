@@ -43,8 +43,8 @@ export default function Footer() {
       </Link>
 
       <small>
-        © {new Date().getFullYear()} {config.legalName} · {config.city}, {config.state} · Built in
-        small batches.
+        © {new Date().getFullYear()} {config.legalName} · {config.city}, {config.state} · Built in small
+        batches.
       </small>
     </footer>
   );

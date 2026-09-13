@@ -22,9 +22,7 @@ export default function Nav() {
         <NavLink to="/shop">Collection</NavLink>
         <NavLink to="/story">Story</NavLink>
         <NavLink to="/bulk">Bulk Orders</NavLink>
-        {user && ['staff', 'manager', 'admin'].includes(user.role) && (
-          <NavLink to="/admin">Console</NavLink>
-        )}
+        {user && ['staff', 'manager', 'admin'].includes(user.role) && <NavLink to="/admin">Console</NavLink>}
       </div>
       <div className="nav-actions">
         <button className="icon-btn" aria-label="Open cart" onClick={() => setOpen(true)}>
@@ -37,8 +35,12 @@ export default function Nav() {
             </button>
             {menu && (
               <div className="menu" role="menu" onMouseLeave={() => setMenu(false)}>
-                <Link to="/orders" onClick={() => setMenu(false)}>My orders</Link>
-                <Link to="/account" onClick={() => setMenu(false)}>Addresses</Link>
+                <Link to="/orders" onClick={() => setMenu(false)}>
+                  My orders
+                </Link>
+                <Link to="/account" onClick={() => setMenu(false)}>
+                  Addresses
+                </Link>
                 <button
                   onClick={async () => {
                     setMenu(false);
@@ -53,7 +55,9 @@ export default function Nav() {
             )}
           </div>
         ) : (
-          <Link className="icon-btn" to="/login">Sign in</Link>
+          <Link className="icon-btn" to="/login">
+            Sign in
+          </Link>
         )}
       </div>
     </nav>

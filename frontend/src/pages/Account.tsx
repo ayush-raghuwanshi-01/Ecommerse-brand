@@ -25,7 +25,11 @@ export default function AccountPage() {
   const [form, setForm] = useState<typeof EMPTY | null>(null);
   const toast = useToast();
 
-  const load = () => api.get<Address[]>('/addresses').then(setAddresses).catch(() => setAddresses([]));
+  const load = () =>
+    api
+      .get<Address[]>('/addresses')
+      .then(setAddresses)
+      .catch(() => setAddresses([]));
   useEffect(() => {
     void load();
   }, []);
@@ -36,7 +40,9 @@ export default function AccountPage() {
       <h1>
         Hello, <em>{user?.full_name.split(' ')[0]}</em>
       </h1>
-      <p className="dim">{user?.email} · {user?.role}</p>
+      <p className="dim">
+        {user?.email} · {user?.role}
+      </p>
 
       <div className="panel">
         <div className="panel-head">
@@ -62,17 +68,71 @@ export default function AccountPage() {
             }}
           >
             <div className="row-2">
-              <label>Full name<input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></label>
-              <label>Phone<input required pattern="[0-9]{10}" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label>
+              <label>
+                Full name
+                <input
+                  required
+                  value={form.full_name}
+                  onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                />
+              </label>
+              <label>
+                Phone
+                <input
+                  required
+                  pattern="[0-9]{10}"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                />
+              </label>
             </div>
-            <label>Line 1<input required value={form.line1} onChange={(e) => setForm({ ...form, line1: e.target.value })} /></label>
-            <label>Line 2<input value={form.line2} onChange={(e) => setForm({ ...form, line2: e.target.value })} /></label>
+            <label>
+              Line 1
+              <input
+                required
+                value={form.line1}
+                onChange={(e) => setForm({ ...form, line1: e.target.value })}
+              />
+            </label>
+            <label>
+              Line 2<input value={form.line2} onChange={(e) => setForm({ ...form, line2: e.target.value })} />
+            </label>
             <div className="row-2">
-              <label>City<input required value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></label>
-              <label>State<input required value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} /></label>
+              <label>
+                City
+                <input
+                  required
+                  value={form.city}
+                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                />
+              </label>
+              <label>
+                State
+                <input
+                  required
+                  value={form.state}
+                  onChange={(e) => setForm({ ...form, state: e.target.value })}
+                />
+              </label>
             </div>
-            <label>PIN code<input required pattern="[1-9][0-9]{5}" maxLength={6} value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value.replace(/\D/g, '') })} /></label>
-            <label className="check"><input type="checkbox" checked={form.is_default_shipping} onChange={(e) => setForm({ ...form, is_default_shipping: e.target.checked })} /> Default shipping</label>
+            <label>
+              PIN code
+              <input
+                required
+                pattern="[1-9][0-9]{5}"
+                maxLength={6}
+                value={form.postal_code}
+                onChange={(e) => setForm({ ...form, postal_code: e.target.value.replace(/\D/g, '') })}
+              />
+            </label>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={form.is_default_shipping}
+                onChange={(e) => setForm({ ...form, is_default_shipping: e.target.checked })}
+              />{' '}
+              Default shipping
+            </label>
             <button className="button">Save address</button>
           </form>
         )}
@@ -82,7 +142,9 @@ export default function AccountPage() {
             <div className="addr-card" key={a.id}>
               <strong>{a.full_name}</strong>
               <small>
-                {a.line1}{a.line2 ? `, ${a.line2}` : ''}<br />
+                {a.line1}
+                {a.line2 ? `, ${a.line2}` : ''}
+                <br />
                 {a.city}, {a.state} {a.postal_code}
               </small>
               <div className="chips">

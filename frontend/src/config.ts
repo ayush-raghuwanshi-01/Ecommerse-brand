@@ -78,8 +78,6 @@ export const config = {
  * `https://wa.me/?text=…`.
  */
 export const getWhatsAppLink = (message: string): string =>
-  config.whatsappNumber
-    ? `https://wa.me/${config.whatsappNumber}?text=${encodeURIComponent(message)}`
-    : '';
+  config.whatsappNumber ? `https://wa.me/${config.whatsappNumber}?text=${encodeURIComponent(message)}` : '';
 
 export default config;

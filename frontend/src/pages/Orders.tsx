@@ -9,7 +9,10 @@ import type { Order, Page } from '../lib/types';
 export function OrdersPage() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   useEffect(() => {
-    api.get<Page<Order>>('/orders/me?page_size=50').then((p) => setOrders(p.items)).catch(() => setOrders([]));
+    api
+      .get<Page<Order>>('/orders/me?page_size=50')
+      .then((p) => setOrders(p.items))
+      .catch(() => setOrders([]));
   }, []);
 
   return (
@@ -21,14 +24,18 @@ export function OrdersPage() {
       {!orders ? (
         <Spinner />
       ) : orders.length === 0 ? (
-        <p className="empty">No orders yet. <Link to="/shop">Browse the collection →</Link></p>
+        <p className="empty">
+          No orders yet. <Link to="/shop">Browse the collection →</Link>
+        </p>
       ) : (
         <div className="order-list">
           {orders.map((o) => (
             <Link className="order-row" key={o.id} to={`/order/${o.id}`}>
               <div>
                 <strong>{o.number}</strong>
-                <small>{dateFmt(o.created_at)} · {o.items.length} piece(s)</small>
+                <small>
+                  {dateFmt(o.created_at)} · {o.items.length} piece(s)
+                </small>
               </div>
               <span className={`status ${o.status}`}>{statusLabel(o.status)}</span>
               <strong>{inr(o.grand_total_paise)}</strong>
@@ -57,14 +64,26 @@ export function OrderDetailPage() {
   const [params] = useSearchParams();
   const toast = useToast();
 
-  const load = () => api.get<Order>(`/orders/me/${id}`).then(setOrder).catch(() => setOrder(null));
+  const load = () =>
+    api
+      .get<Order>(`/orders/me/${id}`)
+      .then(setOrder)
+      .catch(() => setOrder(null));
   useEffect(() => {
     void load();
-    api.get<Record<string, unknown>>(`/shipments/order/${id}/tracking`).then(setTracking).catch(() => null);
+    api
+      .get<Record<string, unknown>>(`/shipments/order/${id}/tracking`)
+      .then(setTracking)
+      .catch(() => null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  if (!order) return <main className="page"><Spinner /></main>;
+  if (!order)
+    return (
+      <main className="page">
+        <Spinner />
+      </main>
+    );
 
   const cancellable = ['pending_payment', 'confirmed', 'processing'].includes(order.status);
 
@@ -72,15 +91,15 @@ export function OrderDetailPage() {
     <main className="page order-detail">
       <Seo title={`Order ${order.number} — Black House`} />
       {params.get('placed') && (
-        <p className="ok banner">
-          ✓ Order {order.number} placed. We’ve emailed you the confirmation.
-        </p>
+        <p className="ok banner">✓ Order {order.number} placed. We’ve emailed you the confirmation.</p>
       )}
       <div className="od-head">
         <div>
           <p className="eyebrow">Order</p>
           <h1>{order.number}</h1>
-          <small>{dateFmt(order.created_at)} · {order.order_source} · {order.payment_method.toUpperCase()}</small>
+          <small>
+            {dateFmt(order.created_at)} · {order.order_source} · {order.payment_method.toUpperCase()}
+          </small>
         </div>
         <div className="od-status">
           <span className={`status ${order.status}`}>{statusLabel(order.status)}</span>
@@ -96,23 +115,47 @@ export function OrderDetailPage() {
               <span>
                 {i.product_name} · {i.variant_name} × {i.qty}
                 {i.is_preorder && <small className="chip gold"> pre-order</small>}
-                {i.estimated_fulfillment_note && <small className="dim"> — {i.estimated_fulfillment_note}</small>}
+                {i.estimated_fulfillment_note && (
+                  <small className="dim"> — {i.estimated_fulfillment_note}</small>
+                )}
               </span>
               <span>{inr(i.total_paise)}</span>
             </div>
           ))}
           <hr />
-          <div className="sum-line"><span>Subtotal</span><span>{inr(order.subtotal_paise)}</span></div>
-          {order.discount_paise > 0 && <div className="sum-line"><span>Discount</span><span>−{inr(order.discount_paise)}</span></div>}
-          <div className="sum-line"><span>Shipping</span><span>{order.shipping_paise === 0 ? 'Free' : inr(order.shipping_paise)}</span></div>
-          <div className="sum-line"><span>GST included</span><span>{inr(order.tax_paise)}</span></div>
-          <div className="sum-line grand"><span>Total</span><span>{inr(order.grand_total_paise)}</span></div>
+          <div className="sum-line">
+            <span>Subtotal</span>
+            <span>{inr(order.subtotal_paise)}</span>
+          </div>
+          {order.discount_paise > 0 && (
+            <div className="sum-line">
+              <span>Discount</span>
+              <span>−{inr(order.discount_paise)}</span>
+            </div>
+          )}
+          <div className="sum-line">
+            <span>Shipping</span>
+            <span>{order.shipping_paise === 0 ? 'Free' : inr(order.shipping_paise)}</span>
+          </div>
+          <div className="sum-line">
+            <span>GST included</span>
+            <span>{inr(order.tax_paise)}</span>
+          </div>
+          <div className="sum-line grand">
+            <span>Total</span>
+            <span>{inr(order.grand_total_paise)}</span>
+          </div>
 
           {cancellable && (
             <div className="cancel-box">
-              <label>Need to cancel?
+              <label>
+                Need to cancel?
                 <select value={reason} onChange={(e) => setReason(e.target.value)}>
-                  {CANCEL_REASONS.map((r) => <option key={r} value={r}>{statusLabel(r)}</option>)}
+                  {CANCEL_REASONS.map((r) => (
+                    <option key={r} value={r}>
+                      {statusLabel(r)}
+                    </option>
+                  ))}
                 </select>
               </label>
               <button
@@ -136,8 +179,11 @@ export function OrderDetailPage() {
         <aside className="panel">
           <h2>Delivery</h2>
           <address className="dim">
-            {order.shipping_address.full_name}<br />
-            {order.shipping_address.line1}{order.shipping_address.line2 ? `, ${order.shipping_address.line2}` : ''}<br />
+            {order.shipping_address.full_name}
+            <br />
+            {order.shipping_address.line1}
+            {order.shipping_address.line2 ? `, ${order.shipping_address.line2}` : ''}
+            <br />
             {order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.postal_code}
           </address>
           {tracking && (
@@ -153,7 +199,10 @@ export function OrderDetailPage() {
             {order.history.map((h, idx) => (
               <li key={idx}>
                 <strong>{statusLabel(h.to_status)}</strong>
-                <small>{dateFmt(h.created_at)}{h.note ? ` · ${h.note}` : ''}</small>
+                <small>
+                  {dateFmt(h.created_at)}
+                  {h.note ? ` · ${h.note}` : ''}
+                </small>
               </li>
             ))}
           </ol>

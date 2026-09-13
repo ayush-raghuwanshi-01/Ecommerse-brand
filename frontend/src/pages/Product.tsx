@@ -41,10 +41,24 @@ export default function ProductPage() {
       .catch(() => setNotFound(true));
   }, [slug]);
 
-  if (notFound) return <main className="page"><p className="empty">This piece is no longer available.</p></main>;
-  if (!product) return <main className="page"><Spinner label="Loading piece" /></main>;
+  if (notFound)
+    return (
+      <main className="page">
+        <p className="empty">This piece is no longer available.</p>
+      </main>
+    );
+  if (!product)
+    return (
+      <main className="page">
+        <Spinner label="Loading piece" />
+      </main>
+    );
 
-  const purchasable = variant && (variant.availability === 'available' || variant.availability === 'low_stock' || (variant.is_preorder && product.preorder_open));
+  const purchasable =
+    variant &&
+    (variant.availability === 'available' ||
+      variant.availability === 'low_stock' ||
+      (variant.is_preorder && product.preorder_open));
   const notifyMode = variant && variant.availability === 'out_of_stock';
 
   const addToBag = async () => {
@@ -94,12 +108,16 @@ export default function ProductPage() {
         <div className="pdp-info">
           <p className="eyebrow">{product.product_type || 'Outerwear'} · Numbered small batch</p>
           <h1>{product.name}</h1>
-          <p className="pdp-price">{inr(variant?.price_paise ?? product.base_price_paise)} <small>incl. GST</small></p>
+          <p className="pdp-price">
+            {inr(variant?.price_paise ?? product.base_price_paise)} <small>incl. GST</small>
+          </p>
           <p className="lede">{product.short_description}</p>
           {product.description && <p className="dim">{product.description}</p>}
 
           {product.is_preorder && product.preorder_fulfillment_note && (
-            <p className="notice">⏳ {product.preorder_fulfillment_note} Fulfilment may take longer than ready stock.</p>
+            <p className="notice">
+              ⏳ {product.preorder_fulfillment_note} Fulfilment may take longer than ready stock.
+            </p>
           )}
           {product.status === 'out_of_stock' && product.restock_note && (
             <p className="notice">↻ {product.restock_note}</p>
@@ -126,29 +144,58 @@ export default function ProductPage() {
           {purchasable ? (
             <div className="buy-row">
               <div className="stepper">
-                <button onClick={() => setQty((n) => Math.max(1, n - 1))} aria-label="Decrease quantity">−</button>
+                <button onClick={() => setQty((n) => Math.max(1, n - 1))} aria-label="Decrease quantity">
+                  −
+                </button>
                 <span>{qty}</span>
-                <button onClick={() => setQty((n) => Math.min(10, n + 1))} aria-label="Increase quantity">+</button>
+                <button onClick={() => setQty((n) => Math.min(10, n + 1))} aria-label="Increase quantity">
+                  +
+                </button>
               </div>
               <button className="button" onClick={addToBag}>
                 {variant?.is_preorder ? 'Pre-order now' : 'Add to bag'}
               </button>
             </div>
           ) : notifyMode ? (
-            <button className="button ghost" onClick={notifyMe}>Notify me when back</button>
+            <button className="button ghost" onClick={notifyMe}>
+              Notify me when back
+            </button>
           ) : (
             <p className="dim">This size is currently unavailable.</p>
           )}
 
-          <a className="textlink" href={getWhatsAppLink(`Hello Black House, I am enquiring about ${product.name}.`)}>
+          <a
+            className="textlink"
+            href={getWhatsAppLink(`Hello Black House, I am enquiring about ${product.name}.`)}
+          >
             Enquire on WhatsApp ↗
           </a>
 
           <dl className="spec">
-            {product.fabric && <><dt>Fabric</dt><dd>{product.fabric}</dd></>}
-            {product.fit_info && <><dt>Fit</dt><dd>{product.fit_info}</dd></>}
-            {product.size_guide && <><dt>Size guide</dt><dd>{product.size_guide}</dd></>}
-            {product.care_instructions && <><dt>Care</dt><dd>{product.care_instructions}</dd></>}
+            {product.fabric && (
+              <>
+                <dt>Fabric</dt>
+                <dd>{product.fabric}</dd>
+              </>
+            )}
+            {product.fit_info && (
+              <>
+                <dt>Fit</dt>
+                <dd>{product.fit_info}</dd>
+              </>
+            )}
+            {product.size_guide && (
+              <>
+                <dt>Size guide</dt>
+                <dd>{product.size_guide}</dd>
+              </>
+            )}
+            {product.care_instructions && (
+              <>
+                <dt>Care</dt>
+                <dd>{product.care_instructions}</dd>
+              </>
+            )}
           </dl>
         </div>
       </div>

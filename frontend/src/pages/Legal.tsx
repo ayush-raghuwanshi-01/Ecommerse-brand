@@ -123,40 +123,37 @@ export function PrivacyPolicyPage() {
       updated={UPDATED}
     >
       <p>
-        This privacy policy describes how {need(config.legalName)} (&ldquo;we&rdquo;,
-        &ldquo;us&rdquo;) collects, uses, discloses and protects your personal information when
-        you use this website or purchase from us. It is published under the Information
-        Technology Act, 2000 and the Information Technology (Reasonable Security Practices and
-        Procedures and Sensitive Personal Data or Information) Rules, 2011.
+        This privacy policy describes how {need(config.legalName)} (&ldquo;we&rdquo;, &ldquo;us&rdquo;)
+        collects, uses, discloses and protects your personal information when you use this website or purchase
+        from us. It is published under the Information Technology Act, 2000 and the Information Technology
+        (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011.
       </p>
 
       <Section title="1. Information we collect">
         <ul>
           <li>
-            <strong>Account details</strong> — name, email address, phone number and a password
-            stored only as a cryptographic hash. We never store plaintext passwords.
+            <strong>Account details</strong> — name, email address, phone number and a password stored only as
+            a cryptographic hash. We never store plaintext passwords.
           </li>
           <li>
-            <strong>Delivery information</strong> — shipping address, PIN code and a contact
-            number for the courier.
+            <strong>Delivery information</strong> — shipping address, PIN code and a contact number for the
+            courier.
           </li>
           <li>
-            <strong>Order and payment records</strong> — items purchased, amounts, GST components,
-            order status and return history.
+            <strong>Order and payment records</strong> — items purchased, amounts, GST components, order
+            status and return history.
           </li>
           <li>
-            <strong>Payment credentials</strong> — we do <em>not</em> collect or store card
-            numbers, UPI credentials or net-banking details. Payments are processed by Razorpay
-            on their own PCI-DSS-compliant infrastructure; we receive only a transaction
-            reference and its status.
+            <strong>Payment credentials</strong> — we do <em>not</em> collect or store card numbers, UPI
+            credentials or net-banking details. Payments are processed by Razorpay on their own
+            PCI-DSS-compliant infrastructure; we receive only a transaction reference and its status.
           </li>
           <li>
-            <strong>Technical data</strong> — IP address, browser user agent and request
-            identifiers, recorded for security, rate limiting and audit purposes.
+            <strong>Technical data</strong> — IP address, browser user agent and request identifiers, recorded
+            for security, rate limiting and audit purposes.
           </li>
           <li>
-            <strong>Enquiries</strong> — anything you send us through the bulk-order form,
-            WhatsApp or email.
+            <strong>Enquiries</strong> — anything you send us through the bulk-order form, WhatsApp or email.
           </li>
         </ul>
       </Section>
@@ -165,14 +162,19 @@ export function PrivacyPolicyPage() {
         <ul>
           <li>To process and deliver your order, and to issue a GST invoice.</li>
           <li>To take payment, verify it, and process refunds and returns.</li>
-          <li>To send transactional messages about your order — confirmation, dispatch, tracking, delivery, and return or refund status.</li>
+          <li>
+            To send transactional messages about your order — confirmation, dispatch, tracking, delivery, and
+            return or refund status.
+          </li>
           <li>To provide customer support and respond to enquiries.</li>
-          <li>To prevent fraud, enforce our terms, and keep an audit trail of staff actions on your order.</li>
+          <li>
+            To prevent fraud, enforce our terms, and keep an audit trail of staff actions on your order.
+          </li>
           <li>To meet statutory obligations, including tax and accounting record-keeping.</li>
         </ul>
         <p>
-          We do not sell your personal information. We do not use it for advertising profiles or
-          share it with data brokers.
+          We do not sell your personal information. We do not use it for advertising profiles or share it with
+          data brokers.
         </p>
       </Section>
 
@@ -187,43 +189,41 @@ export function PrivacyPolicyPage() {
             .
           </li>
           <li>
-            <strong>Courier and logistics partners</strong> — name, address and phone number, so
-            the parcel can be delivered.
+            <strong>Courier and logistics partners</strong> — name, address and phone number, so the parcel
+            can be delivered.
           </li>
           <li>
-            <strong>Resend</strong> — email delivery, receiving your address and the transactional
-            message content.
+            <strong>Resend</strong> — email delivery, receiving your address and the transactional message
+            content.
           </li>
           <li>
-            <strong>Cloudinary</strong> — serves product imagery. It does not receive your
-            personal data.
+            <strong>Cloudinary</strong> — serves product imagery. It does not receive your personal data.
           </li>
           <li>
             <strong>Our hosting provider</strong> — stores the database under our instruction.
           </li>
           <li>
-            <strong>Government and law enforcement</strong> — only where we are legally compelled
-            to disclose.
+            <strong>Government and law enforcement</strong> — only where we are legally compelled to disclose.
           </li>
         </ul>
       </Section>
 
       <Section title="4. Cookies and local storage">
         <p>
-          We use browser local storage to keep you signed in between visits and to maintain your
-          cart. These are strictly necessary for the service to function — we do not use
-          third-party advertising or cross-site tracking cookies. Clearing your browser storage
-          signs you out and empties an unsaved cart.
+          We use browser local storage to keep you signed in between visits and to maintain your cart. These
+          are strictly necessary for the service to function — we do not use third-party advertising or
+          cross-site tracking cookies. Clearing your browser storage signs you out and empties an unsaved
+          cart.
         </p>
       </Section>
 
       <Section title="5. How long we keep it">
         <p>
-          Account and order records are retained for as long as your account is active, and
-          thereafter for the period required by Indian tax and company law (currently eight
-          financial years for transaction records). Security and audit logs are retained for a
-          limited period and then deleted. You may request deletion of your account, subject to
-          our obligation to retain records the law requires us to keep.
+          Account and order records are retained for as long as your account is active, and thereafter for the
+          period required by Indian tax and company law (currently eight financial years for transaction
+          records). Security and audit logs are retained for a limited period and then deleted. You may
+          request deletion of your account, subject to our obligation to retain records the law requires us to
+          keep.
         </p>
       </Section>
 
@@ -233,44 +233,42 @@ export function PrivacyPolicyPage() {
           <li>Short-lived access tokens with rotating, revocable refresh tokens and reuse detection.</li>
           <li>Transport encryption (TLS) on every request.</li>
           <li>Rate limiting on authentication and sensitive endpoints.</li>
-          <li>An append-only audit log of privileged staff actions, recording who did what and from where.</li>
+          <li>
+            An append-only audit log of privileged staff actions, recording who did what and from where.
+          </li>
           <li>Least-privilege database and storage credentials.</li>
         </ul>
         <p>
-          No system is perfectly secure. If a breach affects your personal data and creates a real
-          risk to you, we will notify you and the appropriate authority without undue delay.
+          No system is perfectly secure. If a breach affects your personal data and creates a real risk to
+          you, we will notify you and the appropriate authority without undue delay.
         </p>
       </Section>
 
       <Section title="7. Your rights">
         <p>
-          You may request access to, correction of, or deletion of your personal information;
-          withdraw consent to non-essential processing; or complain to the grievance officer
-          below. Write to <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a> from
-          your registered address. We will acknowledge within 48 hours and respond within 30 days.
+          You may request access to, correction of, or deletion of your personal information; withdraw consent
+          to non-essential processing; or complain to the grievance officer below. Write to{' '}
+          <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a> from your registered address. We
+          will acknowledge within 48 hours and respond within 30 days.
         </p>
       </Section>
 
       <Section title="8. Grievance officer">
-        <p>
-          As required by the Information Technology Act, 2000, our grievance officer can be
-          contacted at:
-        </p>
+        <p>As required by the Information Technology Act, 2000, our grievance officer can be contacted at:</p>
         <SellerIdentity />
       </Section>
 
       <Section title="9. Children">
         <p>
-          Our products are adult outerwear and our services are not directed at children under 18.
-          We do not knowingly collect personal information from minors.
+          Our products are adult outerwear and our services are not directed at children under 18. We do not
+          knowingly collect personal information from minors.
         </p>
       </Section>
 
       <Section title="10. Changes">
         <p>
-          We may update this policy. Material changes will be announced on this page with a revised
-          date, and where we hold your email address we will notify you before the change takes
-          effect.
+          We may update this policy. Material changes will be announced on this page with a revised date, and
+          where we hold your email address we will notify you before the change takes effect.
         </p>
       </Section>
     </LegalShell>
@@ -289,8 +287,8 @@ export function TermsPage() {
       updated={UPDATED}
     >
       <p>
-        These terms form the contract between you and {need(config.legalName)} when you use this
-        website or place an order. By ordering, you accept them. Please also read our{' '}
+        These terms form the contract between you and {need(config.legalName)} when you use this website or
+        place an order. By ordering, you accept them. Please also read our{' '}
         <a href="/policies/privacy">Privacy Policy</a>,{' '}
         <a href="/policies/returns">Refund &amp; Return Policy</a> and{' '}
         <a href="/policies/shipping">Shipping Policy</a>.
@@ -303,18 +301,17 @@ export function TermsPage() {
       <Section title="2. Products">
         <ul>
           <li>
-            Every piece is produced in small, numbered runs. Colour and texture vary naturally
-            between batches of wool and cotton, and screen calibration varies between devices, so
-            the garment you receive may differ slightly from the photograph.
+            Every piece is produced in small, numbered runs. Colour and texture vary naturally between batches
+            of wool and cotton, and screen calibration varies between devices, so the garment you receive may
+            differ slightly from the photograph.
           </li>
           <li>
-            Fabric composition, fit guidance and care instructions are stated on each product
-            page and form part of the description of the goods.
+            Fabric composition, fit guidance and care instructions are stated on each product page and form
+            part of the description of the goods.
           </li>
           <li>
-            A product marked <em>upcoming</em> is shown before it is available. It can only be
-            purchased when pre-order is explicitly open, and the stated pre-order fulfilment
-            window applies.
+            A product marked <em>upcoming</em> is shown before it is available. It can only be purchased when
+            pre-order is explicitly open, and the stated pre-order fulfilment window applies.
           </li>
         </ul>
       </Section>
@@ -322,17 +319,17 @@ export function TermsPage() {
       <Section title="3. Prices and taxes">
         <ul>
           <li>
-            All prices are in Indian Rupees and are <strong>inclusive of GST</strong>. The tax
-            component of each line is shown on your order and on the invoice.
+            All prices are in Indian Rupees and are <strong>inclusive of GST</strong>. The tax component of
+            each line is shown on your order and on the invoice.
           </li>
           <li>
-            Shipping is calculated at checkout from your PIN code or state, and is free above the
-            threshold stated at checkout.
+            Shipping is calculated at checkout from your PIN code or state, and is free above the threshold
+            stated at checkout.
           </li>
           <li>
-            We may correct a pricing error before dispatch. If a price changes between adding an
-            item to your cart and checkout, the checkout step will tell you and ask you to
-            re-confirm — you are never charged a price you have not seen.
+            We may correct a pricing error before dispatch. If a price changes between adding an item to your
+            cart and checkout, the checkout step will tell you and ask you to re-confirm — you are never
+            charged a price you have not seen.
           </li>
           <li>A GST invoice is issued for every order and is available from your order page.</li>
         </ul>
@@ -341,17 +338,14 @@ export function TermsPage() {
       <Section title="4. Ordering and contract formation">
         <ol>
           <li>Adding an item to your cart is an invitation to treat, not an offer.</li>
+          <li>Your order is an offer to buy. Stock is reserved for you for a short window while you pay.</li>
           <li>
-            Your order is an offer to buy. Stock is reserved for you for a short window while you
-            pay.
+            The contract is formed when we confirm the order — on successful payment for prepaid orders, or on
+            our acceptance of a cash-on-delivery order.
           </li>
           <li>
-            The contract is formed when we confirm the order — on successful payment for prepaid
-            orders, or on our acceptance of a cash-on-delivery order.
-          </li>
-          <li>
-            We may decline an order — for example where stock has been exhausted, an address is
-            unserviceable, or we suspect fraud — and will refund any amount taken.
+            We may decline an order — for example where stock has been exhausted, an address is unserviceable,
+            or we suspect fraud — and will refund any amount taken.
           </li>
         </ol>
       </Section>
@@ -359,91 +353,86 @@ export function TermsPage() {
       <Section title="5. Payment">
         <ul>
           <li>
-            Card, UPI and net-banking payments are processed by Razorpay. Cash on delivery is
-            available where your PIN code permits it.
+            Card, UPI and net-banking payments are processed by Razorpay. Cash on delivery is available where
+            your PIN code permits it.
           </li>
           <li>
-            If a payment attempt fails, you may retry after a short cooldown. Your reservation is
-            released when the payment window expires, and the items return to general stock.
+            If a payment attempt fails, you may retry after a short cooldown. Your reservation is released
+            when the payment window expires, and the items return to general stock.
           </li>
           <li>
-            For cash-on-delivery orders, please have the exact amount ready. Our delivery partner
-            collects it on our behalf.
+            For cash-on-delivery orders, please have the exact amount ready. Our delivery partner collects it
+            on our behalf.
           </li>
         </ul>
       </Section>
 
       <Section title="6. Your account">
         <p>
-          You are responsible for keeping your password confidential and for activity under your
-          account. Tell us immediately at{' '}
-          <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a> if you believe it has
-          been misused. We may suspend an account used fraudulently or in breach of these terms.
+          You are responsible for keeping your password confidential and for activity under your account. Tell
+          us immediately at <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a> if you believe
+          it has been misused. We may suspend an account used fraudulently or in breach of these terms.
         </p>
       </Section>
 
       <Section title="7. Cancellation">
         <p>
-          You may request cancellation before your order is packed. Once it is packed or shipped,
-          cancellation requires our approval — see the{' '}
-          <a href="/policies/returns">Refund &amp; Return Policy</a>. Approved cancellations of
-          prepaid orders are refunded to the original payment method.
+          You may request cancellation before your order is packed. Once it is packed or shipped, cancellation
+          requires our approval — see the <a href="/policies/returns">Refund &amp; Return Policy</a>. Approved
+          cancellations of prepaid orders are refunded to the original payment method.
         </p>
       </Section>
 
       <Section title="8. Acceptable use">
         <p>
-          You agree not to probe or disrupt the service, attempt unauthorised access, submit
-          fraudulent orders, scrape the catalogue at volume, resell access, or use the site for
-          any unlawful purpose.
+          You agree not to probe or disrupt the service, attempt unauthorised access, submit fraudulent
+          orders, scrape the catalogue at volume, resell access, or use the site for any unlawful purpose.
         </p>
       </Section>
 
       <Section title="9. Intellectual property">
         <p>
-          The {config.brandName} name, logo, product designs, photography and site content are ours
-          or licensed to us. You may not reproduce them commercially without written permission.
-          Nothing here transfers ownership to you beyond the goods you have bought.
+          The {config.brandName} name, logo, product designs, photography and site content are ours or
+          licensed to us. You may not reproduce them commercially without written permission. Nothing here
+          transfers ownership to you beyond the goods you have bought.
         </p>
       </Section>
 
       <Section title="10. Limitation of liability">
         <p>
-          Our total liability for any order is limited to the amount you paid for that order,
-          except where Indian law does not permit such a limit — including liability for death or
-          personal injury caused by negligence, or for fraud. We are not liable for indirect or
-          consequential loss, or for delays caused by carriers, payment providers or events beyond
-          our reasonable control.
+          Our total liability for any order is limited to the amount you paid for that order, except where
+          Indian law does not permit such a limit — including liability for death or personal injury caused by
+          negligence, or for fraud. We are not liable for indirect or consequential loss, or for delays caused
+          by carriers, payment providers or events beyond our reasonable control.
         </p>
         <p>
-          Nothing in these terms excludes your statutory consumer rights, including the right to
-          goods of satisfactory quality and fit for their purpose.
+          Nothing in these terms excludes your statutory consumer rights, including the right to goods of
+          satisfactory quality and fit for their purpose.
         </p>
       </Section>
 
       <Section title="11. Force majeure">
         <p>
-          We are not liable for failure or delay caused by events outside our reasonable control —
-          natural disaster, epidemic, industrial action, courier failure, payment-provider outage,
-          or government restriction. We will tell you promptly and, where an order cannot be
-          fulfilled, refund it in full.
+          We are not liable for failure or delay caused by events outside our reasonable control — natural
+          disaster, epidemic, industrial action, courier failure, payment-provider outage, or government
+          restriction. We will tell you promptly and, where an order cannot be fulfilled, refund it in full.
         </p>
       </Section>
 
       <Section title="12. Governing law and disputes">
         <p>
-          These terms are governed by the laws of India. Courts at Bhopal, Madhya Pradesh have
-          exclusive jurisdiction, without prejudice to your right as a consumer to bring
-          proceedings where you reside. Any consumer complaint may be raised with the grievance
-          officer named in our <a href="/policies/privacy">Privacy Policy</a>, and you retain the
-          right to approach a consumer forum under the Consumer Protection Act, 2019.
+          These terms are governed by the laws of India. Courts at Bhopal, Madhya Pradesh have exclusive
+          jurisdiction, without prejudice to your right as a consumer to bring proceedings where you reside.
+          Any consumer complaint may be raised with the grievance officer named in our{' '}
+          <a href="/policies/privacy">Privacy Policy</a>, and you retain the right to approach a consumer
+          forum under the Consumer Protection Act, 2019.
         </p>
       </Section>
 
       <Section title="13. Changes to these terms">
         <p>
-          We may update these terms. The version in force is the one published at the time you
-          order, and material changes will be announced on this page.
+          We may update these terms. The version in force is the one published at the time you order, and
+          material changes will be announced on this page.
         </p>
       </Section>
     </LegalShell>
@@ -479,20 +468,19 @@ export function ReturnsPolicyPage() {
       <Section title="2. What we offer">
         <ul>
           <li>
-            <strong>Size exchange</strong> — swap for a different size of the same piece, subject
-            to availability.
+            <strong>Size exchange</strong> — swap for a different size of the same piece, subject to
+            availability.
           </li>
           <li>
-            <strong>Product exchange</strong> — swap for a different piece. Any price difference is
-            settled at the time of exchange.
+            <strong>Product exchange</strong> — swap for a different piece. Any price difference is settled at
+            the time of exchange.
           </li>
           <li>
-            <strong>Replacement</strong> — a new unit where the original is damaged, defective or
-            the wrong item was sent.
+            <strong>Replacement</strong> — a new unit where the original is damaged, defective or the wrong
+            item was sent.
           </li>
           <li>
-            <strong>Refund</strong> — to your original payment method. Available for full-price
-            items.
+            <strong>Refund</strong> — to your original payment method. Available for full-price items.
           </li>
         </ul>
       </Section>
@@ -501,8 +489,8 @@ export function ReturnsPolicyPage() {
         <ul>
           <li>
             <strong>Sale items</strong> can be exchanged or replaced but are{' '}
-            <strong>not eligible for a cash refund</strong>. Every sale item is marked as such on
-            its product page before you buy.
+            <strong>not eligible for a cash refund</strong>. Every sale item is marked as such on its product
+            page before you buy.
           </li>
           <li>Items that are worn, washed, altered, damaged by misuse, or returned without tags.</li>
           <li>Requests made after the {days}-day window has closed.</li>
@@ -512,12 +500,12 @@ export function ReturnsPolicyPage() {
       <Section title="4. Return shipping">
         <ul>
           <li>
-            <strong>We pay</strong> where the item arrived damaged, defective, or was the wrong
-            item — including reverse pickup where our courier partner supports it.
+            <strong>We pay</strong> where the item arrived damaged, defective, or was the wrong item —
+            including reverse pickup where our courier partner supports it.
           </li>
           <li>
-            <strong>You pay</strong> for a change-of-mind return or a size exchange, unless we tell
-            you otherwise in writing.
+            <strong>You pay</strong> for a change-of-mind return or a size exchange, unless we tell you
+            otherwise in writing.
           </li>
         </ul>
       </Section>
@@ -525,17 +513,14 @@ export function ReturnsPolicyPage() {
       <Section title="5. How to request a return">
         <ol>
           <li>
-            Sign in and open <a href="/orders">your orders</a>, then choose the order and select
-            the item you want to return.
+            Sign in and open <a href="/orders">your orders</a>, then choose the order and select the item you
+            want to return.
           </li>
           <li>Choose the reason and the outcome you want — refund, exchange or replacement.</li>
+          <li>We review the request. Approval or rejection is recorded on the order and emailed to you.</li>
           <li>
-            We review the request. Approval or rejection is recorded on the order and emailed to
-            you.
-          </li>
-          <li>
-            If approved, send the item back using the address and instructions on your order page,
-            or await reverse pickup where that has been arranged.
+            If approved, send the item back using the address and instructions on your order page, or await
+            reverse pickup where that has been arranged.
           </li>
           <li>We inspect the item on arrival and complete the refund, exchange or replacement.</li>
         </ol>
@@ -547,36 +532,34 @@ export function ReturnsPolicyPage() {
 
       <Section title="6. When a refund becomes due">
         <p>
-          A refund becomes <strong>eligible</strong> once the returned item is picked up or
-          received, and is <strong>completed</strong> after our inspection confirms it meets the
-          conditions above. If an inspection finds the item worn, damaged or outside policy, we
-          will contact you before doing anything else, and may return the item to you.
+          A refund becomes <strong>eligible</strong> once the returned item is picked up or received, and is{' '}
+          <strong>completed</strong> after our inspection confirms it meets the conditions above. If an
+          inspection finds the item worn, damaged or outside policy, we will contact you before doing anything
+          else, and may return the item to you.
         </p>
       </Section>
 
       <Section title="7. Refund timelines">
         <p>
-          Approved refunds are issued to the original payment method. We initiate them promptly
-          after inspection; the time they take to appear is set by your bank or card issuer and is
-          typically <strong>5–7 working days</strong>. Cash-on-delivery orders have no prepayment
-          to refund — a COD return is handled as an exchange or replacement, or by bank transfer
-          where a refund is genuinely due.
+          Approved refunds are issued to the original payment method. We initiate them promptly after
+          inspection; the time they take to appear is set by your bank or card issuer and is typically{' '}
+          <strong>5–7 working days</strong>. Cash-on-delivery orders have no prepayment to refund — a COD
+          return is handled as an exchange or replacement, or by bank transfer where a refund is genuinely
+          due.
         </p>
       </Section>
 
       <Section title="8. Cancellations">
         <p>
-          You may request cancellation before your order is packed. After packing, cancellation
-          needs our approval. An approved cancellation of a prepaid order is refunded on the same
-          timeline as above.
+          You may request cancellation before your order is packed. After packing, cancellation needs our
+          approval. An approved cancellation of a prepaid order is refunded on the same timeline as above.
         </p>
       </Section>
 
       <Section title="9. Damaged or incorrect deliveries">
         <p>
-          If your parcel arrives damaged, or contains the wrong item, contact us within 48 hours
-          with photographs. We will arrange a replacement or a full refund and cover the return
-          shipping.
+          If your parcel arrives damaged, or contains the wrong item, contact us within 48 hours with
+          photographs. We will arrange a replacement or a full refund and cover the return shipping.
         </p>
       </Section>
 
@@ -601,18 +584,17 @@ export function ShippingPolicyPage() {
     >
       <Section title="1. Dispatch">
         <p>
-          Orders are prepared and dispatched from our fulfilment centre in {config.city},{' '}
-          {config.state}. Small-batch pieces are finished and checked by hand before dispatch, so
-          please allow the handling time shown at checkout. Pre-orders ship within the window
-          stated on the product page.
+          Orders are prepared and dispatched from our fulfilment centre in {config.city}, {config.state}.
+          Small-batch pieces are finished and checked by hand before dispatch, so please allow the handling
+          time shown at checkout. Pre-orders ship within the window stated on the product page.
         </p>
       </Section>
 
       <Section title="2. Delivery time">
         <p>
-          Typical delivery is <strong>{config.shippingSlaDays}</strong> after dispatch, depending
-          on destination. Remote locations may take longer. You will receive tracking by email as
-          soon as the parcel is handed to the courier.
+          Typical delivery is <strong>{config.shippingSlaDays}</strong> after dispatch, depending on
+          destination. Remote locations may take longer. You will receive tracking by email as soon as the
+          parcel is handed to the courier.
         </p>
       </Section>
 
@@ -626,43 +608,40 @@ export function ShippingPolicyPage() {
 
       <Section title="4. Where we deliver">
         <p>
-          We deliver across India. Some PIN codes are not serviceable by our courier partners, and
-          checkout will tell you before you pay if your PIN code cannot be served. If you are
-          unsure, check at checkout or write to{' '}
-          <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a>. International
+          We deliver across India. Some PIN codes are not serviceable by our courier partners, and checkout
+          will tell you before you pay if your PIN code cannot be served. If you are unsure, check at checkout
+          or write to <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a>. International
           shipping is not currently offered.
         </p>
       </Section>
 
       <Section title="5. Tracking">
         <p>
-          Tracking details appear on <a href="/orders">your order page</a> and are emailed to you.
-          Carriers usually scan a parcel within a few hours of dispatch, so tracking may not update
-          immediately.
+          Tracking details appear on <a href="/orders">your order page</a> and are emailed to you. Carriers
+          usually scan a parcel within a few hours of dispatch, so tracking may not update immediately.
         </p>
       </Section>
 
       <Section title="6. Cash on delivery">
         <p>
-          COD is available where your PIN code permits it. Please keep the exact amount ready; our
-          delivery partner collects payment on our behalf and records it against your order.
+          COD is available where your PIN code permits it. Please keep the exact amount ready; our delivery
+          partner collects payment on our behalf and records it against your order.
         </p>
       </Section>
 
       <Section title="7. Failed and undelivered parcels">
         <p>
-          If a courier attempt fails, they will normally retry. If a parcel is returned to us
-          undelivered — because of an incorrect address, an unavailable recipient or a refusal at
-          the door — we will contact you. Re-shipping is at your cost unless the failure was ours.
-          A prepaid order returned undelivered is refunded after the parcel reaches us.
+          If a courier attempt fails, they will normally retry. If a parcel is returned to us undelivered —
+          because of an incorrect address, an unavailable recipient or a refusal at the door — we will contact
+          you. Re-shipping is at your cost unless the failure was ours. A prepaid order returned undelivered
+          is refunded after the parcel reaches us.
         </p>
       </Section>
 
       <Section title="8. Delays">
         <p>
-          Courier delays, weather and local disruptions are outside our control. If your parcel is
-          materially late, contact us and we will investigate with the carrier and keep you
-          informed.
+          Courier delays, weather and local disruptions are outside our control. If your parcel is materially
+          late, contact us and we will investigate with the carrier and keep you informed.
         </p>
       </Section>
 
@@ -697,12 +676,11 @@ export function ContactPage() {
       <Section title="Fastest routes">
         <ul>
           <li>
-            <strong>Order questions</strong> — open{' '}
-            <a href="/orders">your orders</a> first; status, tracking and returns are all there.
+            <strong>Order questions</strong> — open <a href="/orders">your orders</a> first; status, tracking
+            and returns are all there.
           </li>
           <li>
-            <strong>Email</strong> —{' '}
-            <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a>
+            <strong>Email</strong> — <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a>
           </li>
           {config.supportPhone ? (
             <li>
@@ -710,19 +688,19 @@ export function ContactPage() {
             </li>
           ) : null}
           <li>
-            <strong>Bulk and wholesale</strong> — use the{' '}
-            <a href="/bulk">bulk enquiry form</a> and we will respond with pricing and lead times.
+            <strong>Bulk and wholesale</strong> — use the <a href="/bulk">bulk enquiry form</a> and we will
+            respond with pricing and lead times.
           </li>
         </ul>
       </Section>
 
       <Section title="Grievances">
         <p>
-          Under the Information Technology Act, 2000 and the Consumer Protection (E-Commerce)
-          Rules, 2020, complaints may be addressed to our grievance officer at the address above,
-          or by email to <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a>. We
-          acknowledge complaints within 48 hours and aim to resolve them within 30 days. This does
-          not affect your right to approach a consumer forum.
+          Under the Information Technology Act, 2000 and the Consumer Protection (E-Commerce) Rules, 2020,
+          complaints may be addressed to our grievance officer at the address above, or by email to{' '}
+          <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a>. We acknowledge complaints
+          within 48 hours and aim to resolve them within 30 days. This does not affect your right to approach
+          a consumer forum.
         </p>
       </Section>
 

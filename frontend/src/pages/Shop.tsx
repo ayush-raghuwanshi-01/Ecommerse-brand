@@ -34,7 +34,10 @@ export default function Shop() {
 
   return (
     <main className="page">
-      <Seo title="The Collection — Black House" description="Small-batch outerwear: overcoats, trenches, field coats." />
+      <Seo
+        title="The Collection — Black House"
+        description="Small-batch outerwear: overcoats, trenches, field coats."
+      />
       <div className="page-head">
         <p className="eyebrow">The current line</p>
         <h1>
