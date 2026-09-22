@@ -1,13 +1,17 @@
 import { Suspense, lazy, useEffect, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import AnnouncementBar from './components/AnnouncementBar';
 import CartDrawer from './components/CartDrawer';
 import Footer from './components/Footer';
 import Nav from './components/Nav';
 import { Spinner } from './components/bits';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { QuickViewProvider } from './context/QuickViewContext';
 import { ToastProvider } from './context/ToastContext';
+import { WishlistProvider } from './context/WishlistContext';
+import WishlistPage from './pages/Wishlist';
 import AccountPage from './pages/Account';
 import AuthPage from './pages/Auth';
 import BulkPage from './pages/Bulk';
@@ -52,15 +56,20 @@ function ScrollTop() {
 
 function App() {
   return (
-    <AuthProvider>
+        <AuthProvider>
       <ToastProvider>
         <CartProvider>
           <BrowserRouter>
+            <WishlistProvider>
+            <QuickViewProvider>
             <ScrollTop />
             <a className="skip-link" href="#content">
               Skip to content
             </a>
-            <Nav />
+            <div className="topbar">
+              <AnnouncementBar />
+              <Nav />
+            </div>
             <div id="content">
               <Suspense
                 fallback={
@@ -72,6 +81,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/shop" element={<Shop />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
                   <Route path="/product/:slug" element={<ProductPage />} />
                   <Route path="/story" element={<StoryPage />} />
                   <Route path="/bulk" element={<BulkPage />} />
@@ -115,6 +125,8 @@ function App() {
             </div>
             <Footer />
             <CartDrawer />
+            </QuickViewProvider>
+            </WishlistProvider>
           </BrowserRouter>
         </CartProvider>
       </ToastProvider>

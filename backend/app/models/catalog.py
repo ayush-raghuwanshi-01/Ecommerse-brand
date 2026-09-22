@@ -88,6 +88,9 @@ class Product(UUIDPk, Timestamps, Base):
     care_instructions: Mapped[str | None] = mapped_column(Text)
     size_guide: Mapped[str | None] = mapped_column(Text)
     base_price_paise: Mapped[int] = mapped_column(Integer)
+    # Displayed MRP (Legal Metrology). Optional; when set and above
+    # ``base_price_paise`` the storefront renders a strikethrough + % off.
+    mrp_paise: Mapped[int | None] = mapped_column(Integer)
     gst_percentage: Mapped[float] = mapped_column(Numeric(5, 2), default=5.0)
     is_sale_item: Mapped[bool] = mapped_column(Boolean, default=False)  # returnable, not cash-refundable
 

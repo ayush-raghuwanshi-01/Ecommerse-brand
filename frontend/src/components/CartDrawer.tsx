@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { FREE_SHIPPING_THRESHOLD_PAISE } from '../theme';
+import { IconBag, IconCheck } from './bits';
 import { ApiError } from '../lib/api';
 import { inr } from '../lib/format';
 
@@ -19,20 +21,63 @@ export default function CartDrawer() {
 
   if (!open) return null;
 
+  const subtotal = cart?.totals.subtotal_paise ?? 0;
+  const missingForFree = Math.max(0, FREE_SHIPPING_THRESHOLD_PAISE - subtotal);
+  const progress = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD_PAISE) * 100));
+
   return (
     <div className="drawer-scrim" onClick={() => setOpen(false)}>
       <aside className="drawer" onClick={(e) => e.stopPropagation()} aria-label="Shopping bag">
         <header>
-          <h3>Your bag</h3>
+          <h3>
+            Your bag{' '}
+            {cart && cart.items.length > 0 && (
+              <small style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#6f6858' }}>
+                · {cart.items.reduce((n, i) => n + i.qty, 0)}
+              </small>
+            )}
+          </h3>
           <button className="icon-btn" onClick={() => setOpen(false)} aria-label="Close cart">
             ✕
           </button>
         </header>
 
         {!cart || cart.items.length === 0 ? (
-          <p className="empty">Your bag is empty. The collection awaits.</p>
+          <div className="drawer-empty">
+            <span className="de-icon">
+              <IconBag size={26} />
+            </span>
+            <p>Your bag is empty — the collection awaits.</p>
+            <Link
+              className="button"
+              to="/shop"
+              onClick={() => setOpen(false)}
+            >
+              Shop the collection
+            </Link>
+          </div>
         ) : (
           <>
+            {missingForFree > 0 ? (
+              <div className="ship-progress">
+                <span>
+                  Add <strong>{inr(missingForFree)}</strong> more to unlock <strong>free shipping</strong>
+                </span>
+                <div className="sp-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+                  <div className="sp-fill" style={{ width: `${progress}%` }} />
+                </div>
+              </div>
+            ) : (
+              <div className="ship-progress done">
+                <span>
+                  <IconCheck size={13} /> You’ve unlocked free shipping
+                </span>
+                <div className="sp-track">
+                  <div className="sp-fill" style={{ width: '100%' }} />
+                </div>
+              </div>
+            )}
+
             <div className="drawer-items">
               {cart.items.map((item) => (
                 <div className="drawer-item" key={item.id}>
@@ -80,7 +125,7 @@ export default function CartDrawer() {
               ) : (
                 <>
                   <input
-                    placeholder="Coupon code"
+                    placeholder="Coupon code (try WELCOME500)"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
                     aria-label="Coupon code"
@@ -141,7 +186,10 @@ export default function CartDrawer() {
                 navigate('/checkout');
               }}
             >
-              Checkout
+              Proceed to checkout
+            </button>
+            <button className="textlink drawer-continue" onClick={() => setOpen(false)}>
+              or continue shopping
             </button>
           </>
         )}

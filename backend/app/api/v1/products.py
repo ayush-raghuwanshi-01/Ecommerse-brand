@@ -43,6 +43,7 @@ Db = Annotated[Session, Depends(get_db)]
 def _list_item(product: Product) -> ProductListItem:
     item = ProductListItem.model_validate(product)
     item.primary_image_url = catalog_service.primary_image_url(product)
+    item.secondary_image_url = catalog_service.secondary_image_url(product)
     item.sizes_available = [
         v.size.value for v in product.variants if v.availability(3).value in ("available", "low_stock")
     ]

@@ -47,3 +47,9 @@ def assert_purchasable(db: Session, product: Product, variant: ProductVariant) -
 def primary_image_url(product: Product) -> str | None:
     primary = next((i for i in product.images if i.is_primary), None)
     return (primary or (product.images[0] if product.images else None)).url if product.images else None
+
+
+def secondary_image_url(product: Product) -> str | None:
+    """First non-primary image — powers the hover image-swap on cards."""
+    secondary = next((i for i in product.images if not i.is_primary), None)
+    return secondary.url if secondary else None

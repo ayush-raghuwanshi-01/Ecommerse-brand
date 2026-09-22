@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Seo, Spinner } from '../components/bits';
+import { IconShield, Seo, Spinner } from '../components/bits';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { ApiError, api } from '../lib/api';
@@ -111,29 +111,19 @@ export default function Checkout() {
   return (
     <main className="page checkout">
       <Seo title="Checkout — Black House" />
-      <div className="page-head" style={{ marginBottom: '1.5rem' }}>
-        <p className="eyebrow">Direct Craftsmanship · Direct To You</p>
+      <div className="page-head" style={{ marginBottom: '1rem' }}>
+        <p className="eyebrow">Secure checkout</p>
         <h1>
-          <em>Review & Place Order</em>
+          Review & <em>place order</em>
         </h1>
       </div>
 
-      {/* Trust & Pre-payment Notice Banner */}
-      <div
-        className="panel"
-        style={{
-          borderLeft: '4px solid #c9a24b',
-          backgroundColor: '#17140f',
-          padding: '1rem 1.25rem',
-          marginBottom: '1.5rem',
-        }}
-      >
-        <p style={{ margin: '0 0 0.5rem 0', fontWeight: 600, color: '#ece4d3' }}>
-          📞 Every order is personally confirmed by phone call before dispatch.
-        </p>
-        <p style={{ margin: 0, fontSize: '0.9rem', color: '#9a8f7a', lineHeight: 1.5 }}>
-          No online payment is required now. Our team will verify your address, answer any sizing questions,
-          and arrange your preferred payment method (Cash on Delivery or UPI).
+      {/* How we confirm — keeps the real phone-confirmation business model visible */}
+      <div className="callout">
+        <strong>📞 Every order is personally confirmed by a phone call before dispatch.</strong>
+        <p>
+          No online payment is required now. Our team will verify your address, answer any sizing
+          questions, and arrange your preferred payment method (Cash on Delivery or UPI).
         </p>
       </div>
 
@@ -242,23 +232,23 @@ export default function Checkout() {
             />
           </label>
 
-          <button
-            className="button wide"
-            style={{ marginTop: '1.25rem' }}
-            disabled={placing || (pin !== null && !pin.serviceable)}
-          >
+          <button className="button wide" style={{ marginTop: '1.25rem', minHeight: 52 }} disabled={placing || (pin !== null && !pin.serviceable)}>
             {placing ? 'Placing order…' : 'Place order (Confirm by phone)'}
           </button>
         </form>
 
         <aside className="panel summary">
-          <h2>Order summary</h2>
+          <h2 style={{ fontSize: 22 }}>Order summary</h2>
           {cart.items.map((i) => (
-            <div className="sum-line" key={i.id}>
-              <span>
-                {i.product_name} · {i.size} × {i.qty}
-              </span>
-              <span>{inr(i.line_total_paise)}</span>
+            <div className="sum-item" key={i.id}>
+              {i.image_url && <img src={i.image_url} alt="" />}
+              <div className="si-meta">
+                <strong>{i.product_name}</strong>
+                <small>
+                  {i.size} × {i.qty}
+                </small>
+              </div>
+              <span className="si-price">{inr(i.line_total_paise)}</span>
             </div>
           ))}
           <hr />
@@ -282,21 +272,33 @@ export default function Checkout() {
           <div
             style={{
               marginTop: '1.25rem',
-              padding: '0.85rem',
-              border: '1px dashed #c9a24b',
-              borderRadius: '4px',
+              padding: '0.85rem 1rem',
+              border: '1.5px dashed var(--accent-line)',
+              background: 'var(--accent-soft)',
+              borderRadius: 'var(--r-sm)',
               fontSize: '0.85rem',
-              color: '#c9a24b',
-              lineHeight: 1.4,
+              color: 'var(--text)',
+              lineHeight: 1.5,
             }}
           >
-            ✨ <strong>Prepaid discount available:</strong> If you choose to pay via UPI when our team calls to
-            confirm, you will receive an additional discount on your final invoice.
+            ✨ <strong>Prepaid discount available:</strong> pay via UPI when our team calls to confirm
+            and receive an additional discount on your final invoice.
           </div>
 
-          <small style={{ display: 'block', marginTop: '1rem' }}>
-            Prices include GST. Delivery and payment will be finalized over the phone call.
-          </small>
+          <div className="callout secure" style={{ marginTop: '1rem' }}>
+            <strong>
+              <IconShield size={14} /> Secure & verifiable
+            </strong>
+            <p>Prices include GST. A GST invoice is issued with every order; delivery and payment are
+            finalized over the confirmation call.</p>
+          </div>
+
+          <div className="pay-badges" aria-label="Payment methods">
+            <span className="pay-badge">UPI</span>
+            <span className="pay-badge">COD</span>
+            <span className="pay-badge">Razorpay</span>
+            <span className="pay-badge">Cards</span>
+          </div>
         </aside>
       </div>
     </main>

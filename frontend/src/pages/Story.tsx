@@ -12,6 +12,11 @@ export default function StoryPage() {
         <h1>
           Slow made in <em>Bhopal.</em>
         </h1>
+        <img
+          className="story-hero-img"
+          src="/static/uploads/seed/story.jpg"
+          alt="The Black House atelier — charcoal wool being cut by hand"
+        />
         <blockquote>“A wardrobe should become more itself with time.”</blockquote>
         <p>
           Black House began with a simple premise: the everyday layer deserves the same attention as the

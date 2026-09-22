@@ -43,13 +43,6 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       sourcemap: mode !== 'production',
-      rollupOptions: {
-        output: {
-          // Three.js is by far the heaviest dependency — keep it in its own
-          // long-lived chunk so route code can change without invalidating it.
-          manualChunks: { three: ['three', '@react-three/fiber', '@react-three/drei'] },
-        },
-      },
     },
   };
 });
