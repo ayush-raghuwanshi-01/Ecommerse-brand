@@ -106,7 +106,11 @@ export default function Shop() {
             aria-label="Search products"
           />
           <div className="sort">
-            <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} aria-label="Sort products">
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as typeof sort)}
+              aria-label="Sort products"
+            >
               {SORTS.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.label}
@@ -118,9 +122,7 @@ export default function Shop() {
       </div>
 
       <div className="shop-count">
-        <span>
-          {loading ? 'Loading…' : `${sorted.length} piece${sorted.length === 1 ? '' : 's'}`}
-        </span>
+        <span>{loading ? 'Loading…' : `${sorted.length} piece${sorted.length === 1 ? '' : 's'}`}</span>
         <span className="dim" style={{ fontSize: 12 }}>
           GST inclusive · Free shipping over ₹15,000
         </span>

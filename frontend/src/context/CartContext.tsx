@@ -150,7 +150,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       if (!cart) return;
       const currentItems = cart.items
-        .map((i) => (i.id === itemId ? { ...i, qty, line_total_paise: i.unit_price_paise_snapshot * qty } : i))
+        .map((i) =>
+          i.id === itemId ? { ...i, qty, line_total_paise: i.unit_price_paise_snapshot * qty } : i,
+        )
         .filter((i) => i.qty > 0);
       localStorage.setItem(GUEST_CART_KEY, JSON.stringify(currentItems));
       setCart(buildGuestCart(currentItems));

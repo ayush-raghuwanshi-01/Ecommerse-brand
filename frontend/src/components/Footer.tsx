@@ -13,8 +13,8 @@ export default function Footer() {
             BLACK&nbsp;HOUSE
           </Link>
           <p>
-            Small-batch outerwear cut in Bhopal, Madhya Pradesh. Heavyweight cloth, numbered runs,
-            made to stay.
+            Small-batch outerwear cut in Bhopal, Madhya Pradesh. Heavyweight cloth, numbered runs, made to
+            stay.
           </p>
           <div className="footer-contact">
             <a href={`mailto:${config.contactEmail}`}>
@@ -76,8 +76,8 @@ export default function Footer() {
 
       <div className="footer-bottom">
         <small>
-          © {new Date().getFullYear()} {config.legalName} · {config.city}, {config.state} · All prices
-          include GST
+          © {new Date().getFullYear()} {config.legalName} · {config.city}, {config.state} · All prices include
+          GST
         </small>
         <div className="footer-pays" aria-label="Payment methods accepted">
           <span>UPI</span>

@@ -207,9 +207,7 @@ export default function ProductPage() {
           </div>
           <p className="pdp-price">
             <strong>{inr(variant?.price_paise ?? product.base_price_paise)}</strong>
-            {off > 0 && product.mrp_paise ? (
-              <s className="pdp-mrp">{inr(product.mrp_paise)}</s>
-            ) : null}
+            {off > 0 && product.mrp_paise ? <s className="pdp-mrp">{inr(product.mrp_paise)}</s> : null}
             {off > 0 && <span className="pdp-off">{off}% off</span>}
             <small>incl. all taxes · GST {product.gst_percentage}%</small>
           </p>
@@ -220,9 +218,7 @@ export default function ProductPage() {
             </p>
           )}
           {notifyMode && (
-            <p className="pdp-stock out">
-              Out of stock in this size — restocking in the next batch
-            </p>
+            <p className="pdp-stock out">Out of stock in this size — restocking in the next batch</p>
           )}
           <p className="lede">{product.short_description}</p>
 
@@ -304,8 +300,7 @@ export default function ProductPage() {
           </div>
 
           <p className="coupon-hint">
-            First order? Apply code <code>WELCOME500</code> at checkout to save ₹500 on orders above
-            ₹10,000.
+            First order? Apply code <code>WELCOME500</code> at checkout to save ₹500 on orders above ₹10,000.
           </p>
 
           <div className="trust-row">
@@ -357,9 +352,9 @@ export default function ProductPage() {
               </summary>
               <div className="acc-body">
                 <p>
-                  Orders are confirmed by a personal phone call before dispatch, then ship within 5–8
-                  business days. Free shipping on orders above ₹15,000; easy 7-day returns. A GST
-                  invoice is included with every order.
+                  Orders are confirmed by a personal phone call before dispatch, then ship within 5–8 business
+                  days. Free shipping on orders above ₹15,000; easy 7-day returns. A GST invoice is included
+                  with every order.
                 </p>
               </div>
             </details>

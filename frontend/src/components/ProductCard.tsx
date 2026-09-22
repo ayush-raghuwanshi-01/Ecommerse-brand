@@ -33,12 +33,7 @@ export default function ProductCard({ product }: { product: ProductListItem }) {
       <div className="pc-artwrap">
         <Link to={`/product/${product.slug}`} className="pc-art" aria-label={product.name}>
           {product.primary_image_url ? (
-            <img
-              src={product.primary_image_url}
-              alt={product.name}
-              loading="lazy"
-              className="pc-img-1"
-            />
+            <img src={product.primary_image_url} alt={product.name} loading="lazy" className="pc-img-1" />
           ) : (
             <span className="pc-placeholder">Image coming soon</span>
           )}

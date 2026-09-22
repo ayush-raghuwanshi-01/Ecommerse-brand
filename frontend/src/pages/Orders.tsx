@@ -111,7 +111,9 @@ export function OrderDetailPage() {
             <a
               className="button tiny"
               style={{ background: '#25D366', color: '#fff', borderColor: '#25D366' }}
-              href={getWhatsAppLink(`Hi! I just placed order ${order.number}. Please confirm my order details.`)}
+              href={getWhatsAppLink(
+                `Hi! I just placed order ${order.number}. Please confirm my order details.`,
+              )}
               target="_blank"
               rel="noreferrer"
             >

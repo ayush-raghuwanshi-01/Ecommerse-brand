@@ -10,6 +10,7 @@ Indian D2C storefronts. Nullable: legacy rows simply show no MRP.
 """
 
 import sqlalchemy as sa
+
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -24,4 +25,4 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_column("products", sa.Column("mrp_paise", sa.Integer(), nullable=True))
+    op.drop_column("products", "mrp_paise")

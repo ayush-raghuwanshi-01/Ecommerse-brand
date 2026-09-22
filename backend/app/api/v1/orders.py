@@ -93,7 +93,9 @@ def list_orders(
 def get_guest_order(order_number: str, db: Db):
     """Public guest lookup for order confirmation screen."""
     order = db.scalar(
-        select(Order).options(joinedload(Order.items), joinedload(Order.history)).where(Order.number == order_number)
+        select(Order)
+        .options(joinedload(Order.items), joinedload(Order.history))
+        .where(Order.number == order_number)
     )
     if order is None:
         raise NotFoundError("Order not found.")

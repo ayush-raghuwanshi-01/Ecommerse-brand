@@ -122,8 +122,8 @@ export default function Checkout() {
       <div className="callout">
         <strong>📞 Every order is personally confirmed by a phone call before dispatch.</strong>
         <p>
-          No online payment is required now. Our team will verify your address, answer any sizing
-          questions, and arrange your preferred payment method (Cash on Delivery or UPI).
+          No online payment is required now. Our team will verify your address, answer any sizing questions,
+          and arrange your preferred payment method (Cash on Delivery or UPI).
         </p>
       </div>
 
@@ -232,7 +232,11 @@ export default function Checkout() {
             />
           </label>
 
-          <button className="button wide" style={{ marginTop: '1.25rem', minHeight: 52 }} disabled={placing || (pin !== null && !pin.serviceable)}>
+          <button
+            className="button wide"
+            style={{ marginTop: '1.25rem', minHeight: 52 }}
+            disabled={placing || (pin !== null && !pin.serviceable)}
+          >
             {placing ? 'Placing order…' : 'Place order (Confirm by phone)'}
           </button>
         </form>
@@ -281,16 +285,18 @@ export default function Checkout() {
               lineHeight: 1.5,
             }}
           >
-            ✨ <strong>Prepaid discount available:</strong> pay via UPI when our team calls to confirm
-            and receive an additional discount on your final invoice.
+            ✨ <strong>Prepaid discount available:</strong> pay via UPI when our team calls to confirm and
+            receive an additional discount on your final invoice.
           </div>
 
           <div className="callout secure" style={{ marginTop: '1rem' }}>
             <strong>
               <IconShield size={14} /> Secure & verifiable
             </strong>
-            <p>Prices include GST. A GST invoice is issued with every order; delivery and payment are
-            finalized over the confirmation call.</p>
+            <p>
+              Prices include GST. A GST invoice is issued with every order; delivery and payment are finalized
+              over the confirmation call.
+            </p>
           </div>
 
           <div className="pay-badges" aria-label="Payment methods">

@@ -384,7 +384,7 @@ def create_guest_order(
     _reserve_all(db, order, lines)
 
     from app.core.config import settings as env_settings
-    from app.models.payment import Payment, PaymentProvider
+    from app.models.payment import Payment, PaymentProvider, PaymentRecordStatus
 
     db.add(
         Payment(
@@ -392,7 +392,7 @@ def create_guest_order(
             provider=PaymentProvider.mock,
             amount_paise=totals["grand_total_paise"],
             method="cod",
-            status=PaymentRecordStatus.pending_cod,
+            status=PaymentRecordStatus.pending,
         )
     )
     db.flush()

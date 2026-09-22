@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { IconCheck, IconWhatsApp, IconX } from '../components/bits';
 import { useCart } from '../context/CartContext';
@@ -146,9 +139,7 @@ export function QuickViewProvider({ children }: { children: ReactNode }) {
                 <img
                   src={product.images[imgIdx]?.url ?? ''}
                   alt={product.name}
-                  onClick={() =>
-                    setImgIdx((i) => (i + 1) % Math.max(1, product.images.length))
-                  }
+                  onClick={() => setImgIdx((i) => (i + 1) % Math.max(1, product.images.length))}
                 />
                 {product.images.length > 1 && (
                   <div className="qv-thumbs">
@@ -171,9 +162,7 @@ export function QuickViewProvider({ children }: { children: ReactNode }) {
                 <h3>{product.name}</h3>
                 <p className="qv-price">
                   <strong>{inr(variant?.price_paise ?? product.base_price_paise)}</strong>
-                  {off > 0 && product.mrp_paise ? (
-                    <s>{inr(product.mrp_paise)}</s>
-                  ) : null}
+                  {off > 0 && product.mrp_paise ? <s>{inr(product.mrp_paise)}</s> : null}
                   {off > 0 && <span className="qv-off">{off}% off</span>}
                   <small>incl. GST</small>
                 </p>
@@ -197,11 +186,17 @@ export function QuickViewProvider({ children }: { children: ReactNode }) {
                 {purchasable ? (
                   <div className="qv-buy">
                     <div className="stepper">
-                      <button onClick={() => setQty((n) => Math.max(1, n - 1))} aria-label="Decrease quantity">
+                      <button
+                        onClick={() => setQty((n) => Math.max(1, n - 1))}
+                        aria-label="Decrease quantity"
+                      >
                         −
                       </button>
                       <span>{qty}</span>
-                      <button onClick={() => setQty((n) => Math.min(10, n + 1))} aria-label="Increase quantity">
+                      <button
+                        onClick={() => setQty((n) => Math.min(10, n + 1))}
+                        aria-label="Increase quantity"
+                      >
                         +
                       </button>
                     </div>
@@ -224,7 +219,10 @@ export function QuickViewProvider({ children }: { children: ReactNode }) {
                       className={`textlink ${has(product.slug) ? 'active-wish' : ''}`}
                       onClick={() => {
                         toggle(listImg);
-                        toast(has(product.slug) ? 'Removed from wishlist.' : 'Saved to your wishlist.', 'success');
+                        toast(
+                          has(product.slug) ? 'Removed from wishlist.' : 'Saved to your wishlist.',
+                          'success',
+                        );
                       }}
                     >
                       {has(product.slug) ? '♥ Saved' : '♡ Save to wishlist'}
