@@ -56,76 +56,76 @@ function ScrollTop() {
 
 function App() {
   return (
-        <AuthProvider>
+    <AuthProvider>
       <ToastProvider>
         <CartProvider>
           <BrowserRouter>
             <WishlistProvider>
-            <QuickViewProvider>
-            <ScrollTop />
-            <a className="skip-link" href="#content">
-              Skip to content
-            </a>
-            <div className="topbar">
-              <AnnouncementBar />
-              <Nav />
-            </div>
-            <div id="content">
-              <Suspense
-                fallback={
-                  <main className="page">
-                    <Spinner />
-                  </main>
-                }
-              >
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/shop" element={<Shop />} />
-          <Route path="/wishlist" element={<WishlistPage />} />
-                  <Route path="/product/:slug" element={<ProductPage />} />
-                  <Route path="/story" element={<StoryPage />} />
-                  <Route path="/bulk" element={<BulkPage />} />
-                  <Route path="/login" element={<AuthPage />} />
-                  <Route
-                    path="/account"
-                    element={
-                      <RequireAuth>
-                        <AccountPage />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/order/:id" element={<OrderDetailPage />} />
-                  <Route
-                    path="/orders"
-                    element={
-                      <RequireAuth>
-                        <OrdersPage />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route path="/admin" element={<AdminPage />} />
-                  {/* Legal & policy pages — required for e-commerce compliance and
-                      reviewed by Razorpay during merchant KYC. */}
-                  <Route path="/policies/privacy" element={<PrivacyPolicyPage />} />
-                  <Route path="/policies/terms" element={<TermsPage />} />
-                  <Route path="/policies/returns" element={<ReturnsPolicyPage />} />
-                  <Route path="/policies/shipping" element={<ShippingPolicyPage />} />
-                  <Route path="/contact" element={<ContactPage />} />
-                  <Route
-                    path="*"
-                    element={
+              <QuickViewProvider>
+                <ScrollTop />
+                <a className="skip-link" href="#content">
+                  Skip to content
+                </a>
+                <div className="topbar">
+                  <AnnouncementBar />
+                  <Nav />
+                </div>
+                <div id="content">
+                  <Suspense
+                    fallback={
                       <main className="page">
-                        <p className="empty">Page not found.</p>
+                        <Spinner />
                       </main>
                     }
-                  />
-                </Routes>
-              </Suspense>
-            </div>
-            <Footer />
-            <CartDrawer />
-            </QuickViewProvider>
+                  >
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/shop" element={<Shop />} />
+                      <Route path="/wishlist" element={<WishlistPage />} />
+                      <Route path="/product/:slug" element={<ProductPage />} />
+                      <Route path="/story" element={<StoryPage />} />
+                      <Route path="/bulk" element={<BulkPage />} />
+                      <Route path="/login" element={<AuthPage />} />
+                      <Route
+                        path="/account"
+                        element={
+                          <RequireAuth>
+                            <AccountPage />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route path="/checkout" element={<Checkout />} />
+                      <Route path="/order/:id" element={<OrderDetailPage />} />
+                      <Route
+                        path="/orders"
+                        element={
+                          <RequireAuth>
+                            <OrdersPage />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route path="/admin" element={<AdminPage />} />
+                      {/* Legal & policy pages — required for e-commerce compliance and
+                      reviewed by Razorpay during merchant KYC. */}
+                      <Route path="/policies/privacy" element={<PrivacyPolicyPage />} />
+                      <Route path="/policies/terms" element={<TermsPage />} />
+                      <Route path="/policies/returns" element={<ReturnsPolicyPage />} />
+                      <Route path="/policies/shipping" element={<ShippingPolicyPage />} />
+                      <Route path="/contact" element={<ContactPage />} />
+                      <Route
+                        path="*"
+                        element={
+                          <main className="page">
+                            <p className="empty">Page not found.</p>
+                          </main>
+                        }
+                      />
+                    </Routes>
+                  </Suspense>
+                </div>
+                <Footer />
+                <CartDrawer />
+              </QuickViewProvider>
             </WishlistProvider>
           </BrowserRouter>
         </CartProvider>

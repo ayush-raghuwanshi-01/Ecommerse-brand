@@ -100,8 +100,8 @@ export default function Home() {
             <em>long way home.</em>
           </h1>
           <p className="lede">
-            Small-batch outerwear cut by hand in Bhopal — heavyweight wool and cotton, numbered runs,
-            built to outlast seasons.
+            Small-batch outerwear cut by hand in Bhopal — heavyweight wool and cotton, numbered runs, built to
+            outlast seasons.
           </p>
           <div className="actions">
             <Link className="button" to="/shop">
@@ -154,9 +154,9 @@ export default function Home() {
       {/* ── Marquee ──────────────────────────────────────────────────────── */}
       <div className="marquee" aria-hidden="true">
         <div>
-          Heavyweight wool <i>•</i> Gold hardware <i>•</i> Numbered small-batch runs <i>•</i> Made in
-          Bhopal <i>•</i> 7-day returns <i>•</i> Heavyweight wool <i>•</i> Gold hardware <i>•</i>{' '}
-          Numbered small-batch runs <i>•</i> Made in Bhopal <i>•</i> 7-day returns <i>•</i>
+          Heavyweight wool <i>•</i> Gold hardware <i>•</i> Numbered small-batch runs <i>•</i> Made in Bhopal{' '}
+          <i>•</i> 7-day returns <i>•</i> Heavyweight wool <i>•</i> Gold hardware <i>•</i> Numbered
+          small-batch runs <i>•</i> Made in Bhopal <i>•</i> 7-day returns <i>•</i>
         </div>
       </div>
 
@@ -389,8 +389,8 @@ export default function Home() {
             Outfitting a team? <em>Let’s talk.</em>
           </h2>
           <p>
-            Hotels, studios and enterprises — small-batch production runs for teams that care about
-            what they wear.
+            Hotels, studios and enterprises — small-batch production runs for teams that care about what they
+            wear.
           </p>
           <div className="actions" style={{ justifyContent: 'center' }}>
             <Link className="button amber" to="/bulk">
@@ -416,9 +416,7 @@ export default function Home() {
           </h2>
           <p>Numbered runs sell out. Join the list for early access and members-only pricing.</p>
           {subscribed ? (
-            <p className="ok">
-              ✓ You’re on the list — we’ll be in touch when the next run opens.
-            </p>
+            <p className="ok">✓ You’re on the list — we’ll be in touch when the next run opens.</p>
           ) : (
             <form
               onSubmit={(e) => {

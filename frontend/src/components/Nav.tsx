@@ -54,7 +54,18 @@ export default function Nav() {
             onChange={(e) => setQ(e.target.value)}
             aria-label="Search products"
           />
-          <button type="submit" aria-label="Search" style={{ background: 'none', border: 0, cursor: 'pointer', color: 'inherit', display: 'flex', padding: 0 }}>
+          <button
+            type="submit"
+            aria-label="Search"
+            style={{
+              background: 'none',
+              border: 0,
+              cursor: 'pointer',
+              color: 'inherit',
+              display: 'flex',
+              padding: 0,
+            }}
+          >
             <IconSearch size={16} />
           </button>
         </form>

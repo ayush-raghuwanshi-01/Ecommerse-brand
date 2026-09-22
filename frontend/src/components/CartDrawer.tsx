@@ -48,11 +48,7 @@ export default function CartDrawer() {
               <IconBag size={26} />
             </span>
             <p>Your bag is empty — the collection awaits.</p>
-            <Link
-              className="button"
-              to="/shop"
-              onClick={() => setOpen(false)}
-            >
+            <Link className="button" to="/shop" onClick={() => setOpen(false)}>
               Shop the collection
             </Link>
           </div>
@@ -63,7 +59,13 @@ export default function CartDrawer() {
                 <span>
                   Add <strong>{inr(missingForFree)}</strong> more to unlock <strong>free shipping</strong>
                 </span>
-                <div className="sp-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+                <div
+                  className="sp-track"
+                  role="progressbar"
+                  aria-valuenow={progress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
                   <div className="sp-fill" style={{ width: `${progress}%` }} />
                 </div>
               </div>

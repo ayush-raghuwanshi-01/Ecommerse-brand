@@ -53,10 +53,10 @@ export default function AdminPage() {
               {t === 'orders'
                 ? 'Orders & Calls'
                 : t === 'catalog'
-                ? 'Product Catalog'
-                : t === 'inventory'
-                ? 'Variant Stock'
-                : 'Summary'}
+                  ? 'Product Catalog'
+                  : t === 'inventory'
+                    ? 'Variant Stock'
+                    : 'Summary'}
             </button>
           ))}
         </div>
@@ -258,13 +258,19 @@ function CatalogTab() {
   }, [loadProducts]);
 
   const loadProductDetail = (slug: string) => {
-    api.get<Product>(`/products/${slug}`).then(setSelectedProduct).catch(() => null);
+    api
+      .get<Product>(`/products/${slug}`)
+      .then(setSelectedProduct)
+      .catch(() => null);
   };
 
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const slug = newProd.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const slug = newProd.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
       const created = await api.post<Product>('/products', {
         name: newProd.name,
         slug,
@@ -294,7 +300,9 @@ function CatalogTab() {
     e.preventDefault();
     if (!selectedProduct) return;
     try {
-      const generatedSku = newVariant.sku || `${selectedProduct.slug.toUpperCase().slice(0, 4)}-${newVariant.size}-${Date.now().toString().slice(-4)}`;
+      const generatedSku =
+        newVariant.sku ||
+        `${selectedProduct.slug.toUpperCase().slice(0, 4)}-${newVariant.size}-${Date.now().toString().slice(-4)}`;
       await api.post(`/products/${selectedProduct.id}/variants`, {
         sku: generatedSku,
         size: newVariant.size,
@@ -473,7 +481,8 @@ function CatalogTab() {
                             <small>{v.sku}</small>
                           </td>
                           <td>
-                            <strong>{v.stock_qty}</strong> <small className="dim">({v.available_qty} avail)</small>
+                            <strong>{v.stock_qty}</strong>{' '}
+                            <small className="dim">({v.available_qty} avail)</small>
                           </td>
                           <td>
                             <div style={{ display: 'flex', gap: '0.25rem' }}>
@@ -541,7 +550,9 @@ function CatalogTab() {
               </div>
             ) : (
               <div className="panel" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-                <p className="dim">👈 Select any product on the left to manage size variants and stock levels.</p>
+                <p className="dim">
+                  👈 Select any product on the left to manage size variants and stock levels.
+                </p>
               </div>
             )}
           </div>
