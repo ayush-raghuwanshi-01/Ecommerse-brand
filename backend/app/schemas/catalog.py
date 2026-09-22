@@ -112,6 +112,7 @@ class ProductOut(ORMModel):
     care_instructions: str | None
     size_guide: str | None
     base_price_paise: int
+    mrp_paise: int | None = None
     gst_percentage: float
     is_preorder: bool
     preorder_open: bool
@@ -141,9 +142,11 @@ class ProductListItem(ORMModel):
     short_description: str | None
     status: str
     base_price_paise: int
+    mrp_paise: int | None = None
     is_preorder: bool
     preorder_open: bool
     primary_image_url: str | None = None
+    secondary_image_url: str | None = None
     sizes_available: list[str] = []
 
 
@@ -161,6 +164,7 @@ class ProductCreate(BaseModel):
     care_instructions: str | None = None
     size_guide: str | None = None
     base_price_paise: int = Field(ge=0)
+    mrp_paise: int | None = Field(default=None, ge=0)
     gst_percentage: float = Field(default=5.0, ge=0, le=100)
     is_sale_item: bool = False
     is_preorder: bool = False
@@ -188,6 +192,7 @@ class ProductUpdate(BaseModel):
     care_instructions: str | None = None
     size_guide: str | None = None
     base_price_paise: int | None = Field(default=None, ge=0)
+    mrp_paise: int | None = Field(default=None, ge=0)
     gst_percentage: float | None = Field(default=None, ge=0, le=100)
     is_sale_item: bool | None = None
     is_preorder: bool | None = None

@@ -144,7 +144,7 @@ function OrdersTab() {
                     <br />
                     <a
                       href={`tel:${o.shipping_address.phone}`}
-                      style={{ color: '#c9a24b', textDecoration: 'underline' }}
+                      style={{ color: 'var(--accent)', textDecoration: 'underline' }}
                     >
                       📞 {o.shipping_address.phone}
                     </a>
@@ -334,7 +334,7 @@ function CatalogTab() {
       {showAddForm && (
         <form
           className="panel"
-          style={{ background: '#1c1813', marginBottom: '1.5rem', border: '1px solid #c9a24b' }}
+          style={{ marginBottom: '1.5rem', borderColor: 'var(--accent-line)' }}
           onSubmit={handleCreateProduct}
         >
           <h3>Create New Product</h3>
@@ -413,7 +413,7 @@ function CatalogTab() {
                     <tr
                       key={p.id}
                       style={{
-                        background: selectedProduct?.id === p.id ? 'rgba(201, 162, 75, 0.15)' : 'transparent',
+                        background: selectedProduct?.id === p.id ? 'rgba(154, 91, 11, 0.08)' : 'transparent',
                         cursor: 'pointer',
                       }}
                       onClick={() => loadProductDetail(p.slug)}
@@ -447,7 +447,7 @@ function CatalogTab() {
 
           <div>
             {selectedProduct ? (
-              <div className="panel" style={{ background: '#17140f' }}>
+              <div className="panel">
                 <h3>{selectedProduct.name} — Variants & Stock</h3>
                 <p className="dim" style={{ fontSize: '0.9rem' }}>
                   Base price: {inr(selectedProduct.base_price_paise)} · {selectedProduct.product_type}
@@ -511,7 +511,7 @@ function CatalogTab() {
                   style={{
                     marginTop: '1.25rem',
                     padding: '0.75rem',
-                    border: '1px dashed #2b2620',
+                    border: '1.5px dashed var(--border-strong)',
                     borderRadius: '4px',
                   }}
                 >
@@ -709,7 +709,7 @@ function ReportsTab() {
               <span>
                 {v.product_name} · Size {v.size} ({v.sku})
               </span>
-              <strong style={{ color: '#e06c75' }}>{v.available_qty} left</strong>
+              <strong style={{ color: 'var(--alert)' }}>{v.available_qty} left</strong>
             </li>
           ))}
           {report.low_stock_variants.length === 0 && <li className="dim">All variants are well-stocked.</li>}

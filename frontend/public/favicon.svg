@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- Monogram mark: a gold "BH" ligature on the brand's near-black ground.
-       SVG rather than ICO so it stays crisp at every size and costs one request. -->
-  <rect width="64" height="64" fill="#0b0a08"/>
-  <rect x="1.5" y="1.5" width="61" height="61" fill="none" stroke="#2b2620" stroke-width="1.5"/>
-  <g fill="#c9a24b" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="600">
+  <!-- Monogram mark: ink "BH" ligature on a warm white ground with an amber
+       hairline — the light-theme version of the brand mark. -->
+  <rect width="64" height="64" rx="14" fill="#ffffff"/>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="13" fill="none" stroke="#e0dacd" stroke-width="1.5"/>
+  <g fill="#17140f" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="600">
     <text x="12" y="42" letter-spacing="-1">B</text>
-    <text x="32" y="42" letter-spacing="-1">H</text>
+    <text x="32" y="42" letter-spacing="-1" fill="#9a5b0b">H</text>
   </g>
 </svg>

@@ -35,28 +35,23 @@ SEED_IMAGE_DIR = "seed"
 
 
 def _placeholder_svg(name: str, short: str) -> str:
-    """A branded stand-in for real product photography."""
+    """A branded stand-in for real product photography (light theme)."""
     from xml.sax.saxutils import escape
 
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#17140f"/>
-      <stop offset="100%" stop-color="#0b0a08"/>
-    </linearGradient>
-    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#c9a24b" stop-opacity="0.55"/>
-      <stop offset="100%" stop-color="#c9a24b" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#f7f4ee"/>
+      <stop offset="100%" stop-color="#efeae0"/>
     </linearGradient>
   </defs>
   <rect width="800" height="1000" fill="url(#bg)"/>
-  <circle cx="620" cy="250" r="230" fill="url(#sheen)"/>
-  <rect x="1" y="1" width="798" height="998" fill="none" stroke="#2b2620" stroke-width="2"/>
-  <text x="400" y="470" text-anchor="middle" fill="#ece4d3"
+  <rect x="1" y="1" width="798" height="998" fill="none" stroke="#e0dacd" stroke-width="2"/>
+  <text x="400" y="470" text-anchor="middle" fill="#17140f"
         font-family="Georgia, 'Times New Roman', serif" font-size="52">{escape(name)}</text>
-  <text x="400" y="530" text-anchor="middle" fill="#9a8f7a"
+  <text x="400" y="530" text-anchor="middle" fill="#6f6858"
         font-family="Helvetica, Arial, sans-serif" font-size="24">{escape(short)}</text>
-  <text x="400" y="620" text-anchor="middle" fill="#c9a24b"
+  <text x="400" y="620" text-anchor="middle" fill="#9a5b0b"
         font-family="Helvetica, Arial, sans-serif" font-size="16"
         letter-spacing="6">BLACK HOUSE · PLACEHOLDER</text>
 </svg>
@@ -67,7 +62,9 @@ def write_seed_images(products) -> None:
     """Write one placeholder SVG per product into the configured local storage path.
 
     Skipped when a non-local storage provider is configured (the files would be
-    unreachable) or when the image already exists.
+    unreachable), or when a real photograph (``.jpg``) already exists for the
+    product — drop photography into ``storage/uploads/seed/<slug>.jpg`` and it
+    is picked up automatically.
     """
     from app.core.config import settings
 
@@ -79,21 +76,32 @@ def write_seed_images(products) -> None:
     target.mkdir(parents=True, exist_ok=True)
     written = 0
     for slug, name, short in products:
-        path = target / f"{slug}.svg"
-        if path.exists():
+        if (target / f"{slug}.jpg").exists():
             continue
-        path.write_text(_placeholder_svg(name, short), encoding="utf-8")
+        (target / f"{slug}.svg").write_text(_placeholder_svg(name, short), encoding="utf-8")
         written += 1
     print(f"wrote {written} placeholder image(s) to {target}")
 
 
+def seed_image_url(slug: str) -> str:
+    """Public URL of the seeded artwork for a product (photo first, SVG fallback)."""
+    from app.core.config import settings
+
+    target = Path(settings.storage_local_path) / SEED_IMAGE_DIR
+    ext = "jpg" if (target / f"{slug}.jpg").exists() else "svg"
+    return f"/static/uploads/{SEED_IMAGE_DIR}/{slug}.{ext}"
+
+
+# (name, short, sell price, displayed MRP, status, stock)
+# MRP is the labelled tag price (Legal Metrology); the storefront renders the
+# difference as a strikethrough + % off. Keep MRP >= sell price.
 PRODUCTS = [
-    ("The Waypoint", "Double-faced wool overcoat", 1850000, "active", {"M": 6, "L": 4, "XL": 2}),
-    ("The Longline", "Extra-long belted wool trench", 2400000, "active", {"S": 3, "M": 5, "L": 0}),
-    ("The Transit", "Utilitarian wool travel jacket", 2150000, "active", {"M": 8, "L": 6, "XL": 3}),
-    ("The Field Coat", "Heavyweight cotton field coat", 2800000, "active", {"S": 2, "M": 2, "L": 1}),
-    ("The Rook", "Cropped wool bomber", 1680000, "out_of_stock", {}),
-    ("The Overcast", "Water-resistant stone mac", 2250000, "upcoming", {}),
+    ("The Waypoint", "Double-faced wool overcoat", 1850000, 2190000, "active", {"M": 6, "L": 4, "XL": 2}),
+    ("The Longline", "Extra-long belted wool trench", 2400000, 2890000, "active", {"S": 3, "M": 5, "L": 0}),
+    ("The Transit", "Utilitarian wool travel jacket", 2150000, 2490000, "active", {"M": 8, "L": 6, "XL": 3}),
+    ("The Field Coat", "Heavyweight cotton field coat", 2800000, 3350000, "active", {"S": 2, "M": 2, "L": 1}),
+    ("The Rook", "Cropped wool bomber", 1680000, 1990000, "out_of_stock", {}),
+    ("The Overcast", "Water-resistant stone mac", 2250000, 2650000, "upcoming", {}),
 ]
 
 
@@ -151,7 +159,7 @@ def seed() -> None:
 
         seeded_images: list[tuple[str, str, str]] = []
 
-        for idx, (name, short, price, status, stock) in enumerate(PRODUCTS):
+        for idx, (name, short, price, mrp, status, stock) in enumerate(PRODUCTS):
             product = Product(
                 name=name,
                 slug=name.lower().replace("the ", "").replace(" ", "-"),
@@ -165,6 +173,7 @@ def seed() -> None:
                 care_instructions="Dry clean only. Store on a wide hanger.",
                 size_guide="True to size. Size up for layering.",
                 base_price_paise=price,
+                mrp_paise=mrp,
                 gst_percentage=5.0,
                 is_preorder=status == "upcoming",
                 preorder_fulfillment_note="Pre-orders ship in 4–6 weeks." if status == "upcoming" else None,
@@ -177,12 +186,25 @@ def seed() -> None:
             db.add(
                 ProductImage(
                     product_id=product.id,
-                    url=f"/static/uploads/{SEED_IMAGE_DIR}/{product.slug}.svg",
+                    url=seed_image_url(product.slug),
                     alt_text=f"{name} on model",
                     is_primary=True,
                     sort_order=0,
                 )
             )
+            # Second (detail) image — powers the hover image-swap on cards and
+            # the PDP thumbnail strip, the standard pattern on Indian D2C sites.
+            alt_url = seed_image_url(f"{product.slug}-alt")
+            if alt_url.endswith(".jpg"):
+                db.add(
+                    ProductImage(
+                        product_id=product.id,
+                        url=alt_url,
+                        alt_text=f"{name} detail",
+                        is_primary=False,
+                        sort_order=1,
+                    )
+                )
             seeded_images.append((product.slug, name, short))
             for order, size in enumerate(SIZES):
                 qty = stock.get(size.value if hasattr(size, "value") else size, 0)

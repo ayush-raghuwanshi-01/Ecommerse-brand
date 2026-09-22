@@ -39,11 +39,17 @@ export interface ProductListItem {
   status: string;
   product_type?: string | null;
   base_price_paise: number;
+  mrp_paise?: number | null;
   is_preorder: boolean;
   preorder_open: boolean;
   primary_image_url: string | null;
+  secondary_image_url?: string | null;
   sizes_available: string[];
 }
+
+/** % below displayed MRP (Legal Metrology tag price), 0 when no MRP. */
+export const discountPct = (sell: number, mrp?: number | null): number =>
+  mrp && mrp > sell ? Math.round(((mrp - sell) / mrp) * 100) : 0;
 
 export interface Product {
   id: string;
@@ -58,6 +64,7 @@ export interface Product {
   care_instructions: string | null;
   size_guide: string | null;
   base_price_paise: number;
+  mrp_paise?: number | null;
   gst_percentage: number;
   is_preorder: boolean;
   preorder_open: boolean;

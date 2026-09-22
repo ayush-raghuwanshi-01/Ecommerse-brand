@@ -33,6 +33,8 @@ export const config = {
   contactEmail: firstDefined(env.VITE_CONTACT_EMAIL, 'hello@blackhouse.example'),
   whatsappNumber: normalisePhone(firstDefined(env.VITE_WHATSAPP_NUMBER, '919999999999')),
   supportPhone: normalisePhone(env.VITE_SUPPORT_PHONE ?? ''),
+  /** Instagram handle (without @) — powers the "on the gram" section. */
+  instagramHandle: firstDefined(env.VITE_INSTAGRAM_HANDLE, 'blackhouse.bpl').replace(/^@/, ''),
 
   /**
    * Registered business identity, printed on the legal pages and invoices.

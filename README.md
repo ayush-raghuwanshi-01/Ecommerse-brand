@@ -6,7 +6,7 @@ storefront plus the commerce backend behind it.
 ```
 Ecommerse-brand/
 ├── backend/          FastAPI · SQLAlchemy 2 · Alembic · PostgreSQL · Pydantic v2
-├── frontend/         Vite · React 18 · TypeScript · Three.js · react-router v7
+├── frontend/         Vite · React 18 · TypeScript · react-router v7
 ├── docs/             setup, configuration, roadmap
 ├── scripts/          bootstrap and dev runners
 ├── docker-compose.yml   full stack: postgres + redis + api + web
@@ -17,7 +17,7 @@ Ecommerse-brand/
 | | |
 |---|---|
 | **backend/** | Production-oriented modular monolith. JWT + Argon2id auth with rotating refresh tokens, hierarchical roles (`customer < staff < manager < admin`), transactional checkout with stock reservation, Razorpay + COD, returns/exchanges/refunds, coupons, shipping rules, restock alerts, and an append-only audit log. 32 tables, **154 tests, 88% coverage**. |
-| **frontend/** | Storefront and staff/admin console in one app: hero 3D, shop with filters, PDP with size/variant pricing, cart drawer, checkout with PIN-code validation and payment, order tracking, returns, bulk enquiry, and a role-gated admin panel. |
+| **frontend/** | White-theme, conversion-focused storefront and staff/admin console in one app: offer bar + sticky nav, editorial hero, trust bar, category tiles, shop with filters/sort/search, PDP with size/variant pricing, buy-now, WhatsApp enquiry and related pieces, cart drawer with free-shipping progress, checkout with PIN-code validation, order tracking, returns, bulk enquiry, and a role-gated admin panel. |
 
 Money is **integer paise** everywhere (`₹1,999 = 199900`). Prices are **GST-inclusive**; the tax
 component is derived per line.
