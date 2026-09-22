@@ -114,23 +114,23 @@ def seed() -> None:
         db.add(warehouse)
 
         users = {
-            "admin": User(
+            "admin1": User(
                 email="admin@blackhouse.example",
-                full_name="Owner",
+                full_name="Admin 1 (Founder)",
                 role=UserRole.admin,
                 password_hash=hash_password("Admin@12345"),
             ),
-            "manager": User(
-                email="manager@blackhouse.example",
-                full_name="Store Manager",
-                role=UserRole.manager,
-                password_hash=hash_password("Manager@12345"),
+            "admin2": User(
+                email="admin2@blackhouse.example",
+                full_name="Admin 2 (Operations)",
+                role=UserRole.admin,
+                password_hash=hash_password("Admin@12345"),
             ),
-            "staff": User(
-                email="staff@blackhouse.example",
-                full_name="Floor Staff",
-                role=UserRole.staff,
-                password_hash=hash_password("Staff@12345"),
+            "admin3": User(
+                email="admin3@blackhouse.example",
+                full_name="Admin 3 (Dispatch)",
+                role=UserRole.admin,
+                password_hash=hash_password("Admin@12345"),
             ),
             "customer": User(
                 email="customer@example.com",

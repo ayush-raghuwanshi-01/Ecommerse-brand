@@ -17,12 +17,15 @@ from app.core.deps import CurrentUser
 from app.models.payment import IdempotencyKey
 from app.schemas.order import (
     CheckoutPreview,
+    GuestPlaceOrderOut,
+    GuestPlaceOrderRequest,
     PincodeCheck,
     PincodeCheckOut,
     PlaceOrderOut,
     PlaceOrderRequest,
 )
-from app.services import cart_service, payment_service, shipping_service
+from app.services import cart_service, notification_service, payment_service, shipping_service
+from app.services.order_service import create_guest_order
 from app.services.order_service import place_order as place_order_service
 
 router = APIRouter(prefix="/checkout", tags=["checkout"])
@@ -76,6 +79,32 @@ def preview(user: CurrentUser, db: Db, postal_code: str | None = None):
         checkout_blocked=serialized.checkout_blocked,
         block_reasons=serialized.block_reasons,
         shipping=shipping,
+    )
+
+
+@router.post("/guest", response_model=GuestPlaceOrderOut, status_code=201)
+def place_guest_order(payload: GuestPlaceOrderRequest, db: Db):
+    """Zero-friction guest order placement — no account or online payment gateway required."""
+    order = create_guest_order(
+        db,
+        customer_name=payload.customer_name,
+        customer_phone=payload.customer_phone,
+        customer_email=payload.customer_email,
+        shipping_address=payload.shipping_address.model_dump(),
+        items=[item.model_dump() for item in payload.items],
+        customer_notes=payload.customer_notes,
+    )
+    db.commit()
+
+    wa_text = f"Hi! I placed order {order.number} on your store. Please confirm my order."
+    wa_url = notification_service.whatsapp_link(order.shipping_address.get("phone", ""), wa_text)
+
+    from app.api.v1.orders import serialize_order
+
+    return GuestPlaceOrderOut(
+        order=serialize_order(db, order, viewer=None),
+        message="Order placed successfully! Our team will call you shortly to confirm and arrange dispatch.",
+        whatsapp_link=wa_url,
     )
 
 

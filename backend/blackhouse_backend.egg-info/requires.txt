@@ -1,5 +1,6 @@
 fastapi<1.0,>=0.115
 uvicorn[standard]>=0.32
+gunicorn>=23.0
 sqlalchemy<2.1,>=2.0.36
 alembic>=1.14
 pydantic<3.0,>=2.9
@@ -16,6 +17,11 @@ pytest>=8.3
 pytest-cov>=5.0
 ruff>=0.7
 redis>=5.2
+prometheus-client>=0.21
+
+[observability]
+prometheus-client>=0.21
+sentry-sdk[fastapi]>=2.19
 
 [redis]
 redis>=5.2

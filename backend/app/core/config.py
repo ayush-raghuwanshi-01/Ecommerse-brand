@@ -109,7 +109,8 @@ class Settings(BaseSettings):
     sms_api_key: str = ""
     whatsapp_provider: str = ""
     whatsapp_api_key: str = ""
-    whatsapp_business_number: str = "910000000000"
+    whatsapp_business_number: str = "919999999999"
+    admin_notification_email: str = "orders@blackhouse.example"
 
     # ── Object storage ──────────────────────────────────────────────────────
     storage_provider: Literal["local", "s3", "cloudinary"] = "local"

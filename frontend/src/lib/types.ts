@@ -37,6 +37,7 @@ export interface ProductListItem {
   slug: string;
   short_description: string | null;
   status: string;
+  product_type?: string | null;
   base_price_paise: number;
   is_preorder: boolean;
   preorder_open: boolean;

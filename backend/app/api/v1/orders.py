@@ -26,9 +26,9 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 Db = Annotated[Session, Depends(get_db)]
 
 
-def serialize_order(db: Session, order: Order, viewer: User) -> OrderOut:
+def serialize_order(db: Session, order: Order, viewer: User | None = None) -> OrderOut:
     out = OrderOut.model_validate(order)
-    if viewer.role.value == "customer":
+    if viewer is None or viewer.role.value == "customer":
         out.internal_notes = None
     return out
 
@@ -87,6 +87,17 @@ def list_orders(
         )
     items, total = paginate(db, stmt, params, sort_columns={"created_at": Order.created_at})
     return Page(items=[serialize_order(db, o, staff) for o in items], meta=page_meta(params, total))
+
+
+@router.get("/guest/{order_number}", response_model=OrderOut)
+def get_guest_order(order_number: str, db: Db):
+    """Public guest lookup for order confirmation screen."""
+    order = db.scalar(
+        select(Order).options(joinedload(Order.items), joinedload(Order.history)).where(Order.number == order_number)
+    )
+    if order is None:
+        raise NotFoundError("Order not found.")
+    return serialize_order(db, order, viewer=None)
 
 
 @router.get("/{order_id}", response_model=OrderOut)

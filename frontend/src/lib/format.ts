@@ -6,15 +6,19 @@ export const dateFmt = (iso: string | null | undefined): string =>
 export const ORDER_FLOW = [
   'pending_payment',
   'confirmed',
-  'processing',
   'packed',
   'shipped',
   'delivered',
-  'completed',
 ] as const;
 
-export const statusLabel = (s: string): string =>
-  s
+export const statusLabel = (s: string): string => {
+  if (s === 'pending_payment') return 'Placed (Pending Call)';
+  if (s === 'confirmed') return 'Confirmed by Call';
+  if (s === 'processing') return 'Confirmed by Call';
+  if (s === 'return_requested') return 'Return Requested';
+  if (s === 'returned') return 'Return Resolved';
+  return s
     .split('_')
     .map((w) => w[0]?.toUpperCase() + w.slice(1))
     .join(' ');
+};

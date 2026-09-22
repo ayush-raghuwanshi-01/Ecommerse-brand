@@ -254,6 +254,37 @@ def _password_reset(p: dict[str, Any]) -> RenderedEmail:
     )
 
 
+def _admin_new_order(p: dict[str, Any]) -> RenderedEmail:
+    number = _get(p, "order_number")
+    customer = _get(p, "customer_name")
+    phone = _get(p, "customer_phone")
+    heading = f"🚨 New Order Alert: {number}"
+    body = (
+        f"<p><strong>A new order has been placed on the storefront!</strong></p>"
+        f"<p><strong>Customer:</strong> {customer}<br/>"
+        f"<strong>Phone:</strong> <a href='tel:{phone}'>{phone}</a></p>"
+        f"<p>Please call the customer to confirm the order, arrange payment (COD or UPI), and proceed.</p>"
+        f"{_order_details(p)}"
+    )
+    return RenderedEmail(
+        subject=f"[NEW ORDER] {number} - {customer} ({phone})",
+        html=_layout(
+            preheader=f"New order {number} from {customer}",
+            heading=heading,
+            body_html=body,
+            cta=("Open Admin Console", _storefront_url("admin")),
+        ),
+        text=_text_body(
+            heading,
+            [
+                f"Customer: {customer} ({phone})",
+                "Action needed: Call the customer to confirm the order and arrange payment.",
+            ],
+            p,
+        ),
+    )
+
+
 def _order_placed(p: dict[str, Any]) -> RenderedEmail:
     number = _get(p, "order_number")
     heading = f"Order {number} received" if number else "Your order is received"
@@ -473,6 +504,7 @@ def _generic(p: dict[str, Any]) -> RenderedEmail:
 TEMPLATES = {
     "account_created": _account_created,
     "password_reset_requested": _password_reset,
+    "admin_new_order": _admin_new_order,
     "order_placed": _order_placed,
     "payment_successful": _payment_successful,
     "payment_failed": _payment_failed,

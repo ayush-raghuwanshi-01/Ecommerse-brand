@@ -84,27 +84,13 @@ function App() {
                       </RequireAuth>
                     }
                   />
-                  <Route
-                    path="/checkout"
-                    element={
-                      <RequireAuth>
-                        <Checkout />
-                      </RequireAuth>
-                    }
-                  />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/order/:id" element={<OrderDetailPage />} />
                   <Route
                     path="/orders"
                     element={
                       <RequireAuth>
                         <OrdersPage />
-                      </RequireAuth>
-                    }
-                  />
-                  <Route
-                    path="/order/:id"
-                    element={
-                      <RequireAuth>
-                        <OrderDetailPage />
                       </RequireAuth>
                     }
                   />

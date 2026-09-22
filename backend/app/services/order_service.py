@@ -312,6 +312,124 @@ def _created_status():
     return PaymentRecordStatus.created
 
 
+def create_guest_order(
+    db: Session,
+    *,
+    customer_name: str,
+    customer_phone: str,
+    customer_email: str | None = None,
+    shipping_address: dict,
+    items: list[dict],
+    customer_notes: str | None = None,
+    source: OrderSource = OrderSource.website,
+) -> Order:
+    """Guest checkout with manual phone confirmation (no online payment gateway needed)."""
+    if not items:
+        raise ValidationError("Your bag is empty.")
+
+    lines: list[PricedLine] = []
+    for spec in items:
+        variant = inventory_service.get_variant(db, spec["variant_id"])
+        if variant.product is None or not variant.product.publicly_visible:
+            if variant.product is None or variant.product.status.value == "archived":
+                raise ValidationError("Archived products cannot be ordered.", details={"sku": variant.sku})
+        lines.append(
+            PricedLine(
+                variant=variant,
+                qty=spec["qty"],
+                unit_price_paise=variant.price_paise,
+                is_preorder=bool(variant.is_preorder or variant.product.preorder_open),
+                extra={"snapshot_price": variant.price_paise},
+            )
+        )
+    _snapshot_lines(db, lines, None, 0)
+
+    # Standard shipping calculation
+    provider = shipping_service.get_provider()
+    svc = provider.check_serviceability(db, shipping_address["postal_code"])
+    if not svc.serviceable:
+        raise PolicyError(svc.reason or "Address not serviceable.")
+    shipping_charge = provider.get_shipping_rate(
+        db,
+        shipping_address["postal_code"],
+        shipping_address.get("state", ""),
+        sum(ln.line_gross_paise for ln in lines),
+    )
+    totals = pricing_service.finalize(lines, discount_paise=0, shipping_paise=shipping_charge)
+
+    # Clean snapshots
+    shipping_snap = dict(shipping_address)
+    shipping_snap["full_name"] = customer_name
+    shipping_snap["phone"] = customer_phone
+    if customer_email:
+        shipping_snap["email"] = customer_email
+
+    order = _create_order_record(
+        db,
+        customer=None,
+        staff=None,
+        source=source,
+        lines=lines,
+        totals=totals,
+        coupon=None,
+        payment_method=PaymentMethod.cod,
+        shipping_snap=shipping_snap,
+        billing_snap=dict(shipping_snap),
+        customer_notes=customer_notes,
+        internal_notes=None,
+    )
+    # Guest orders start at placed / pending_payment (or confirmed for COD lifecycle)
+    order.status = OrderStatus.pending_payment
+    order.payment_status = PaymentStatus.pending_cod
+    _reserve_all(db, order, lines)
+
+    from app.core.config import settings as env_settings
+    from app.models.payment import Payment, PaymentProvider
+
+    db.add(
+        Payment(
+            order_id=order.id,
+            provider=PaymentProvider.mock,
+            amount_paise=totals["grand_total_paise"],
+            method="cod",
+            status=PaymentRecordStatus.pending_cod,
+        )
+    )
+    db.flush()
+
+    # Alert admin team immediately via email
+    admin_email = env_settings.admin_notification_email or "orders@blackhouse.example"
+    notification_service.notify(
+        db,
+        event_type="admin_new_order",
+        recipient=admin_email,
+        payload={
+            "subject": f"New Order {order.number} from {customer_name}",
+            "order_number": order.number,
+            "customer_name": customer_name,
+            "customer_phone": customer_phone,
+            "total_paise": order.grand_total_paise,
+            "payment_method": "Pay on Call (COD/UPI)",
+            "status": "Placed",
+        },
+    )
+
+    # Also notify customer if email provided
+    if customer_email:
+        notification_service.notify(
+            db,
+            event_type="order_placed",
+            recipient=customer_email,
+            payload={
+                "subject": f"Order {order.number} placed successfully",
+                "order_number": order.number,
+                "total_paise": order.grand_total_paise,
+                "status": "Placed",
+            },
+        )
+    return order
+
+
 def staff_create_order(
     db: Session,
     *,
@@ -463,8 +581,8 @@ def set_status(
 
     # COD stock commits when staff confirm fulfillment start (confirmed → processing)
     if (
-        old == OrderStatus.confirmed
-        and new_status == OrderStatus.processing
+        (old in (OrderStatus.confirmed, OrderStatus.pending_payment))
+        and new_status in (OrderStatus.processing, OrderStatus.confirmed)
         and order.payment_method == PaymentMethod.cod
         and order.payment_status == PaymentStatus.pending_cod
     ):
