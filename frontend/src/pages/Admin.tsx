@@ -4,17 +4,19 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { ApiError, api } from '../lib/api';
 import { dateFmt, inr, statusLabel } from '../lib/format';
-import type { Order, Page, Reports } from '../lib/types';
+import type { Order, Page, Product, ProductListItem, Reports } from '../lib/types';
 
 const NEXT_STATUS: Record<string, string> = {
-  confirmed: 'processing',
+  pending_payment: 'confirmed',
+  confirmed: 'packed',
   processing: 'packed',
   packed: 'shipped',
   shipped: 'delivered',
   delivered: 'completed',
+  return_requested: 'returned',
 };
 
-type Tab = 'orders' | 'inventory' | 'reports' | 'coupons';
+type Tab = 'orders' | 'catalog' | 'inventory' | 'reports';
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -25,7 +27,7 @@ export default function AdminPage() {
       <main className="page">
         <Seo title="Console — Black House" />
         <p className="empty">
-          Staff access only. Sign in with a staff, manager or admin account to open the console.
+          Admin access only. Sign in with an admin or staff account to open the console.
         </p>
       </main>
     );
@@ -35,12 +37,12 @@ export default function AdminPage() {
     <main className="page admin">
       <Seo title="Console — Black House" />
       <div className="page-head">
-        <p className="eyebrow">Operations console</p>
+        <p className="eyebrow">Operations & Catalog Console</p>
         <h1>
-          {user.full_name} <em>· {user.role}</em>
+          {user.full_name} <em>· Admin</em>
         </h1>
         <div className="tabs" role="tablist">
-          {(['orders', 'inventory', 'reports', 'coupons'] as Tab[]).map((t) => (
+          {(['orders', 'catalog', 'inventory', 'reports'] as Tab[]).map((t) => (
             <button
               key={t}
               role="tab"
@@ -48,19 +50,28 @@ export default function AdminPage() {
               className={tab === t ? 'active' : ''}
               onClick={() => setTab(t)}
             >
-              {statusLabel(t)}
+              {t === 'orders'
+                ? 'Orders & Calls'
+                : t === 'catalog'
+                ? 'Product Catalog'
+                : t === 'inventory'
+                ? 'Variant Stock'
+                : 'Summary'}
             </button>
           ))}
         </div>
       </div>
       {tab === 'orders' && <OrdersTab />}
-      {tab === 'inventory' && <InventoryTab canAdjust />}
+      {tab === 'catalog' && <CatalogTab />}
+      {tab === 'inventory' && <InventoryTab />}
       {tab === 'reports' && <ReportsTab />}
-      {tab === 'coupons' && <CouponsTab canManage={user.role !== 'staff'} />}
     </main>
   );
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   ORDERS & CALLS TAB
+───────────────────────────────────────────────────────────────────────────── */
 function OrdersTab() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [status, setStatus] = useState('');
@@ -73,6 +84,7 @@ function OrdersTab() {
       .then((p) => setOrders(p.items))
       .catch(() => setOrders([]));
   }, [status]);
+
   useEffect(() => {
     load();
   }, [load]);
@@ -90,23 +102,17 @@ function OrdersTab() {
   return (
     <div className="panel">
       <div className="panel-head">
-        <h2>Orders</h2>
+        <h2>Orders & Call Confirmations</h2>
         <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Filter by status">
-          <option value="">All statuses</option>
-          {[
-            'pending_payment',
-            'confirmed',
-            'processing',
-            'packed',
-            'shipped',
-            'delivered',
-            'cancel_requested',
-            'cancelled',
-          ].map((s) => (
-            <option key={s} value={s}>
-              {statusLabel(s)}
-            </option>
-          ))}
+          <option value="">All Orders</option>
+          <option value="pending_payment">Placed (Needs Call)</option>
+          <option value="confirmed">Confirmed by Call</option>
+          <option value="packed">Packed</option>
+          <option value="shipped">Shipped</option>
+          <option value="delivered">Delivered</option>
+          <option value="return_requested">Return Requested</option>
+          <option value="returned">Return Resolved</option>
+          <option value="cancelled">Cancelled</option>
         </select>
       </div>
       {!orders ? (
@@ -117,12 +123,12 @@ function OrdersTab() {
             <thead>
               <tr>
                 <th>Order</th>
-                <th>Customer</th>
-                <th>Source</th>
-                <th>Payment</th>
+                <th>Customer & Phone</th>
+                <th>Address</th>
+                <th>Items</th>
                 <th>Status</th>
                 <th>Total</th>
-                <th>Actions</th>
+                <th>Call & Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -134,76 +140,70 @@ function OrdersTab() {
                     <small>{dateFmt(o.created_at)}</small>
                   </td>
                   <td>
-                    {o.shipping_address.full_name}
+                    <strong>{o.shipping_address.full_name}</strong>
                     <br />
-                    <small>{o.shipping_address.postal_code}</small>
+                    <a
+                      href={`tel:${o.shipping_address.phone}`}
+                      style={{ color: '#c9a24b', textDecoration: 'underline' }}
+                    >
+                      📞 {o.shipping_address.phone}
+                    </a>
                   </td>
                   <td>
-                    <span className="chip dim">{o.order_source}</span>
-                    {o.is_preorder && <span className="chip gold">pre</span>}
+                    <small>
+                      {o.shipping_address.line1}, {o.shipping_address.city} ({o.shipping_address.postal_code})
+                    </small>
                   </td>
                   <td>
-                    <span className={`status ${o.payment_status}`}>{statusLabel(o.payment_status)}</span>
+                    <small>
+                      {o.items.map((i) => `${i.product_name} (${i.variant_name}) × ${i.qty}`).join(', ')}
+                    </small>
                   </td>
                   <td>
                     <span className={`status ${o.status}`}>{statusLabel(o.status)}</span>
                   </td>
                   <td>{inr(o.grand_total_paise)}</td>
                   <td className="actions-cell">
+                    <a
+                      className="button tiny"
+                      style={{ background: '#25D366', color: '#fff', borderColor: '#25D366' }}
+                      href={`https://wa.me/${o.shipping_address.phone?.replace(
+                        /\D/g,
+                        '',
+                      )}?text=${encodeURIComponent(
+                        `Hi ${o.shipping_address.full_name}, calling from Black House regarding your order ${o.number} (Total: ${inr(
+                          o.grand_total_paise,
+                        )}).`,
+                      )}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      WhatsApp
+                    </a>
                     {NEXT_STATUS[o.status] && (
                       <button
                         className="button tiny"
                         onClick={() =>
                           act(
                             () => api.post(`/orders/${o.id}/status`, { status: NEXT_STATUS[o.status] }),
-                            `Moved to ${NEXT_STATUS[o.status]}`,
+                            `Moved to ${statusLabel(NEXT_STATUS[o.status])}`,
                           )
                         }
                       >
                         → {statusLabel(NEXT_STATUS[o.status])}
                       </button>
                     )}
-                    {o.status === 'cancel_requested' && (
-                      <>
-                        <button
-                          className="button tiny"
-                          onClick={() =>
-                            act(
-                              () => api.post(`/orders/${o.id}/cancel-decision`, { approve: true }),
-                              'Cancellation approved',
-                            )
-                          }
-                        >
-                          Approve cancel
-                        </button>
-                        <button
-                          className="button tiny ghost"
-                          onClick={() =>
-                            act(
-                              () => api.post(`/orders/${o.id}/cancel-decision`, { approve: false }),
-                              'Cancellation rejected',
-                            )
-                          }
-                        >
-                          Reject
-                        </button>
-                      </>
-                    )}
-                    {o.payment_status === 'pending_cod' && o.status !== 'cancelled' && (
+                    {o.status === 'pending_payment' && (
                       <button
                         className="button tiny ghost"
                         onClick={() =>
                           act(
-                            () =>
-                              api.post(`/orders/${o.id}/collect-cod`, {
-                                collected: true,
-                                method_note: 'cash',
-                              }),
-                            'COD collected',
+                            () => api.post(`/orders/${o.id}/status`, { status: 'cancelled' }),
+                            'Order marked cancelled',
                           )
                         }
                       >
-                        Collect COD
+                        Cancel
                       </button>
                     )}
                   </td>
@@ -218,7 +218,343 @@ function OrdersTab() {
   );
 }
 
-function InventoryTab({ canAdjust }: { canAdjust: boolean }) {
+/* ─────────────────────────────────────────────────────────────────────────────
+   CATALOG MANAGEMENT TAB (Add Product, Edit Price, Add Variants)
+───────────────────────────────────────────────────────────────────────────── */
+function CatalogTab() {
+  const [products, setProducts] = useState<ProductListItem[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newProd, setNewProd] = useState({
+    name: '',
+    product_type: 'Shirt',
+    base_price_paise: 299900,
+    short_description: '',
+    fabric: '100% Cotton',
+  });
+  const [newVariant, setNewVariant] = useState({
+    size: 'M',
+    sku: '',
+    stock_qty: 10,
+    price_paise: 299900,
+  });
+
+  const toast = useToast();
+
+  const loadProducts = useCallback(() => {
+    setLoading(true);
+    api
+      .get<Page<ProductListItem>>('/products?page_size=100')
+      .then((p) => {
+        setProducts(p.items);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
+
+  const loadProductDetail = (slug: string) => {
+    api.get<Product>(`/products/${slug}`).then(setSelectedProduct).catch(() => null);
+  };
+
+  const handleCreateProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const slug = newProd.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const created = await api.post<Product>('/products', {
+        name: newProd.name,
+        slug,
+        product_type: newProd.product_type,
+        base_price_paise: Number(newProd.base_price_paise),
+        short_description: newProd.short_description || undefined,
+        fabric: newProd.fabric || undefined,
+        status: 'active',
+      });
+      toast(`Created product "${created.name}"`, 'success');
+      setShowAddForm(false);
+      setNewProd({
+        name: '',
+        product_type: 'Shirt',
+        base_price_paise: 299900,
+        short_description: '',
+        fabric: '100% Cotton',
+      });
+      loadProducts();
+      setSelectedProduct(created);
+    } catch (err) {
+      toast(err instanceof ApiError ? err.message : 'Failed to create product', 'error');
+    }
+  };
+
+  const handleAddVariant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProduct) return;
+    try {
+      const generatedSku = newVariant.sku || `${selectedProduct.slug.toUpperCase().slice(0, 4)}-${newVariant.size}-${Date.now().toString().slice(-4)}`;
+      await api.post(`/products/${selectedProduct.id}/variants`, {
+        sku: generatedSku,
+        size: newVariant.size,
+        price_paise: Number(newVariant.price_paise) || selectedProduct.base_price_paise,
+        stock_qty: Number(newVariant.stock_qty),
+        gst_percentage: 5.0,
+      });
+      toast(`Added size ${newVariant.size} with stock ${newVariant.stock_qty}`, 'success');
+      setNewVariant({ size: 'M', sku: '', stock_qty: 10, price_paise: selectedProduct.base_price_paise });
+      loadProductDetail(selectedProduct.slug);
+    } catch (err) {
+      toast(err instanceof ApiError ? err.message : 'Failed to add variant', 'error');
+    }
+  };
+
+  const handleUpdateStock = async (variantId: string, currentStock: number, delta: number) => {
+    try {
+      await api.patch(`/products/variants/${variantId}`, {
+        stock_qty: Math.max(0, currentStock + delta),
+      });
+      toast('Stock updated', 'success');
+      if (selectedProduct) loadProductDetail(selectedProduct.slug);
+    } catch (err) {
+      toast(err instanceof ApiError ? err.message : 'Failed to update stock', 'error');
+    }
+  };
+
+  return (
+    <div className="panel">
+      <div className="panel-head">
+        <h2>Product & SKU Management</h2>
+        <button className="button tiny" onClick={() => setShowAddForm(!showAddForm)}>
+          {showAddForm ? 'Close Form' : '+ Add New Product'}
+        </button>
+      </div>
+
+      {showAddForm && (
+        <form
+          className="panel"
+          style={{ background: '#1c1813', marginBottom: '1.5rem', border: '1px solid #c9a24b' }}
+          onSubmit={handleCreateProduct}
+        >
+          <h3>Create New Product</h3>
+          <div className="row-2">
+            <label>
+              Product Name *
+              <input
+                required
+                placeholder="e.g. Pure Cotton Kurta"
+                value={newProd.name}
+                onChange={(e) => setNewProd({ ...newProd, name: e.target.value })}
+              />
+            </label>
+            <label>
+              Category / Type *
+              <input
+                required
+                placeholder="e.g. Shirt, Kurta, Trousers"
+                value={newProd.product_type}
+                onChange={(e) => setNewProd({ ...newProd, product_type: e.target.value })}
+              />
+            </label>
+          </div>
+          <div className="row-2">
+            <label>
+              Base Price (paise, e.g. 299900 = ₹2,999) *
+              <input
+                type="number"
+                required
+                value={newProd.base_price_paise}
+                onChange={(e) => setNewProd({ ...newProd, base_price_paise: Number(e.target.value) })}
+              />
+            </label>
+            <label>
+              Fabric details
+              <input
+                placeholder="e.g. Handloom Khadi Cotton"
+                value={newProd.fabric}
+                onChange={(e) => setNewProd({ ...newProd, fabric: e.target.value })}
+              />
+            </label>
+          </div>
+          <label>
+            Short Description
+            <textarea
+              rows={2}
+              placeholder="Brief story or product highlight..."
+              value={newProd.short_description}
+              onChange={(e) => setNewProd({ ...newProd, short_description: e.target.value })}
+            />
+          </label>
+          <button className="button tiny" style={{ marginTop: '0.75rem' }}>
+            Save Product
+          </button>
+        </form>
+      )}
+
+      {loading ? (
+        <Spinner />
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+          <div>
+            <h3>All Products ({products.length})</h3>
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Sizes</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {products.map((p) => (
+                    <tr
+                      key={p.id}
+                      style={{
+                        background: selectedProduct?.id === p.id ? 'rgba(201, 162, 75, 0.15)' : 'transparent',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => loadProductDetail(p.slug)}
+                    >
+                      <td>
+                        <strong>{p.name}</strong>
+                        <br />
+                        <small className="dim">{p.product_type}</small>
+                      </td>
+                      <td>{inr(p.base_price_paise)}</td>
+                      <td>
+                        <small>{p.sizes_available.join(', ') || 'None'}</small>
+                      </td>
+                      <td>
+                        <button
+                          className="button tiny ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            loadProductDetail(p.slug);
+                          }}
+                        >
+                          Manage SKUs
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            {selectedProduct ? (
+              <div className="panel" style={{ background: '#17140f' }}>
+                <h3>{selectedProduct.name} — Variants & Stock</h3>
+                <p className="dim" style={{ fontSize: '0.9rem' }}>
+                  Base price: {inr(selectedProduct.base_price_paise)} · {selectedProduct.product_type}
+                </p>
+
+                <div className="table-wrap" style={{ marginTop: '1rem' }}>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Size</th>
+                        <th>SKU</th>
+                        <th>Stock</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedProduct.variants.map((v) => (
+                        <tr key={v.id}>
+                          <td>
+                            <strong>{v.size}</strong>
+                          </td>
+                          <td>
+                            <small>{v.sku}</small>
+                          </td>
+                          <td>
+                            <strong>{v.stock_qty}</strong> <small className="dim">({v.available_qty} avail)</small>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '0.25rem' }}>
+                              <button
+                                className="button tiny ghost"
+                                onClick={() => handleUpdateStock(v.id, v.stock_qty, -1)}
+                              >
+                                −1
+                              </button>
+                              <button
+                                className="button tiny ghost"
+                                onClick={() => handleUpdateStock(v.id, v.stock_qty, 1)}
+                              >
+                                +1
+                              </button>
+                              <button
+                                className="button tiny"
+                                onClick={() => handleUpdateStock(v.id, v.stock_qty, 5)}
+                              >
+                                +5
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {selectedProduct.variants.length === 0 && (
+                    <p className="empty">No variants created yet for this product.</p>
+                  )}
+                </div>
+
+                <form
+                  onSubmit={handleAddVariant}
+                  style={{
+                    marginTop: '1.25rem',
+                    padding: '0.75rem',
+                    border: '1px dashed #2b2620',
+                    borderRadius: '4px',
+                  }}
+                >
+                  <h4 style={{ margin: '0 0 0.5rem 0' }}>+ Add Size Variant</h4>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <select
+                      value={newVariant.size}
+                      onChange={(e) => setNewVariant({ ...newVariant, size: e.target.value })}
+                      style={{ padding: '0.4rem' }}
+                    >
+                      {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map((s) => (
+                        <option key={s} value={s}>
+                          Size {s}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      placeholder="Stock quantity"
+                      value={newVariant.stock_qty}
+                      onChange={(e) => setNewVariant({ ...newVariant, stock_qty: Number(e.target.value) })}
+                      style={{ width: '100px', padding: '0.4rem' }}
+                    />
+                    <button className="button tiny">Add Size</button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <div className="panel" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                <p className="dim">👈 Select any product on the left to manage size variants and stock levels.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   INVENTORY TAB (Stock Ledger & Adjustment)
+───────────────────────────────────────────────────────────────────────────── */
+function InventoryTab() {
   const [rows, setRows] = useState<Page<unknown> | null>(null);
   const [items, setItems] = useState<Array<Record<string, unknown>>>([]);
   const [form, setForm] = useState({
@@ -234,6 +570,7 @@ function InventoryTab({ canAdjust }: { canAdjust: boolean }) {
       setRows(p);
       setItems(p.items);
     });
+
   useEffect(() => {
     void load();
   }, []);
@@ -241,80 +578,72 @@ function InventoryTab({ canAdjust }: { canAdjust: boolean }) {
   return (
     <div className="panel">
       <div className="panel-head">
-        <h2>Inventory (Bhopal warehouse)</h2>
-        {canAdjust && (
-          <form
-            className="adj-form"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              try {
-                await api.post('/inventory/adjustments', {
-                  variant_id: form.variant_id,
-                  adjustment_type: form.adjustment_type,
-                  qty_change: ['decrease', 'damage', 'defect'].includes(form.adjustment_type)
-                    ? -Math.abs(Number(form.qty_change))
-                    : Math.abs(Number(form.qty_change)),
-                  reason: form.reason || undefined,
-                });
-                toast('Inventory adjusted & ledgered.', 'success');
-                void load();
-              } catch (err) {
-                toast(err instanceof ApiError ? err.message : 'Adjustment failed', 'error');
-              }
-            }}
+        <h2>Stock Overview & Ledger</h2>
+        <form
+          className="adj-form"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            try {
+              await api.post('/inventory/adjustments', {
+                variant_id: form.variant_id,
+                adjustment_type: form.adjustment_type,
+                qty_change: ['decrease', 'damage', 'defect'].includes(form.adjustment_type)
+                  ? -Math.abs(Number(form.qty_change))
+                  : Math.abs(Number(form.qty_change)),
+                reason: form.reason || undefined,
+              });
+              toast('Inventory adjusted & ledgered.', 'success');
+              void load();
+            } catch (err) {
+              toast(err instanceof ApiError ? err.message : 'Adjustment failed', 'error');
+            }
+          }}
+        >
+          <select
+            value={form.variant_id}
+            onChange={(e) => setForm({ ...form, variant_id: e.target.value })}
+            required
+            aria-label="Variant"
           >
-            <select
-              value={form.variant_id}
-              onChange={(e) => setForm({ ...form, variant_id: e.target.value })}
-              required
-              aria-label="Variant"
-            >
-              <option value="">Select variant…</option>
-              {items.map((v) => (
-                <option key={String(v.variant_id)} value={String(v.variant_id)}>
-                  {String(v.product_name)} · {String(v.size)} · {String(v.sku)}
-                </option>
-              ))}
-            </select>
-            <select
-              value={form.adjustment_type}
-              onChange={(e) => setForm({ ...form, adjustment_type: e.target.value })}
-              aria-label="Adjustment type"
-            >
-              {['increase', 'decrease', 'return', 'damage', 'defect', 'correction'].map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              min={1}
-              value={form.qty_change}
-              onChange={(e) => setForm({ ...form, qty_change: e.target.value })}
-              aria-label="Quantity"
-            />
-            <input
-              placeholder="Reason"
-              value={form.reason}
-              onChange={(e) => setForm({ ...form, reason: e.target.value })}
-            />
-            <button className="button tiny">Adjust</button>
-          </form>
-        )}
+            <option value="">Select SKU…</option>
+            {items.map((v) => (
+              <option key={String(v.variant_id)} value={String(v.variant_id)}>
+                {String(v.product_name)} · {String(v.size)} ({String(v.sku)})
+              </option>
+            ))}
+          </select>
+          <select
+            value={form.adjustment_type}
+            onChange={(e) => setForm({ ...form, adjustment_type: e.target.value })}
+            aria-label="Adjustment type"
+          >
+            {['increase', 'decrease', 'return', 'damage', 'correction'].map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            min="1"
+            value={form.qty_change}
+            onChange={(e) => setForm({ ...form, qty_change: e.target.value })}
+            style={{ width: '70px' }}
+          />
+          <button className="button tiny">Adjust</button>
+        </form>
       </div>
+
       <div className="table-wrap">
         <table className="table">
           <thead>
             <tr>
               <th>SKU</th>
-              <th>Piece</th>
+              <th>Product</th>
               <th>Size</th>
               <th>Available</th>
               <th>Reserved</th>
               <th>Sold</th>
-              <th>Damaged</th>
-              <th>Returned</th>
             </tr>
           </thead>
           <tbody>
@@ -328,31 +657,35 @@ function InventoryTab({ canAdjust }: { canAdjust: boolean }) {
                 </td>
                 <td>{String(v.reserved_qty)}</td>
                 <td>{String(v.sold_qty)}</td>
-                <td>{String(v.damaged_qty)}</td>
-                <td>{String(v.returned_qty)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {rows && rows.meta.total === 0 && <p className="empty">No variants yet.</p>}
+      {rows && rows.meta.total === 0 && <p className="empty">No variants in inventory yet.</p>}
     </div>
   );
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   REPORTS TAB
+───────────────────────────────────────────────────────────────────────────── */
 function ReportsTab() {
   const [report, setReport] = useState<Reports | null>(null);
+
   useEffect(() => {
     api
       .get<Reports>('/admin/reports?period_days=30')
       .then(setReport)
       .catch(() => setReport(null));
   }, []);
+
   if (!report) return <Spinner />;
+
   return (
     <div className="kpi-grid">
       <div className="kpi">
-        <small>Orders (30d)</small>
+        <small>Total Orders</small>
         <strong>{report.orders_total}</strong>
       </div>
       <div className="kpi">
@@ -360,128 +693,27 @@ function ReportsTab() {
         <strong>{inr(report.revenue_paise)}</strong>
       </div>
       <div className="kpi">
-        <small>Avg order</small>
+        <small>Avg Order Value</small>
         <strong>{inr(report.aov_paise)}</strong>
       </div>
       <div className="kpi">
-        <small>Units sold</small>
+        <small>Units Sold</small>
         <strong>{report.units_sold}</strong>
       </div>
+
       <div className="panel span-2">
-        <h2>Low stock</h2>
+        <h2>Low Stock Alert (&lt; 3 units)</h2>
         <ul className="low-list">
           {report.low_stock_variants.map((v) => (
             <li key={v.sku}>
               <span>
-                {v.product_name} · {v.size} · {v.sku}
+                {v.product_name} · Size {v.size} ({v.sku})
               </span>
-              <strong>{v.available_qty} left</strong>
+              <strong style={{ color: '#e06c75' }}>{v.available_qty} left</strong>
             </li>
           ))}
-          {report.low_stock_variants.length === 0 && <li className="dim">All sizes healthy.</li>}
+          {report.low_stock_variants.length === 0 && <li className="dim">All variants are well-stocked.</li>}
         </ul>
-      </div>
-      <div className="panel span-2">
-        <h2>Revenue by source</h2>
-        <ul className="low-list">
-          {Object.entries(report.revenue_by_source).map(([k, v]) => (
-            <li key={k}>
-              <span>{statusLabel(k)}</span>
-              <strong>{inr(v)}</strong>
-            </li>
-          ))}
-          {Object.keys(report.revenue_by_source).length === 0 && <li className="dim">No paid orders yet.</li>}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-function CouponsTab({ canManage }: { canManage: boolean }) {
-  const [coupons, setCoupons] = useState<Array<Record<string, unknown>>>([]);
-  const [form, setForm] = useState({ code: '', discount_value: '50000', min_order_paise: '1000000' });
-  const toast = useToast();
-  const load = () =>
-    api
-      .get<Array<Record<string, unknown>>>('/coupons')
-      .then(setCoupons)
-      .catch(() => setCoupons([]));
-  useEffect(() => {
-    void load();
-  }, []);
-
-  return (
-    <div className="panel">
-      <div className="panel-head">
-        <h2>Coupons</h2>
-        {canManage && (
-          <form
-            className="adj-form"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              try {
-                await api.post('/coupons', {
-                  code: form.code,
-                  discount_type: 'fixed',
-                  discount_value: Number(form.discount_value),
-                  min_order_paise: Number(form.min_order_paise),
-                });
-                toast('Coupon created.', 'success');
-                setForm({ code: '', discount_value: '50000', min_order_paise: '1000000' });
-                void load();
-              } catch (err) {
-                toast(err instanceof ApiError ? err.message : 'Create failed', 'error');
-              }
-            }}
-          >
-            <input
-              placeholder="CODE"
-              value={form.code}
-              onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-              required
-            />
-            <input
-              type="number"
-              value={form.discount_value}
-              onChange={(e) => setForm({ ...form, discount_value: e.target.value })}
-              aria-label="Discount paise"
-            />
-            <input
-              type="number"
-              value={form.min_order_paise}
-              onChange={(e) => setForm({ ...form, min_order_paise: e.target.value })}
-              aria-label="Min order paise"
-            />
-            <button className="button tiny">Create</button>
-          </form>
-        )}
-      </div>
-      <div className="table-wrap">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Discount</th>
-              <th>Min order</th>
-              <th>Used</th>
-              <th>Active</th>
-            </tr>
-          </thead>
-          <tbody>
-            {coupons.map((c) => (
-              <tr key={String(c.id)}>
-                <td>
-                  <strong>{String(c.code)}</strong>
-                </td>
-                <td>{inr(Number(c.discount_value))}</td>
-                <td>{inr(Number(c.min_order_paise))}</td>
-                <td>{String(c.times_used)}</td>
-                <td>{String(c.is_active) === 'true' ? '✓' : '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {coupons.length === 0 && <p className="empty">No coupons yet.</p>}
       </div>
     </div>
   );

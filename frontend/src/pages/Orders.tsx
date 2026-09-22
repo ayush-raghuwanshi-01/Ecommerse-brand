@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Seo, Spinner } from '../components/bits';
+import { getWhatsAppLink } from '../config';
 import { useToast } from '../context/ToastContext';
 import { ApiError, api } from '../lib/api';
 import { dateFmt, inr, statusLabel } from '../lib/format';
@@ -64,11 +65,18 @@ export function OrderDetailPage() {
   const [params] = useSearchParams();
   const toast = useToast();
 
-  const load = () =>
+  const load = () => {
+    // Try customer route first, fall back to guest route
     api
       .get<Order>(`/orders/me/${id}`)
       .then(setOrder)
-      .catch(() => setOrder(null));
+      .catch(() => {
+        api
+          .get<Order>(`/orders/guest/${id}`)
+          .then(setOrder)
+          .catch(() => setOrder(null));
+      });
+  };
   useEffect(() => {
     void load();
     api
@@ -91,7 +99,26 @@ export function OrderDetailPage() {
     <main className="page order-detail">
       <Seo title={`Order ${order.number} — Black House`} />
       {params.get('placed') && (
-        <p className="ok banner">✓ Order {order.number} placed. We’ve emailed you the confirmation.</p>
+        <div className="ok banner" style={{ padding: '1.25rem', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+          <p style={{ fontWeight: 600, fontSize: '1.1rem', margin: '0 0 0.5rem 0' }}>
+            ✓ Order {order.number} Placed Successfully!
+          </p>
+          <p style={{ margin: '0 0 0.75rem 0' }}>
+            Every order is personally verified. Our team will call you shortly on{' '}
+            <strong>{order.shipping_address.phone}</strong> to confirm your details and arrange dispatch.
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <a
+              className="button tiny"
+              style={{ background: '#25D366', color: '#fff', borderColor: '#25D366' }}
+              href={getWhatsAppLink(`Hi! I just placed order ${order.number}. Please confirm my order details.`)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              💬 Chat with us on WhatsApp
+            </a>
+          </div>
+        </div>
       )}
       <div className="od-head">
         <div>

@@ -27,10 +27,14 @@ app/core/database.py
 app/core/deps.py
 app/core/exceptions.py
 app/core/logging.py
+app/core/metrics.py
+app/core/middleware.py
+app/core/net.py
 app/core/pagination.py
 app/core/ratelimit.py
 app/core/security.py
 app/core/types.py
+app/core/uploads.py
 app/models/__init__.py
 app/models/base.py
 app/models/cart.py
@@ -52,6 +56,7 @@ app/services/auth_service.py
 app/services/cart_service.py
 app/services/catalog_service.py
 app/services/coupon_service.py
+app/services/email_templates.py
 app/services/inventory_service.py
 app/services/notification_service.py
 app/services/order_service.py
@@ -68,9 +73,14 @@ app/tests/test_cart_checkout.py
 app/tests/test_catalog.py
 app/tests/test_engagement.py
 app/tests/test_inventory.py
+app/tests/test_metrics.py
+app/tests/test_notifications.py
 app/tests/test_orders.py
 app/tests/test_payments.py
+app/tests/test_ratelimit.py
 app/tests/test_returns.py
+app/tests/test_security.py
+app/tests/test_storage.py
 blackhouse_backend.egg-info/PKG-INFO
 blackhouse_backend.egg-info/SOURCES.txt
 blackhouse_backend.egg-info/dependency_links.txt

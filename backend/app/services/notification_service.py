@@ -213,6 +213,7 @@ def _provider_for(channel: NotificationChannel) -> ChannelProvider:
 
 # Event → default channels (email first; configurable later per business preference)
 EVENT_CHANNELS: dict[str, list[NotificationChannel]] = {
+    "admin_new_order": [NotificationChannel.email],
     "account_created": [NotificationChannel.email],
     "password_reset_requested": [NotificationChannel.email],
     "order_placed": [NotificationChannel.email, NotificationChannel.internal],

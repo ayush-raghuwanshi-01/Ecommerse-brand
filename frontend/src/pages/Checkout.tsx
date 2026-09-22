@@ -5,7 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { ApiError, api } from '../lib/api';
 import { inr } from '../lib/format';
-import type { PlaceOrderResult } from '../lib/types';
+import type { Order } from '../lib/types';
 
 interface PinResult {
   serviceable: boolean;
@@ -14,31 +14,29 @@ interface PinResult {
   reason: string | null;
 }
 
+interface GuestOrderResponse {
+  order: Order;
+  message: string;
+  whatsapp_link: string;
+}
+
 const EMPTY_ADDR = {
   full_name: '',
   phone: '',
+  email: '',
   line1: '',
   line2: '',
   landmark: '',
-  city: '',
+  city: 'Bhopal',
   state: 'Madhya Pradesh',
   postal_code: '',
 };
 
-declare global {
-  interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
-  }
-}
-
 export default function Checkout() {
-  const { cart, refresh } = useCart();
+  const { cart, clearCart } = useCart();
   const [addr, setAddr] = useState(EMPTY_ADDR);
-  const [sameBilling, setSameBilling] = useState(true);
-  const [method, setMethod] = useState<'razorpay' | 'cod'>('razorpay');
   const [pin, setPin] = useState<PinResult | null>(null);
   const [placing, setPlacing] = useState(false);
-  const [mockSession, setMockSession] = useState<PlaceOrderResult | null>(null);
   const [notes, setNotes] = useState('');
   const navigate = useNavigate();
   const toast = useToast();
@@ -52,7 +50,9 @@ export default function Checkout() {
         })
         .then(setPin)
         .catch(() => setPin(null));
-    } else setPin(null);
+    } else {
+      setPin(null);
+    }
   }, [addr.postal_code, cart?.totals.subtotal_paise]);
 
   if (!cart)
@@ -61,7 +61,8 @@ export default function Checkout() {
         <Spinner />
       </main>
     );
-  if (cart.items.length === 0 && !mockSession)
+
+  if (cart.items.length === 0)
     return (
       <main className="page">
         <Seo title="Checkout — Black House" />
@@ -72,68 +73,32 @@ export default function Checkout() {
   const place = async () => {
     setPlacing(true);
     try {
-      const created = await api.post<{ id: string }>('/addresses', {
-        ...addr,
-        country: 'IN',
-        address_type: 'home',
-        is_default_shipping: true,
-        is_default_billing: sameBilling,
-      });
-      const result = await api.post<PlaceOrderResult>(
-        '/checkout/orders',
-        {
-          shipping_address_id: created.id,
-          billing_address_id: sameBilling ? created.id : undefined,
-          payment_method: method,
-          customer_notes: notes || undefined,
+      const payload = {
+        customer_name: addr.full_name,
+        customer_phone: addr.phone,
+        customer_email: addr.email || undefined,
+        shipping_address: {
+          full_name: addr.full_name,
+          phone: addr.phone,
+          line1: addr.line1,
+          line2: addr.line2 || undefined,
+          landmark: addr.landmark || undefined,
+          city: addr.city,
+          state: addr.state,
+          postal_code: addr.postal_code,
+          country: 'IN',
         },
-        { 'Idempotency-Key': crypto.randomUUID() },
-      );
-      await refresh();
-      if (!result.requires_payment) {
-        navigate(`/order/${result.order.id}?placed=1`);
-        return;
-      }
-      const session = result.payment_session!;
-      if (session.mock) {
-        setMockSession(result);
-        return;
-      }
-      // Live Razorpay checkout
-      await new Promise<void>((resolve, reject) => {
-        const load = () => {
-          if (!window.Razorpay) return reject(new Error('Razorpay SDK unavailable'));
-          const rzp = new window.Razorpay({
-            key: session.key_id,
-            amount: session.amount_paise,
-            currency: session.currency,
-            name: 'Black House',
-            description: `Order ${session.order_number}`,
-            order_id: session.provider_order_id,
-            handler: async (resp: { razorpay_payment_id: string; razorpay_signature: string }) => {
-              try {
-                await api.post('/payments/verify', {
-                  order_id: result.order.id,
-                  razorpay_payment_id: resp.razorpay_payment_id,
-                  razorpay_signature: resp.razorpay_signature,
-                });
-                navigate(`/order/${result.order.id}?placed=1`);
-                resolve();
-              } catch (e) {
-                reject(e as Error);
-              }
-            },
-            modal: { ondismiss: () => reject(new Error('Payment cancelled')) },
-          });
-          rzp.open();
-        };
-        if (window.Razorpay) return load();
-        const s = document.createElement('script');
-        s.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        s.onload = load;
-        s.onerror = () => reject(new Error('Razorpay SDK unavailable'));
-        document.body.appendChild(s);
-      });
+        items: cart.items.map((i) => ({
+          variant_id: i.variant_id,
+          qty: i.qty,
+        })),
+        customer_notes: notes || undefined,
+      };
+
+      const result = await api.post<GuestOrderResponse>('/checkout/guest', payload);
+      clearCart();
+      toast('Order placed successfully!', 'success');
+      navigate(`/order/${result.order.number}?placed=1`);
     } catch (e) {
       toast(e instanceof ApiError ? e.message : 'Checkout failed', 'error');
     } finally {
@@ -141,211 +106,199 @@ export default function Checkout() {
     }
   };
 
-  const mockPay = async () => {
-    if (!mockSession) return;
-    try {
-      await api.post(`/payments/mock-capture/${mockSession.order.id}`);
-      navigate(`/order/${mockSession.order.id}?placed=1`);
-    } catch (e) {
-      toast(e instanceof ApiError ? e.message : 'Payment failed', 'error');
-    }
-  };
-
-  const shipping = pin?.serviceable ? pin.shipping_charge_paise : null;
+  const shipping = pin?.serviceable ? pin.shipping_charge_paise : 0;
 
   return (
     <main className="page checkout">
       <Seo title="Checkout — Black House" />
-      <h1>
-        <em>Checkout</em>
-      </h1>
+      <div className="page-head" style={{ marginBottom: '1.5rem' }}>
+        <p className="eyebrow">Direct Craftsmanship · Direct To You</p>
+        <h1>
+          <em>Review & Place Order</em>
+        </h1>
+      </div>
 
-      {mockSession ? (
-        <div className="mock-pay" role="dialog" aria-label="Test payment">
-          <p className="eyebrow">Test gateway</p>
-          <h2>Pay {inr(mockSession.order.grand_total_paise)}</h2>
-          <p className="dim">
-            Order {mockSession.order.number} · Razorpay keys are not configured, so this sandbox simulates a
-            successful UPI/card capture.
-          </p>
-          <div className="actions">
-            <button className="button" onClick={mockPay}>
-              Pay now (test)
-            </button>
-            <button className="button ghost" onClick={() => navigate(`/order/${mockSession.order.id}`)}>
-              Pay later
-            </button>
+      {/* Trust & Pre-payment Notice Banner */}
+      <div
+        className="panel"
+        style={{
+          borderLeft: '4px solid #c9a24b',
+          backgroundColor: '#17140f',
+          padding: '1rem 1.25rem',
+          marginBottom: '1.5rem',
+        }}
+      >
+        <p style={{ margin: '0 0 0.5rem 0', fontWeight: 600, color: '#ece4d3' }}>
+          📞 Every order is personally confirmed by phone call before dispatch.
+        </p>
+        <p style={{ margin: 0, fontSize: '0.9rem', color: '#9a8f7a', lineHeight: 1.5 }}>
+          No online payment is required now. Our team will verify your address, answer any sizing questions,
+          and arrange your preferred payment method (Cash on Delivery or UPI).
+        </p>
+      </div>
+
+      <div className="checkout-grid">
+        <form
+          className="panel"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void place();
+          }}
+        >
+          <h2>Delivery details</h2>
+          <label>
+            Full name *
+            <input
+              required
+              placeholder="e.g. Rahul Sharma"
+              value={addr.full_name}
+              onChange={(e) => setAddr({ ...addr, full_name: e.target.value })}
+            />
+          </label>
+          <label>
+            Phone number (for call confirmation) *
+            <input
+              required
+              pattern="[0-9]{10}"
+              placeholder="10-digit mobile number"
+              value={addr.phone}
+              onChange={(e) => setAddr({ ...addr, phone: e.target.value.replace(/\D/g, '') })}
+            />
+          </label>
+          <label>
+            Email address (optional, for invoice copy)
+            <input
+              type="email"
+              placeholder="name@example.com"
+              value={addr.email}
+              onChange={(e) => setAddr({ ...addr, email: e.target.value })}
+            />
+          </label>
+          <label>
+            Street address *
+            <input
+              required
+              placeholder="House/Flat no., building, street"
+              value={addr.line1}
+              onChange={(e) => setAddr({ ...addr, line1: e.target.value })}
+            />
+          </label>
+          <label>
+            Area / Landmark (optional)
+            <input
+              placeholder="Near park, landmark, etc."
+              value={addr.landmark}
+              onChange={(e) => setAddr({ ...addr, landmark: e.target.value })}
+            />
+          </label>
+          <div className="row-2">
+            <label>
+              City *
+              <input
+                required
+                value={addr.city}
+                onChange={(e) => setAddr({ ...addr, city: e.target.value })}
+              />
+            </label>
+            <label>
+              State *
+              <input
+                required
+                value={addr.state}
+                onChange={(e) => setAddr({ ...addr, state: e.target.value })}
+              />
+            </label>
           </div>
-        </div>
-      ) : (
-        <div className="checkout-grid">
-          <form
-            className="panel"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void place();
+          <label>
+            PIN code *
+            <input
+              required
+              inputMode="numeric"
+              pattern="[1-9][0-9]{5}"
+              maxLength={6}
+              placeholder="6-digit postal code"
+              value={addr.postal_code}
+              onChange={(e) => setAddr({ ...addr, postal_code: e.target.value.replace(/\D/g, '') })}
+            />
+          </label>
+
+          {pin &&
+            (pin.serviceable ? (
+              <p className="ok">
+                ✓ Serviceable · estimated delivery in {pin.estimated_delivery_days} days · shipping{' '}
+                {pin.shipping_charge_paise === 0 ? 'free' : inr(pin.shipping_charge_paise)}
+              </p>
+            ) : (
+              <p className="alert-text">✗ {pin.reason || 'This PIN code is currently unserviceable.'}</p>
+            ))}
+
+          <label style={{ marginTop: '1rem' }}>
+            Special instructions / sizing notes (optional)
+            <textarea
+              rows={2}
+              placeholder="Any fit preferences, landmark guidance or best call timing..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </label>
+
+          <button
+            className="button wide"
+            style={{ marginTop: '1.25rem' }}
+            disabled={placing || (pin !== null && !pin.serviceable)}
+          >
+            {placing ? 'Placing order…' : 'Place order (Confirm by phone)'}
+          </button>
+        </form>
+
+        <aside className="panel summary">
+          <h2>Order summary</h2>
+          {cart.items.map((i) => (
+            <div className="sum-line" key={i.id}>
+              <span>
+                {i.product_name} · {i.size} × {i.qty}
+              </span>
+              <span>{inr(i.line_total_paise)}</span>
+            </div>
+          ))}
+          <hr />
+          <div className="sum-line">
+            <span>Subtotal</span>
+            <span>{inr(cart.totals.subtotal_paise)}</span>
+          </div>
+          <div className="sum-line">
+            <span>Shipping</span>
+            <span>{shipping === 0 ? 'Free' : inr(shipping)}</span>
+          </div>
+          <div className="sum-line">
+            <span>GST included</span>
+            <span>{inr(cart.totals.tax_paise)}</span>
+          </div>
+          <div className="sum-line grand">
+            <span>Estimated total</span>
+            <span>{inr(cart.totals.grand_total_paise + shipping)}</span>
+          </div>
+
+          <div
+            style={{
+              marginTop: '1.25rem',
+              padding: '0.85rem',
+              border: '1px dashed #c9a24b',
+              borderRadius: '4px',
+              fontSize: '0.85rem',
+              color: '#c9a24b',
+              lineHeight: 1.4,
             }}
           >
-            <h2>Shipping address</h2>
-            <label>
-              Full name
-              <input
-                required
-                value={addr.full_name}
-                onChange={(e) => setAddr({ ...addr, full_name: e.target.value })}
-              />
-            </label>
-            <label>
-              Phone
-              <input
-                required
-                pattern="[0-9]{10}"
-                value={addr.phone}
-                onChange={(e) => setAddr({ ...addr, phone: e.target.value })}
-              />
-            </label>
-            <label>
-              Address line 1
-              <input
-                required
-                value={addr.line1}
-                onChange={(e) => setAddr({ ...addr, line1: e.target.value })}
-              />
-            </label>
-            <label>
-              Address line 2
-              <input value={addr.line2} onChange={(e) => setAddr({ ...addr, line2: e.target.value })} />
-            </label>
-            <label>
-              Landmark
-              <input value={addr.landmark} onChange={(e) => setAddr({ ...addr, landmark: e.target.value })} />
-            </label>
-            <div className="row-2">
-              <label>
-                City
-                <input
-                  required
-                  value={addr.city}
-                  onChange={(e) => setAddr({ ...addr, city: e.target.value })}
-                />
-              </label>
-              <label>
-                State
-                <input
-                  required
-                  value={addr.state}
-                  onChange={(e) => setAddr({ ...addr, state: e.target.value })}
-                />
-              </label>
-            </div>
-            <label>
-              PIN code
-              <input
-                required
-                inputMode="numeric"
-                pattern="[1-9][0-9]{5}"
-                maxLength={6}
-                value={addr.postal_code}
-                onChange={(e) => setAddr({ ...addr, postal_code: e.target.value.replace(/\D/g, '') })}
-              />
-            </label>
-            {pin &&
-              (pin.serviceable ? (
-                <p className="ok">
-                  ✓ Serviceable · delivery in {pin.estimated_delivery_days} days · shipping{' '}
-                  {pin.shipping_charge_paise === 0 ? 'free' : inr(pin.shipping_charge_paise)}
-                </p>
-              ) : (
-                <p className="alert-text">✗ {pin.reason}</p>
-              ))}
-            <label className="check">
-              <input
-                type="checkbox"
-                checked={sameBilling}
-                onChange={(e) => setSameBilling(e.target.checked)}
-              />{' '}
-              Billing address same as shipping
-            </label>
+            ✨ <strong>Prepaid discount available:</strong> If you choose to pay via UPI when our team calls to
+            confirm, you will receive an additional discount on your final invoice.
+          </div>
 
-            <h2>Payment</h2>
-            <div className="pay-methods">
-              <label className={`pay ${method === 'razorpay' ? 'selected' : ''}`}>
-                <input
-                  type="radio"
-                  name="pay"
-                  checked={method === 'razorpay'}
-                  onChange={() => setMethod('razorpay')}
-                />
-                <div>
-                  <strong>UPI / Card / Netbanking</strong>
-                  <small>Securely via Razorpay</small>
-                </div>
-              </label>
-              <label className={`pay ${method === 'cod' ? 'selected' : ''}`}>
-                <input type="radio" name="pay" checked={method === 'cod'} onChange={() => setMethod('cod')} />
-                <div>
-                  <strong>Cash on Delivery</strong>
-                  <small>No extra fee · pay at your door</small>
-                </div>
-              </label>
-            </div>
-
-            <label>
-              Order notes (optional)
-              <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
-            </label>
-            <button
-              className="button wide"
-              disabled={placing || (pin !== null && !pin.serviceable) || cart.checkout_blocked}
-            >
-              {placing ? 'Placing order…' : method === 'cod' ? 'Place COD order' : 'Place order & pay'}
-            </button>
-            {cart.checkout_blocked && (
-              <ul className="block-reasons">
-                {cart.block_reasons.map((r) => (
-                  <li key={r}>{r}</li>
-                ))}
-              </ul>
-            )}
-          </form>
-
-          <aside className="panel summary">
-            <h2>Order summary</h2>
-            {cart.items.map((i) => (
-              <div className="sum-line" key={i.id}>
-                <span>
-                  {i.product_name} · {i.size} × {i.qty}
-                </span>
-                <span>{inr(i.line_total_paise)}</span>
-              </div>
-            ))}
-            <hr />
-            <div className="sum-line">
-              <span>Subtotal</span>
-              <span>{inr(cart.totals.subtotal_paise)}</span>
-            </div>
-            {cart.totals.discount_paise > 0 && (
-              <div className="sum-line">
-                <span>Discount {cart.coupon_code && `(${cart.coupon_code})`}</span>
-                <span>−{inr(cart.totals.discount_paise)}</span>
-              </div>
-            )}
-            <div className="sum-line">
-              <span>Shipping</span>
-              <span>{shipping === null ? '—' : shipping === 0 ? 'Free' : inr(shipping)}</span>
-            </div>
-            <div className="sum-line">
-              <span>GST included</span>
-              <span>{inr(cart.totals.tax_paise)}</span>
-            </div>
-            <div className="sum-line grand">
-              <span>To pay</span>
-              <span>{inr(cart.totals.grand_total_paise + (shipping ?? 0))}</span>
-            </div>
-            <small>Prices include GST. A GST-compliant invoice follows delivery.</small>
-          </aside>
-        </div>
-      )}
+          <small style={{ display: 'block', marginTop: '1rem' }}>
+            Prices include GST. Delivery and payment will be finalized over the phone call.
+          </small>
+        </aside>
+      </div>
     </main>
   );
 }

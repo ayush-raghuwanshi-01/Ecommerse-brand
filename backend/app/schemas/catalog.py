@@ -91,6 +91,7 @@ class VariantCreate(BaseModel):
 
 class VariantUpdate(BaseModel):
     price_paise: int | None = Field(default=None, ge=0)
+    stock_qty: int | None = Field(default=None, ge=0)
     gst_percentage: float | None = Field(default=None, ge=0, le=100)
     is_active: bool | None = None
     is_purchasable: bool | None = None

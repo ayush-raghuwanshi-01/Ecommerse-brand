@@ -31,7 +31,7 @@ export const config = {
 
   /** Contact channels */
   contactEmail: firstDefined(env.VITE_CONTACT_EMAIL, 'hello@blackhouse.example'),
-  whatsappNumber: normalisePhone(firstDefined(env.VITE_WHATSAPP_NUMBER, '910000000000')),
+  whatsappNumber: normalisePhone(firstDefined(env.VITE_WHATSAPP_NUMBER, '919999999999')),
   supportPhone: normalisePhone(env.VITE_SUPPORT_PHONE ?? ''),
 
   /**

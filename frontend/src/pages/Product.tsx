@@ -64,7 +64,15 @@ export default function ProductPage() {
   const addToBag = async () => {
     if (!variant) return;
     try {
-      await add(variant.id, qty);
+      await add(variant.id, qty, {
+        product_id: product.id,
+        product_name: product.name,
+        variant_name: `Size ${variant.size}`,
+        sku: variant.sku,
+        size: variant.size,
+        image_url: primary?.url || null,
+        unit_price_paise: variant.price_paise,
+      });
       toast(`${product.name} (${variant.size}) added to your bag.`, 'success');
     } catch (e) {
       toast(e instanceof ApiError ? e.message : 'Could not add to bag', 'error');

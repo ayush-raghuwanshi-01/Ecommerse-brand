@@ -7,7 +7,7 @@ name = "blackhouse-backend"
 version = "1.0.0"
 description = "Black House — modular-monolith commerce backend (FastAPI, SQLAlchemy 2, PostgreSQL)"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 license = { text = "Proprietary" }
 authors = [{ name = "Black House Engineering" }]
 

@@ -69,6 +69,32 @@ class CheckoutPreview(BaseModel):
     shipping: PincodeCheckOut | None = None
 
 
+class GuestOrderLine(BaseModel):
+    variant_id: str
+    qty: int = Field(ge=1, le=10)
+
+
+class GuestAddressInput(BaseModel):
+    full_name: str
+    phone: str
+    line1: str
+    line2: str | None = None
+    landmark: str | None = None
+    city: str
+    state: str = "Madhya Pradesh"
+    postal_code: str = Field(pattern=r"^[1-9][0-9]{5}$")
+    country: str = "IN"
+
+
+class GuestPlaceOrderRequest(BaseModel):
+    customer_name: str
+    customer_phone: str
+    customer_email: str | None = None
+    shipping_address: GuestAddressInput
+    items: list[GuestOrderLine] = Field(min_length=1)
+    customer_notes: str | None = None
+
+
 class PlaceOrderRequest(BaseModel):
     shipping_address_id: str
     billing_address_id: str | None = None  # defaults to shipping
@@ -138,6 +164,12 @@ class OrderOut(ORMModel):
     updated_at: datetime
     delivered_at: datetime | None = None
     cancellation_reason: str | None = None
+
+
+class GuestPlaceOrderOut(BaseModel):
+    order: OrderOut
+    message: str = "Order placed successfully. Our team will call you shortly to confirm your order."
+    whatsapp_link: str
 
 
 class PlaceOrderOut(BaseModel):
